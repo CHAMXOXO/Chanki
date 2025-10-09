@@ -1,4 +1,4 @@
-// anki-importer.js (DEFINITIVE, FINAL, CORRECTED VERSION)
+// anki-importer.js (FINAL, CLEAN, SINGLE-FUNCTION VERSION)
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const MCQ_MIN_OPTIONS = 2;
@@ -22,52 +22,29 @@ const buildAnkiFieldsObject = (question, answer, jtaID, inferredType, enhancedFi
   let fields = { "Joplin to Anki ID": jtaID };
   switch (inferredType) {
       case 'basic':
-          fields["Header"] = enhancedFields.header;
-          fields["Question"] = question;
-          fields["Answer"] = answer;
-          fields["Explanation"] = enhancedFields.explanation;
-          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer;
-          fields["Sources"] = enhancedFields.sources;
+          fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["Answer"] = answer;
+          fields["Explanation"] = enhancedFields.explanation; fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
+          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
           break;
       case 'cloze':
-          // --- THIS WAS THE BUG. IT IS NOW CORRECTED ---
-          fields["Header"] = enhancedFields.header;
-          fields["Text"] = question; // CORRECTED: Cloze content goes into the "Text" field.
-          fields["Extra"] = enhancedFields.extra;
-          fields["Explanation"] = enhancedFields.explanation;
-          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer;
-          fields["Sources"] = enhancedFields.sources;
+          fields["Header"] = enhancedFields.header; fields["Text"] = question; fields["Extra"] = enhancedFields.extra;
+          fields["Explanation"] = enhancedFields.explanation; fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
+          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
           break;
-          // --- END OF CORRECTION ---
       case 'mcq':
-          fields["Header"] = enhancedFields.header;
-          fields["Question"] = question;
-          fields["OptionA"] = enhancedFields.optionA;
-          fields["OptionB"] = enhancedFields.optionB;
-          fields["OptionC"] = enhancedFields.optionC;
-          fields["OptionD"] = enhancedFields.optionD;
-          fields["CorrectAnswer"] = enhancedFields.correctAnswer;
-          fields["Explanation"] = enhancedFields.explanation;
+          fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["OptionA"] = enhancedFields.optionA;
+          fields["OptionB"] = enhancedFields.optionB; fields["OptionC"] = enhancedFields.optionC; fields["OptionD"] = enhancedFields.optionD;
+          fields["CorrectAnswer"] = enhancedFields.correctAnswer; fields["Explanation"] = enhancedFields.explanation;
           fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer;
-          fields["Sources"] = enhancedFields.sources;
+          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
           break;
       case 'imageOcclusion':
-          fields["Header"] = enhancedFields.header;
-          fields["QuestionImagePath"] = enhancedFields.questionImagePath;
-          fields["AnswerImagePath"] = enhancedFields.answerImagePath;
-          fields["AltText"] = enhancedFields.altText;
-          fields["Question"] = question;
-          fields["Answer"] = answer;
-          fields["Origin"] = enhancedFields.origin;
-          fields["Insertion"] = enhancedFields.insertion;
-          fields["Innervation"] = enhancedFields.innervation;
-          fields["Action"] = enhancedFields.action;
-          fields["Comments"] = enhancedFields.comments;
-          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer;
+          fields["Header"] = enhancedFields.header; fields["QuestionImagePath"] = enhancedFields.questionImagePath;
+          fields["AnswerImagePath"] = enhancedFields.answerImagePath; fields["AltText"] = enhancedFields.altText;
+          fields["Question"] = question; fields["Answer"] = answer; fields["Origin"] = enhancedFields.origin;
+          fields["Insertion"] = enhancedFields.insertion; fields["Innervation"] = enhancedFields.innervation;
+          fields["Action"] = enhancedFields.action; fields["Comments"] = enhancedFields.comments;
+          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation; fields["Footer"] = enhancedFields.footer;
           fields["Sources"] = enhancedFields.sources;
           break;
   }
@@ -97,10 +74,6 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   return "basic";
 };
 
-// anki-importer.js -> replace the importer function
-
-// anki-importer.js -> replace the importer function
-
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
@@ -111,11 +84,9 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
     const deckName = "default";
-    await client.ensureDeckExists(deckName);
+    await client.ensureDeckExists(deckname);
     
-    // This object is now the single source of truth for the note's fields
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
-    
     const foundNoteIds = await client.findNote(jtaID, deckName);
 
     if (foundNoteIds && foundNoteIds.length > 0) {
@@ -137,13 +108,10 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
         return { action: "skipped", noteId: existingNoteId };
       }
 
-      // --- THIS IS THE CRUCIAL CHANGE ---
-      // We no longer pass all the individual pieces. We pass the pre-built object.
       log(levelVerbose, `Note ${existingNoteId} has changed. Updating.`);
       await client.updateNote(existingNoteId, joplinFields); 
       await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
       return { action: "updated", noteId: existingNoteId };
-      // --- END OF CHANGE ---
 
     } else {
       log(levelVerbose, `Creating new note for JTA ID ${jtaID}.`);
@@ -178,4 +146,4 @@ const batchImporter = async (client, items, batchSize = 10, log) => {
   return results;
 };
 
-module.exports = { importer, batchImporter, buildAnkiFieldsObject };
+module.exports = { importer, batchImporter };
