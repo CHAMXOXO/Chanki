@@ -132,7 +132,7 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# FINALIZED THEME SYSTEM CSS (v11 with Structural Fix) - REVISED
+# REVISED THEME SYSTEM CSS (v12 with Color Enhancements)
 # ============================================
 THEME_CSS = '''
 /* Theme Toggle Button - Base Styles */
@@ -178,10 +178,12 @@ body.theme-light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)
     background: linear-gradient(135deg, #a855f7 0%, #d946ef 100%);
 }
 .theme-light .theme-toggle { color: #433865; text-shadow: 0 1px 2px rgba(0,0,0,0.1); box-shadow: 0 0 20px 5px rgba(252, 211, 77, 0.5); }
-.theme-light .card-type, .theme-light .cloze-title, .theme-light .mcq-title, .theme-light .image-title, .theme-light .header-text { color: #ffffff !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+.theme-light .card-type, .theme-light .cloze-title, .theme-light .mcq-title, .theme-light .image-title, .theme-light .header-text { color: #F5F3FF !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
+.theme-light .question-text, .theme-light .question-section, .theme-light .question-overlay { color: #581C87 !important; }
+.theme-light .answer-text, .theme-light .correct-answer .answer-value, .theme-light .answer-overlay { color: #065F46 !important; }
 .theme-light .section-title, .theme-light .block-title, .theme-light .extra-title, .theme-light .comments-title { color: #4C1D95 !important; font-weight: 700 !important; }
-.theme-light .anatomy-title { color: #ffffff !important; }
-.theme-light .cloze { background: linear-gradient(135deg, #d946ef, #ec4899) !important; color: white; font-weight: 700; animation: highlight-light 2s ease-in-out infinite alternate; }
+.theme-light .anatomy-title { color: #F5F3FF !important; }
+.theme-light .cloze { background: linear-gradient(135deg, #d946ef, #ec4899) !important; color: #F5F3FF; font-weight: 700; animation: highlight-light 2s ease-in-out infinite alternate; }
 .theme-light .explanation-block, .theme-light .explanation-section, .theme-light .explanation-info { background: #E6FFFA; border-left: 5px solid #38B2AC; }
 .theme-light .correlation-block, .theme-light .correlation-section, .theme-light .correlation-info { background: #F0E6FF; border-left: 5px solid #8B5CF6; }
 .theme-light .extra-info, .theme-light .comments-block { background: #FFF5E6; border-left: 5px solid #F97316; }
@@ -192,11 +194,11 @@ body.theme-light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)
 .theme-light .action-section { background-color: rgba(74, 222, 128, 0.8); border-left: 5px solid #22C55E; }
 .theme-light .custom-origin { color: #4C1D95 !important; } .theme-light .custom-insertion { color: #1E3A8A !important; } .theme-light .custom-innervation { color: #831843 !important; } .theme-light .custom-action { color: #14532D !important; }
 .theme-light .option { background: rgba(255,255,255,0.7); }
-.theme-light .option-a { border-left-color: #2196f3 !important; } .theme-light .option-a .option-letter { background: linear-gradient(135deg, #2196f3, #64b5f6); color: white !important; } .theme-light .option-a .option-text { color: #1e3a8a !important; }
-.theme-light .option-b { border-left-color: #4caf50 !important; } .theme-light .option-b .option-letter { background: linear-gradient(135deg, #4caf50, #81c784); color: white !important; } .theme-light .option-b .option-text { color: #14532d !important; }
-.theme-light .option-c { border-left-color: #ff9800 !important; } .theme-light .option-c .option-letter { background: linear-gradient(135deg, #ff9800, #ffb74d); color: white !important; } .theme-light .option-c .option-text { color: #854d0e !important; }
-.theme-light .option-d { border-left-color: #f44336 !important; } .theme-light .option-d .option-letter { background: linear-gradient(135deg, #f44336, #ef5350); color: white !important; } .theme-light .option-d .option-text { color: #7f1d1d !important; }
-.theme-light .toggle-btn { color: #ffffff; }
+.theme-light .option-a { border-left-color: #2196f3 !important; } .theme-light .option-a .option-letter { background: linear-gradient(135deg, #2196f3, #64b5f6); color: #E3F2FD !important; } .theme-light .option-a .option-text { color: #1e3a8a !important; }
+.theme-light .option-b { border-left-color: #4caf50 !important; } .theme-light .option-b .option-letter { background: linear-gradient(135deg, #4caf50, #81c784); color: #E8F5E9 !important; } .theme-light .option-b .option-text { color: #14532d !important; }
+.theme-light .option-c { border-left-color: #ff9800 !important; } .theme-light .option-c .option-letter { background: linear-gradient(135deg, #ff9800, #ffb74d); color: #FFF8E1 !important; } .theme-light .option-c .option-text { color: #854d0e !important; }
+.theme-light .option-d { border-left-color: #f44336 !important; } .theme-light .option-d .option-letter { background: linear-gradient(135deg, #f44336, #ef5350); color: #FFEBEE !important; } .theme-light .option-d .option-text { color: #7f1d1d !important; }
+.theme-light .explanation-btn { color: #083344; } .theme-light .correlation-btn { color: #EBE5FF; } .theme-light .extra-btn { color: #fff; } .theme-light .comments-btn { color: #fff; }
 
 /* ---------------------------------------------------- */
 /* -------------- 🌖 THEME: LIGHT-DARK ---------------- */
@@ -208,10 +210,12 @@ body.theme-light-dark { background: linear-gradient(135deg, #4c5c96 0%, #1f2937 
 .theme-light-dark .meta-header, .theme-light-dark .header, .theme-light-dark .cloze-header, .theme-light-dark .mcq-header, .theme-light-dark .image-header {
     background: linear-gradient(135deg, #be185d 0%, #ec4899 100%);
 }
-.theme-light-dark .theme-toggle { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.5); }
-.theme-light-dark .card-type, .theme-light-dark .cloze-title, .theme-light-dark .mcq-title, .theme-light-dark .image-title, .theme-light-dark .header-text { color: #ffffff !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+.theme-light-dark .theme-toggle { color: #FCE7F3; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.5); }
+.theme-light-dark .card-type, .theme-light-dark .cloze-title, .theme-light-dark .mcq-title, .theme-light-dark .image-title, .theme-light-dark .header-text { color: #FCE7F3 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+.theme-light-dark .question-text, .theme-light-dark .question-section, .theme-light-dark .question-overlay { color: #FBCFE8 !important; }
+.theme-light-dark .answer-text, .theme-light-dark .correct-answer .answer-value, .theme-light-dark .answer-overlay { color: #A7F3D0 !important; }
 .theme-light-dark .section-title, .theme-light-dark .block-title, .theme-light-dark .extra-title, .theme-light-dark .comments-title, .theme-light-dark .anatomy-title { color: #FBCFE8 !important; }
-.theme-light-dark .cloze { background: linear-gradient(135deg, #ec4899, #f472b6) !important; color: white; font-weight: 700; animation: highlight-light-dark 2s ease-in-out infinite alternate; }
+.theme-light-dark .cloze { background: linear-gradient(135deg, #ec4899, #f472b6) !important; color: #FDF2F8; font-weight: 700; animation: highlight-light-dark 2s ease-in-out infinite alternate; }
 .theme-light-dark .explanation-block, .theme-light-dark .explanation-section, .theme-light-dark .explanation-info { background: rgba(92, 44, 64, 0.8); border-left: 5px solid #EC4899; }
 .theme-light-dark .correlation-block, .theme-light-dark .correlation-section, .theme-light-dark .correlation-info { background: rgba(17, 94, 89, 0.8); border-left: 5px solid #14B8A6; }
 .theme-light-dark .extra-info, .theme-light-dark .comments-block { background: rgba(109, 40, 217, 0.6); border-left: 5px solid #A855F7; }
@@ -222,11 +226,11 @@ body.theme-light-dark { background: linear-gradient(135deg, #4c5c96 0%, #1f2937 
 .theme-light-dark .action-section { background-color: rgba(234, 88, 12, 0.7); border-left: 5px solid #F97316; }
 .theme-light-dark .custom-origin { color: #fbcfe8 !important; } .theme-light-dark .custom-insertion { color: #a7f3d0 !important; } .theme-light-dark .custom-innervation { color: #e9d5ff !important; } .theme-light-dark .custom-action { color: #fed7aa !important; }
 .theme-light-dark .option { background: rgba(55, 65, 81, 0.7); }
-.theme-light-dark .option-a { border-left-color: #f472b6 !important; } .theme-light-dark .option-a .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: white !important; } .theme-light-dark .option-a .option-text { color: #fce7f3 !important; }
-.theme-light-dark .option-b { border-left-color: #34d399 !important; } .theme-light-dark .option-b .option-letter { background: linear-gradient(135deg, #10b981, #34d399); color: white !important; } .theme-light-dark .option-b .option-text { color: #d1fae5 !important; }
-.theme-light-dark .option-c { border-left-color: #60a5fa !important; } .theme-light-dark .option-c .option-letter { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white !important; } .theme-light-dark .option-c .option-text { color: #dbeafe !important; }
-.theme-light-dark .option-d { border-left-color: #c084fc !important; } .theme-light-dark .option-d .option-letter { background: linear-gradient(135deg, #a855f7, #c084fc); color: white !important; } .theme-light-dark .option-d .option-text { color: #f3e8ff !important; }
-.theme-light-dark .toggle-btn { color: #ffffff; }
+.theme-light-dark .option-a { border-left-color: #f472b6 !important; } .theme-light-dark .option-a .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FDF2F8 !important; } .theme-light-dark .option-a .option-text { color: #fce7f3 !important; }
+.theme-light-dark .option-b { border-left-color: #34d399 !important; } .theme-light-dark .option-b .option-letter { background: linear-gradient(135deg, #10b981, #34d399); color: #D1FAE5 !important; } .theme-light-dark .option-b .option-text { color: #d1fae5 !important; }
+.theme-light-dark .option-c { border-left-color: #60a5fa !important; } .theme-light-dark .option-c .option-letter { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #DBEAFE !important; } .theme-light-dark .option-c .option-text { color: #dbeafe !important; }
+.theme-light-dark .option-d { border-left-color: #c084fc !important; } .theme-light-dark .option-d .option-letter { background: linear-gradient(135deg, #a855f7, #c084fc); color: #F3E8FF !important; } .theme-light-dark .option-d .option-text { color: #f3e8ff !important; }
+.theme-light-dark .toggle-btn { color: #FDF2F8; }
 
 /* ---------------------------------------------------- */
 /* --------------- 🌗 THEME: BALANCED ----------------- */
@@ -238,10 +242,12 @@ body.theme-balanced { background: linear-gradient(to top, #30cfd0 0%, #330867 10
 .theme-balanced .meta-header, .theme-balanced .header, .theme-balanced .cloze-header, .theme-balanced .mcq-header, .theme-balanced .image-header {
     background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
 }
-.theme-balanced .theme-toggle { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(6, 182, 212, 0.6); }
+.theme-balanced .theme-toggle { color: #E0F2FE; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(6, 182, 212, 0.6); }
 .theme-balanced .card-type, .theme-balanced .cloze-title, .theme-balanced .mcq-title, .theme-balanced .image-title, .theme-balanced .header-text { color: #E0F2FE !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+.theme-balanced .question-text, .theme-balanced .question-section, .theme-balanced .question-overlay { color: #CFFAFE !important; }
+.theme-balanced .answer-text, .theme-balanced .correct-answer .answer-value, .theme-balanced .answer-overlay { color: #F0ABFC !important; }
 .theme-balanced .section-title, .theme-balanced .block-title, .theme-balanced .extra-title, .theme-balanced .comments-title, .theme-balanced .anatomy-title { color: #CFFAFE !important; }
-.theme-balanced .cloze { background: linear-gradient(135deg, #3b82f6, #60a5fa) !important; color: white; font-weight: 700; animation: highlight-balanced 2s ease-in-out infinite alternate; }
+.theme-balanced .cloze { background: linear-gradient(135deg, #3b82f6, #60a5fa) !important; color: #EBF8FF; font-weight: 700; animation: highlight-balanced 2s ease-in-out infinite alternate; }
 .theme-balanced .explanation-block, .theme-balanced .explanation-section, .theme-balanced .explanation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #3B82F6; }
 .theme-balanced .correlation-block, .theme-balanced .correlation-section, .theme-balanced .correlation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #06B6D4; }
 .theme-balanced .extra-info, .theme-balanced .comments-block { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #D946EF; }
@@ -252,11 +258,11 @@ body.theme-balanced { background: linear-gradient(to top, #30cfd0 0%, #330867 10
 .theme-balanced .action-section { background-color: rgba(245, 158, 11, 0.6); border-left: 5px solid #FBBF24; }
 .theme-balanced .custom-origin { color: #dbeafe !important; } .theme-balanced .custom-insertion { color: #cffafe !important; } .theme-balanced .custom-innervation { color: #fae8ff !important; } .theme-balanced .custom-action { color: #fef9c3 !important; }
 .theme-balanced .option { background: rgba(26, 32, 44, 0.75); }
-.theme-balanced .option-a { border-left-color: #38bdf8 !important; } .theme-balanced .option-a .option-letter { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: white !important; } .theme-balanced .option-a .option-text { color: #e0f2fe !important; }
-.theme-balanced .option-b { border-left-color: #a78bfa !important; } .theme-balanced .option-b .option-letter { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white !important; } .theme-balanced .option-b .option-text { color: #ede9fe !important; }
-.theme-balanced .option-c { border-left-color: #f472b6 !important; } .theme-balanced .option-c .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: white !important; } .theme-balanced .option-c .option-text { color: #fce7f3 !important; }
-.theme-balanced .option-d { border-left-color: #fbbf24 !important; } .theme-balanced .option-d .option-letter { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white !important; } .theme-balanced .option-d .option-text { color: #fefce8 !important; }
-.theme-balanced .toggle-btn { color: #ffffff; }
+.theme-balanced .option-a { border-left-color: #38bdf8 !important; } .theme-balanced .option-a .option-letter { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #E0F2FE !important; } .theme-balanced .option-a .option-text { color: #e0f2fe !important; }
+.theme-balanced .option-b { border-left-color: #a78bfa !important; } .theme-balanced .option-b .option-letter { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #EDE9FE !important; } .theme-balanced .option-b .option-text { color: #ede9fe !important; }
+.theme-balanced .option-c { border-left-color: #f472b6 !important; } .theme-balanced .option-c .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FCE7F3 !important; } .theme-balanced .option-c .option-text { color: #fce7f3 !important; }
+.theme-balanced .option-d { border-left-color: #fbbf24 !important; } .theme-balanced .option-d .option-letter { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #FEFCE8 !important; } .theme-balanced .option-d .option-text { color: #fefce8 !important; }
+.theme-balanced .toggle-btn { color: #E0F2FE; }
 
 /* ---------------------------------------------------- */
 /* -------------- 🌘 THEME: DARK-LIGHT ---------------- */
@@ -268,8 +274,10 @@ body.theme-dark-light { background: linear-gradient(135deg, #0f172a 0%, #1e293b 
 .theme-dark-light .meta-header, .theme-dark-light .header, .theme-dark-light .cloze-header, .theme-dark-light .mcq-header, .theme-dark-light .image-header {
     background: linear-gradient(135deg, #7e22ce 0%, #a21caf 100%);
 }
-.theme-dark-light .theme-toggle { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(168, 85, 247, 0.6); }
+.theme-dark-light .theme-toggle { color: #F5D0FE; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(168, 85, 247, 0.6); }
 .theme-dark-light .card-type, .theme-dark-light .cloze-title, .theme-dark-light .mcq-title, .theme-dark-light .image-title, .theme-dark-light .header-text { color: #F5D0FE !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
+.theme-dark-light .question-text, .theme-dark-light .question-section, .theme-dark-light .question-overlay { color: #FBCFE8 !important; }
+.theme-dark-light .answer-text, .theme-dark-light .correct-answer .answer-value, .theme-dark-light .answer-overlay { color: #99F6E4 !important; }
 .theme-dark-light .section-title, .theme-dark-light .block-title, .theme-dark-light .extra-title, .theme-dark-light .comments-title, .theme-dark-light .anatomy-title { color: #99F6E4 !important; }
 .theme-dark-light .cloze { background: linear-gradient(135deg, #F071A2, #f472b6) !important; color: #111827; font-weight: 700; animation: highlight-dark-light 2s ease-in-out infinite alternate; }
 .theme-dark-light .explanation-block, .theme-dark-light .explanation-section, .theme-dark-light .explanation-info { background: rgba(19, 78, 74, 0.8); border-left: 5px solid #2DD4BF; }
@@ -288,7 +296,8 @@ body.theme-dark-light { background: linear-gradient(135deg, #0f172a 0%, #1e293b 
 .theme-dark-light .option-d { border-left-color: #fb923c !important; } .theme-dark-light .option-d .option-letter { background: linear-gradient(135deg, #f97316, #fb923c); color: #0f172a !important; font-weight: 700 !important; } .theme-dark-light .option-d .option-text { color: #ffedd5 !important; }
 .theme-dark-light .explanation-btn { color: #99F6E4; }
 .theme-dark-light .correlation-btn { color: #E0F2FE; }
-.theme-dark-light .extra-btn, .theme-dark-light .comments-btn { color: #F3E8FF; }
+.theme-dark-light .extra-btn { color: #F3E8FF; }
+.theme-dark-light .comments-btn { color: #F3E8FF; }
 
 /* ---------------------------------------------------- */
 /* --------------- 🌑 THEME: TRUE-DARK ---------------- */
@@ -300,8 +309,10 @@ body.theme-true-dark { background: #000000; }
 .theme-true-dark .meta-header, .theme-true-dark .header, .theme-true-dark .cloze-header, .theme-true-dark .mcq-header, .theme-true-dark .image-header {
     background: #1F2937;
 }
-.theme-true-dark .theme-toggle { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(209, 213, 219, 0.3); }
+.theme-true-dark .theme-toggle { color: #E5E7EB; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(209, 213, 219, 0.3); }
 .theme-true-dark .card-type, .theme-true-dark .cloze-title, .theme-true-dark .mcq-title, .theme-true-dark .image-title, .theme-true-dark .header-text { color: #9CA3AF !important; }
+.theme-true-dark .question-text, .theme-true-dark .question-section, .theme-true-dark .question-overlay { color: #9CA3AF !important; }
+.theme-true-dark .answer-text, .theme-true-dark .correct-answer .answer-value, .theme-true-dark .answer-overlay { color: #BBF7D0 !important; }
 .theme-true-dark .section-title, .theme-true-dark .block-title, .theme-true-dark .extra-title, .theme-true-dark .comments-title, .theme-true-dark .anatomy-title { color: #D1D5DB !important; }
 .theme-true-dark .cloze { background: linear-gradient(135deg, #881337, #9f1239) !important; color: #D1D5DB; font-weight: 700; animation: highlight-true-dark 2s ease-in-out infinite alternate; }
 .theme-true-dark .explanation-block, .theme-true-dark .explanation-section, .theme-true-dark .explanation-info { background: rgba(31, 41, 55, 0.8); border-left: 5px solid #15803D; }
@@ -320,8 +331,9 @@ body.theme-true-dark { background: #000000; }
 .theme-true-dark .option-d { border-left-color: #1d4ed8 !important; } .theme-true-dark .option-d .option-letter { background: #1d4ed8; color: #e5e7eb !important; } .theme-true-dark .option-d .option-text { color: #d1d5db !important; }
 .theme-true-dark .explanation-btn { background: #166534; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); color: #BBF7D0; }
 .theme-true-dark .correlation-btn { background: #1E40AF; box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); color: #BFDBFE; }
-.theme-true-dark .extra-btn, .theme-true-dark .comments-btn { background: #7E22CE; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); color: #E9D5FF; }
-.theme-true-dark .showall-btn { background: #374151; box-shadow: 0 0 15px rgba(156, 163, 175, 0.3); }
+.theme-true-dark .extra-btn { background: #7E22CE; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); color: #E9D5FF; }
+.theme-true-dark .comments-btn { background: #7E22CE; box-shadow: 0 0 15px rgba(168, 85, 247, 0.4); color: #E9D5FF; }
+.theme-true-dark .showall-btn { background: #374151; box-shadow: 0 0 15px rgba(156, 163, 175, 0.3); color: #E5E7EB; }
 
 /* Theme-Specific Cloze Glow Animations */
 @keyframes highlight-light { 100% { box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.6); } }
@@ -339,9 +351,9 @@ body.theme-true-dark { background: #000000; }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 11 - STRUCTURAL FIX)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 12 - COLOR & FIX)
 # ============================================
-# Basic model (v11)
+# Basic model (v12)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -438,7 +450,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v11) === */
+/* === FINAL LAYOUT CSS (v12) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -467,13 +479,13 @@ css=THEME_CSS + '''
 .toggle-btn:active { transform: translateY(0); }
 .explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: #E5E7EB; }
 .hidden { display: none !important; }
 .explanation-section:not(.hidden), .correlation-section:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v11)
+# Cloze model (v12)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -572,7 +584,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v11) === */
+/* === FINAL LAYOUT CSS (v12) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -600,14 +612,14 @@ css=THEME_CSS + '''
 .explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
 .extra-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: #E5E7EB; }
 .hidden { display: none !important; }
 .extra-info:not(.hidden), .explanation-info:not(.hidden), .correlation-info:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 ''',
 model_type=1
 )
-# MCQ model (v11)
+# MCQ model (v12)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -712,7 +724,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v11) === */
+/* === FINAL LAYOUT CSS (v12) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -734,7 +746,7 @@ css=THEME_CSS + '''
 .option-text { font-size: 1.15em; flex: 1; }
 .correct-answer { padding: 20px; background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%); border-radius: 12px; margin-bottom: 25px; text-align: center; }
 .answer-label { font-weight: 700; margin-bottom: 10px; color: #2d3436; }
-.answer-value { font-size: 1.3em; color: #00b894; font-weight: 600; }
+.answer-value { font-size: 1.3em; font-weight: 600; }
 .custom-explanation, .custom-correlation { font-weight: 500 !important; font-style: italic !important; }
 .explanation-block, .correlation-block { margin-top: 20px; padding: 20px; border-radius: 15px; font-size: 1.0em; }
 .block-title { font-weight: 700; margin-bottom: 10px; }
@@ -748,13 +760,13 @@ css=THEME_CSS + '''
 .toggle-btn:hover { transform: translateY(-3px) scale(1.05); animation-play-state: paused; } .toggle-btn:active { transform: translateY(0); }
 .explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: #E5E7EB; }
 .hidden { display: none !important; }
 .explanation-block:not(.hidden), .correlation-block:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v11)
+# Image model (v12)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -859,7 +871,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v11) === */
+/* === FINAL LAYOUT CSS (v12) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -875,9 +887,9 @@ css=THEME_CSS + '''
 .image-content { position: relative; padding: 30px; text-align: center; }
 .main-image { max-width: 100%; border-radius: 15px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease; display: block; margin: 0 auto; }
 .main-image:hover { transform: scale(1.02); }
-.question-overlay, .answer-overlay { margin-bottom: 20px; padding: 15px 25px; background: rgba(255, 255, 255, 0.9); border-radius: 12px; font-weight: 500; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center; }
-.custom-image-question { background: rgba(255, 255, 255, 0.95) !important; color: #5d4037 !important; font-weight: 600 !important; font-size: 1.3em !important; text-shadow: 1px 1px 3px rgba(255,255,255,0.8) !important; border: 2px solid #5d4037 !important; padding: 20px !important; position: relative; z-index: 2; }
-.custom-image-answer { background: linear-gradient(135deg, #f093fb, #f5576c) !important; color: #ffffff !important; font-weight: 600 !important; font-size: 1.3em !important; padding: 10px; border-radius: 8px; position: relative; z-index: 2; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+.question-overlay, .answer-overlay { margin-bottom: 20px; padding: 15px 25px; border-radius: 12px; font-weight: 500; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center; }
+.custom-image-question { background: rgba(255, 255, 255, 0.95) !important; font-weight: 600 !important; font-size: 1.3em !important; text-shadow: 1px 1px 3px rgba(255,255,255,0.8) !important; border: 2px solid #5d4037 !important; padding: 20px !important; position: relative; z-index: 2; }
+.custom-image-answer { background: linear-gradient(135deg, #f093fb, #f5576c) !important; color: #FDF2F8 !important; font-weight: 600 !important; font-size: 1.3em !important; padding: 10px; border-radius: 8px; position: relative; z-index: 2; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 .custom-comments, .custom-correlation { font-weight: 500 !important; font-style: italic !important; }
 .correlation-section, .comments-block { margin: 25px; padding: 20px; border-radius: 15px; }
 .section-title, .comments-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1em; }
@@ -895,7 +907,7 @@ css=THEME_CSS + '''
 .toggle-btn:hover { transform: translateY(-3px) scale(1.05); animation-play-state: paused; } .toggle-btn:active { transform: translateY(0); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
 .comments-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: #E5E7EB; }
 .hidden { display: none !important; }
 .correlation-section:not(.hidden), .comments-block:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -906,17 +918,35 @@ def create_deck(name):
     return Deck(2059400110, name)
 
 def create_test_notes():
-    deck = create_deck('Joplin to Anki Enhanced - FINAL')
-    print("Creating test notes with structural fix (v11)...")
+    deck = create_deck('Joplin to Anki Enhanced - FULL TEST SUITE')
+    print("Creating a comprehensive test suite with 8 notes (v12)...")
     
-    # Note with a header to test the SMALLER button INSIDE the meta-header
-    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v11_header'])
-    # Note without a header to test the LARGER button INSIDE the main header
-    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v11_noheader'])
+    # === BASIC NOTES ===
+    # Basic with Header (tests small button)
+    deck.add_note(Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker.', 'Persistent tachycardia can indicate underlying issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_v12_header']))
+    # Basic without Header (tests large button)
+    deck.add_note(Note(model=basic_model, fields=['', 'What is the primary function of alveoli?', 'Gas exchange between the lungs and bloodstream.', 'This occurs via passive diffusion.', '', 'Respiratory System', '', 'joplin_basic_v12_noheader']))
+
+    # === CLOZE NOTES ===
+    # Cloze with Header (tests small button)
+    deck.add_note(Note(model=cloze_model, fields=['Neuroscience', 'The {{c1::hippocampus}} is a complex brain structure embedded deep into the temporal lobe, with a major role in learning and {{c2::memory}}.', 'It is a plastic and vulnerable structure.', 'Damage can lead to anterograde amnesia.', 'Alzheimer\'s disease often impacts this area first.', 'Unit 3', 'Kandel, Principles of Neural Science', 'joplin_cloze_v12_header']))
+    # Cloze without Header (tests large button)
+    deck.add_note(Note(model=cloze_model, fields=['', 'The powerhouse of the cell is the {{c1::mitochondrion}}.', '', 'It generates most of the cell\'s supply of adenosine triphosphate (ATP).', '', 'Cell Biology', '', 'joplin_cloze_v12_noheader']))
+
+    # === MCQ NOTES ===
+    # MCQ with Header (tests small button)
+    deck.add_note(Note(model=mcq_model, fields=['Pharmacology', 'Which of the following drugs is a proton-pump inhibitor?', 'Ranitidine', 'Omeprazole', 'Loperamide', 'Ondansetron', 'B', 'Omeprazole works by irreversibly blocking the H+/K+ ATPase in gastric parietal cells.', 'Often used for GERD and peptic ulcers.', 'Chapter 45', 'Katzung & Trevor\'s Pharmacology', 'joplin_mcq_v12_header']))
+    # MCQ without Header (tests large button)
+    deck.add_note(Note(model=mcq_model, fields=['', 'What is the capital of Japan?', 'Beijing', 'Seoul', 'Tokyo', 'Bangkok', 'C', '', '', 'Geography 101', '', 'joplin_mcq_v12_noheader']))
+
+    # === IMAGE NOTES ===
+    # Image with Header (tests small button)
+    # NOTE: You must place 'question_deltoid.jpg' and 'answer_deltoid.jpg' in a 'media' folder next to the script.
+    deck.add_note(Note(model=image_model, fields=['Anatomy - Upper Limb', '_media/question_deltoid.jpg', '_media/answer_deltoid.jpg', 'Identify the highlighted muscle.', 'Deltoid Muscle', 'Lateral third of clavicle, acromion, and spine of scapula', 'Deltoid tuberosity of humerus', 'Axillary nerve (C5, C6)', 'Abduction, flexion, and extension of the shoulder', 'Axillary nerve damage can paralyze the deltoid.', 'Key for arm abduction beyond 15 degrees.', 'Shoulder Joint', 'Gray\'s Anatomy', 'joplin_image_v12_header']))
+    # Image without Header (tests large button)
+    deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '_media/answer_heart.jpg', 'Identify the chamber indicated by the arrow.', 'Left Ventricle', '', '', '', 'Pumps oxygenated blood to the rest of the body via the aorta.', '', '', 'Thoracic Cavity', '', 'joplin_image_v12_noheader']))
     
-    deck.add_note(basic_note_with_header)
-    deck.add_note(basic_note_no_header)
-    print("2 test notes added to the deck to demonstrate both button positions and sizes.")
+    print("8 test notes added to the deck for all types and header variations.")
     return deck
 
 if __name__ == '__main__':
@@ -925,20 +955,34 @@ if __name__ == '__main__':
     output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    filename = os.path.join(output_directory, f"joplin_anki_STRUCTURAL_FIX_{timestamp}.apkg")
+    filename = os.path.join(output_directory, f"joplin_anki_ENHANCED_{timestamp}.apkg")
 
+    # For Image notes to work, create a 'media' folder and add placeholder images.
+    media_directory = "media"
+    if not os.path.exists(media_directory):
+        os.makedirs(media_directory)
+        # Create dummy image files if they don't exist
+        for img_name in ['question_deltoid.jpg', 'answer_deltoid.jpg', 'question_heart.jpg', 'answer_heart.jpg']:
+            with open(os.path.join(media_directory, img_name), 'w') as f:
+                f.write("placeholder") # create a dummy file
+
+    media_files = [os.path.join(media_directory, f) for f in os.listdir(media_directory)]
     package = Package(deck)
+    package.media_files = media_files
     package.write_to_file(filename)
 
     print("\n" + "="*60)
-    print(f"✅ Success! Structurally correct package created: {filename}")
+    print(f"✅ Success! Enhanced package with all fixes created: {filename}")
     print("="*60)
-    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v11 - Structural Fix) ✨")
-    print("This version implements the definitive architectural change:")
-    print("  • The theme toggle button is now rendered INSIDE the correct header.")
-    print("  • All headers are now proper positioning anchors (`position: relative`).")
-    print("  • CSS is simplified and no longer fragile.")
-    print("This permanently resolves the floating button issue. Thank you for your patience and clear diagnosis of the problem.")
+    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v12 - Color & Fix) ✨")
+    print("This version implements all requested changes:")
+    print("  • Theme toggle button positioning is now CORRECT for all note types.")
+    print("  • Text colors for headers, Q&A, and buttons are now vibrant and theme-specific.")
+    print("  • The test deck now includes 8 notes to verify all card types and layouts.")
+    print("  • Code remains readable and unminified for easy debugging.")
+    print("\nIMPORTANT: For the Image notes to work, please place your images")
+    print(" (e.g., 'question_deltoid.jpg') inside the 'media' folder before running.")
+    
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
     for old_file in files[3:]: # Keep the latest 3 versions
