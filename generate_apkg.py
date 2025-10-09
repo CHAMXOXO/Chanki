@@ -132,7 +132,7 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# REVISED THEME SYSTEM CSS (v13 with Final Fixes)
+# REVISED THEME SYSTEM CSS (v14 with Final Fixes)
 # ============================================
 THEME_CSS = '''
 /* Theme Toggle Button - Base Styles */
@@ -146,9 +146,9 @@ THEME_CSS = '''
 }
 .theme-toggle:hover { transform: scale(1.2); animation-play-state: paused; }
 
-/* Rule for Main Headers (Default/Large Button) */
+/* Rule for Main Headers (Default/Large Button) - SIZE ADJUSTED */
 .header .theme-toggle, .cloze-header .theme-toggle, .mcq-header .theme-toggle, .image-header .theme-toggle {
-    top: 10px; right: 10px; font-size: 1.5em; padding: 8px;
+    top: 10px; right: 10px; font-size: 1.4em; padding: 8px;
 }
 @media (max-width: 480px) {
     .header .theme-toggle, .cloze-header .theme-toggle, .mcq-header .theme-toggle, .image-header .theme-toggle {
@@ -156,7 +156,7 @@ THEME_CSS = '''
     }
 }
 
-/* Rule for Meta Header (Small Button) - POSITION ADJUSTED */
+/* Rule for Meta Header (Small Button) */
 .meta-header .theme-toggle {
     top: 4px; right: 6px; font-size: 1.3em; padding: 3px;
 }
@@ -179,8 +179,10 @@ body.theme-light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)
 }
 .theme-light .theme-toggle { color: #433865; text-shadow: 0 1px 2px rgba(0,0,0,0.1); box-shadow: 0 0 20px 5px rgba(252, 211, 77, 0.5); }
 .theme-light .card-type, .theme-light .cloze-title, .theme-light .mcq-title, .theme-light .image-title, .theme-light .header-text { color: #F5F3FF !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.2); }
-.theme-light .question-text, .theme-light .question-section, .theme-light .question-overlay { color: #581C87 !important; }
-.theme-light .answer-text, .theme-light .correct-answer .answer-value, .theme-light .answer-overlay { color: #065F46 !important; }
+.theme-light .question-text, .theme-light .question-section { color: #581C87 !important; }
+.theme-light .question-overlay { color: #5d4037 !important; }
+.theme-light .answer-text, .theme-light .answer-overlay { color: #065F46 !important; }
+.theme-light .correct-answer .answer-value { color: #14532D !important; }
 .theme-light .section-title, .theme-light .block-title, .theme-light .extra-title, .theme-light .comments-title { color: #4C1D95 !important; font-weight: 700 !important; }
 .theme-light .anatomy-title { color: #F5F3FF !important; }
 .theme-light .cloze { background: linear-gradient(135deg, #d946ef, #ec4899) !important; color: #F5F3FF; font-weight: 700; animation: highlight-light 2s ease-in-out infinite alternate; }
@@ -212,8 +214,10 @@ body.theme-light-dark { background: linear-gradient(135deg, #4c5c96 0%, #1f2937 
 }
 .theme-light-dark .theme-toggle { color: #FCE7F3; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.5); }
 .theme-light-dark .card-type, .theme-light-dark .cloze-title, .theme-light-dark .mcq-title, .theme-light-dark .image-title, .theme-light-dark .header-text { color: #FCE7F3 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-.theme-light-dark .question-text, .theme-light-dark .question-section, .theme-light-dark .question-overlay { color: #FBCFE8 !important; }
-.theme-light-dark .answer-text, .theme-light-dark .correct-answer .answer-value, .theme-light-dark .answer-overlay { color: #A7F3D0 !important; }
+.theme-light-dark .question-text, .theme-light-dark .question-section { color: #FBCFE8 !important; }
+.theme-light-dark .question-overlay { color: #831843 !important; }
+.theme-light-dark .answer-text, .theme-light-dark .answer-overlay { color: #A7F3D0 !important; }
+.theme-light-dark .correct-answer .answer-value { color: #831843 !important; }
 .theme-light-dark .section-title, .theme-light-dark .block-title, .theme-light-dark .extra-title, .theme-light-dark .comments-title, .theme-light-dark .anatomy-title { color: #FBCFE8 !important; }
 .theme-light-dark .cloze { background: linear-gradient(135deg, #ec4899, #f472b6) !important; color: #FDF2F8; font-weight: 700; animation: highlight-light-dark 2s ease-in-out infinite alternate; }
 .theme-light-dark .explanation-block, .theme-light-dark .explanation-section, .theme-light-dark .explanation-info { background: rgba(92, 44, 64, 0.8); border-left: 5px solid #EC4899; }
@@ -244,8 +248,10 @@ body.theme-balanced { background: linear-gradient(to top, #30cfd0 0%, #330867 10
 }
 .theme-balanced .theme-toggle { color: #E0F2FE; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(6, 182, 212, 0.6); }
 .theme-balanced .card-type, .theme-balanced .cloze-title, .theme-balanced .mcq-title, .theme-balanced .image-title, .theme-balanced .header-text { color: #E0F2FE !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-.theme-balanced .question-text, .theme-balanced .question-section, .theme-balanced .question-overlay { color: #CFFAFE !important; }
-.theme-balanced .answer-text, .theme-balanced .correct-answer .answer-value, .theme-balanced .answer-overlay { color: #F0ABFC !important; }
+.theme-balanced .question-text, .theme-balanced .question-section { color: #CFFAFE !important; }
+.theme-balanced .question-overlay { color: #164e63 !important; }
+.theme-balanced .answer-text, .theme-balanced .answer-overlay { color: #F0ABFC !important; }
+.theme-balanced .correct-answer .answer-value { color: #1e3a8a !important; }
 .theme-balanced .section-title, .theme-balanced .block-title, .theme-balanced .extra-title, .theme-balanced .comments-title, .theme-balanced .anatomy-title { color: #CFFAFE !important; }
 .theme-balanced .cloze { background: linear-gradient(135deg, #3b82f6, #60a5fa) !important; color: #EBF8FF; font-weight: 700; animation: highlight-balanced 2s ease-in-out infinite alternate; }
 .theme-balanced .explanation-block, .theme-balanced .explanation-section, .theme-balanced .explanation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #3B82F6; }
@@ -276,8 +282,10 @@ body.theme-dark-light { background: linear-gradient(135deg, #0f172a 0%, #1e293b 
 }
 .theme-dark-light .theme-toggle { color: #F5D0FE; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(168, 85, 247, 0.6); }
 .theme-dark-light .card-type, .theme-dark-light .cloze-title, .theme-dark-light .mcq-title, .theme-dark-light .image-title, .theme-dark-light .header-text { color: #F5D0FE !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
-.theme-dark-light .question-text, .theme-dark-light .question-section, .theme-dark-light .question-overlay { color: #FBCFE8 !important; }
-.theme-dark-light .answer-text, .theme-dark-light .correct-answer .answer-value, .theme-dark-light .answer-overlay { color: #99F6E4 !important; }
+.theme-dark-light .question-text, .theme-dark-light .question-section { color: #FBCFE8 !important; }
+.theme-dark-light .question-overlay { color: #581c87 !important; }
+.theme-dark-light .answer-text, .theme-dark-light .answer-overlay { color: #99F6E4 !important; }
+.theme-dark-light .correct-answer .answer-value { color: #581c87 !important; }
 .theme-dark-light .section-title, .theme-dark-light .block-title, .theme-dark-light .extra-title, .theme-dark-light .comments-title, .theme-dark-light .anatomy-title { color: #99F6E4 !important; }
 .theme-dark-light .cloze { background: linear-gradient(135deg, #F071A2, #f472b6) !important; color: #111827; font-weight: 700; animation: highlight-dark-light 2s ease-in-out infinite alternate; }
 .theme-dark-light .explanation-block, .theme-dark-light .explanation-section, .theme-dark-light .explanation-info { background: rgba(19, 78, 74, 0.8); border-left: 5px solid #2DD4BF; }
@@ -308,8 +316,10 @@ body.theme-true-dark { background: #000000; }
 }
 .theme-true-dark .theme-toggle { color: #E5E7EB; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(209, 213, 219, 0.3); }
 .theme-true-dark .card-type, .theme-true-dark .cloze-title, .theme-true-dark .mcq-title, .theme-true-dark .image-title, .theme-true-dark .header-text { color: #9CA3AF !important; }
-.theme-true-dark .question-text, .theme-true-dark .question-section, .theme-true-dark .question-overlay { color: #9CA3AF !important; }
-.theme-true-dark .answer-text, .theme-true-dark .correct-answer .answer-value, .theme-true-dark .answer-overlay { color: #BBF7D0 !important; }
+.theme-true-dark .question-text, .theme-true-dark .question-section { color: #9CA3AF !important; }
+.theme-true-dark .question-overlay { color: #374151 !important; }
+.theme-true-dark .answer-text, .theme-true-dark .answer-overlay { color: #BBF7D0 !important; }
+.theme-true-dark .correct-answer .answer-value { color: #374151 !important; }
 .theme-true-dark .section-title, .theme-true-dark .block-title, .theme-true-dark .extra-title, .theme-true-dark .comments-title, .theme-true-dark .anatomy-title { color: #D1D5DB !important; }
 .theme-true-dark .cloze { background: linear-gradient(135deg, #881337, #9f1239) !important; color: #D1D5DB; font-weight: 700; animation: highlight-true-dark 2s ease-in-out infinite alternate; }
 .theme-true-dark .explanation-block, .theme-true-dark .explanation-section, .theme-true-dark .explanation-info { background: rgba(31, 41, 55, 0.8); border-left: 5px solid #15803D; }
@@ -348,9 +358,9 @@ body.theme-true-dark { background: #000000; }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 13 - FINAL FIX)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 14)
 # ============================================
-# Basic model (v13)
+# Basic model (v14)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -447,7 +457,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v13) === */
+/* === FINAL LAYOUT CSS (v14) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -482,7 +492,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v13)
+# Cloze model (v14)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -581,7 +591,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v13) === */
+/* === FINAL LAYOUT CSS (v14) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -616,7 +626,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v13)
+# MCQ model (v14)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -721,7 +731,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v13) === */
+/* === FINAL LAYOUT CSS (v14) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -763,7 +773,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v13)
+# Image model (v14)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -868,7 +878,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v13) === */
+/* === FINAL LAYOUT CSS (v14) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -885,7 +895,7 @@ css=THEME_CSS + '''
 .main-image { max-width: 100%; border-radius: 15px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease; display: block; margin: 0 auto; }
 .main-image:hover { transform: scale(1.02); }
 .question-overlay, .answer-overlay { margin-bottom: 20px; padding: 15px 25px; border-radius: 12px; font-weight: 500; box-shadow: 0 8px 20px rgba(0,0,0,0.1); text-align: center; }
-.custom-image-question { background: rgba(255, 255, 255, 0.95) !important; font-weight: 600 !important; font-size: 1.3em !important; text-shadow: 1px 1px 3px rgba(255,255,255,0.8) !important; border: 2px solid #5d4037 !important; padding: 20px !important; position: relative; z-index: 2; }
+.custom-image-question { background: rgba(255, 255, 255, 0.95) !important; font-weight: 600 !important; font-size: 1.3em !important; border: 2px solid #5d4037 !important; padding: 20px !important; position: relative; z-index: 2; }
 .custom-image-answer { background: linear-gradient(135deg, #f093fb, #f5576c) !important; color: #FDF2F8 !important; font-weight: 600 !important; font-size: 1.3em !important; padding: 10px; border-radius: 8px; position: relative; z-index: 2; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
 .custom-comments, .custom-correlation { font-weight: 500 !important; font-style: italic !important; }
 .correlation-section, .comments-block { margin: 25px; padding: 20px; border-radius: 15px; }
@@ -915,33 +925,32 @@ def create_deck(name):
     return Deck(2059400110, name)
 
 def create_test_notes():
-    deck = create_deck('Joplin to Anki Enhanced - FULL TEST SUITE')
-    print("Creating a comprehensive test suite with 8 notes (v13)...")
+    deck = create_deck('Joplin to Anki Enhanced - FINAL TEST SUITE')
+    print("Creating a comprehensive test suite with 8 notes (v14)...")
     
     # === BASIC NOTES ===
     # Basic with Header (tests small button)
-    deck.add_note(Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker.', 'Persistent tachycardia can indicate underlying issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_v13_header']))
+    deck.add_note(Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker.', 'Persistent tachycardia can indicate underlying issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_v14_header']))
     # Basic without Header (tests large button)
-    deck.add_note(Note(model=basic_model, fields=['', 'What is the primary function of alveoli?', 'Gas exchange between the lungs and bloodstream.', 'This occurs via passive diffusion.', '', 'Respiratory System', '', 'joplin_basic_v13_noheader']))
+    deck.add_note(Note(model=basic_model, fields=['', 'What is the primary function of alveoli?', 'Gas exchange between the lungs and bloodstream.', 'This occurs via passive diffusion.', '', 'Respiratory System', '', 'joplin_basic_v14_noheader']))
 
     # === CLOZE NOTES ===
     # Cloze with Header (tests small button)
-    deck.add_note(Note(model=cloze_model, fields=['Neuroscience', 'The {{c1::hippocampus}} is a complex brain structure embedded deep into the temporal lobe, with a major role in learning and {{c2::memory}}.', 'It is a plastic and vulnerable structure.', 'Damage can lead to anterograde amnesia.', 'Alzheimer\'s disease often impacts this area first.', 'Unit 3', 'Kandel, Principles of Neural Science', 'joplin_cloze_v13_header']))
+    deck.add_note(Note(model=cloze_model, fields=['Neuroscience', 'The {{c1::hippocampus}} is a complex brain structure embedded deep into the temporal lobe, with a major role in learning and {{c2::memory}}.', 'It is a plastic and vulnerable structure.', 'Damage can lead to anterograde amnesia.', 'Alzheimer\'s disease often impacts this area first.', 'Unit 3', 'Kandel, Principles of Neural Science', 'joplin_cloze_v14_header']))
     # Cloze without Header (tests large button)
-    deck.add_note(Note(model=cloze_model, fields=['', 'The powerhouse of the cell is the {{c1::mitochondrion}}.', '', 'It generates most of the cell\'s supply of adenosine triphosphate (ATP).', '', 'Cell Biology', '', 'joplin_cloze_v13_noheader']))
+    deck.add_note(Note(model=cloze_model, fields=['', 'The powerhouse of the cell is the {{c1::mitochondrion}}.', '', 'It generates most of the cell\'s supply of adenosine triphosphate (ATP).', '', 'Cell Biology', '', 'joplin_cloze_v14_noheader']))
 
     # === MCQ NOTES ===
-    # MCQ with Header (tests small button)
-    deck.add_note(Note(model=mcq_model, fields=['Pharmacology', 'Which of the following drugs is a proton-pump inhibitor?', 'Ranitidine', 'Omeprazole', 'Loperamide', 'Ondansetron', 'B', 'Omeprazole works by irreversibly blocking the H+/K+ ATPase in gastric parietal cells.', 'Often used for GERD and peptic ulcers.', 'Chapter 45', 'Katzung & Trevor\'s Pharmacology', 'joplin_mcq_v13_header']))
-    # MCQ without Header (tests large button)
-    deck.add_note(Note(model=mcq_model, fields=['', 'What is the capital of Japan?', 'Beijing', 'Seoul', 'Tokyo', 'Bangkok', 'C', '', '', 'Geography 101', '', 'joplin_mcq_v13_noheader']))
+    # MCQ with Header (tests small button & answer text visibility)
+    deck.add_note(Note(model=mcq_model, fields=['Pharmacology', 'Which of the following drugs is a proton-pump inhibitor?', 'Ranitidine', 'Omeprazole', 'Loperamide', 'Ondansetron', 'B', 'Omeprazole works by irreversibly blocking the H+/K+ ATPase in gastric parietal cells.', 'Often used for GERD and peptic ulcers.', 'Chapter 45', 'Katzung & Trevor\'s Pharmacology', 'joplin_mcq_v14_header']))
+    # MCQ without Header (tests large button & answer text visibility)
+    deck.add_note(Note(model=mcq_model, fields=['', 'What is the capital of Japan?', 'Beijing', 'Seoul', 'Tokyo', 'Bangkok', 'C', '', '', 'Geography 101', '', 'joplin_mcq_v14_noheader']))
 
     # === IMAGE NOTES ===
-    # Image with Header (tests small button)
-    # NOTE: You must place 'question_deltoid.jpg' and 'answer_deltoid.jpg' in a 'media' folder next to the script.
-    deck.add_note(Note(model=image_model, fields=['Anatomy - Upper Limb', '_media/question_deltoid.jpg', '_media/answer_deltoid.jpg', 'Identify the highlighted muscle.', 'Deltoid Muscle', 'Lateral third of clavicle, acromion, and spine of scapula', 'Deltoid tuberosity of humerus', 'Axillary nerve (C5, C6)', 'Abduction, flexion, and extension of the shoulder', 'Axillary nerve damage can paralyze the deltoid.', 'Key for arm abduction beyond 15 degrees.', 'Shoulder Joint', 'Gray\'s Anatomy', 'joplin_image_v13_header']))
-    # Image without Header (tests large button)
-    deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '_media/answer_heart.jpg', 'Identify the chamber indicated by the arrow.', 'Left Ventricle', '', '', '', 'Pumps oxygenated blood to the rest of the body via the aorta.', '', '', 'Thoracic Cavity', '', 'joplin_image_v13_noheader']))
+    # Image with Header (tests small button & question text visibility)
+    deck.add_note(Note(model=image_model, fields=['Anatomy - Upper Limb', '_media/question_deltoid.jpg', '_media/answer_deltoid.jpg', 'Identify the highlighted muscle.', 'Deltoid Muscle', 'Lateral third of clavicle, acromion, and spine of scapula', 'Deltoid tuberosity of humerus', 'Axillary nerve (C5, C6)', 'Abduction, flexion, and extension of the shoulder', 'Axillary nerve damage can paralyze the deltoid.', 'Key for arm abduction beyond 15 degrees.', 'Shoulder Joint', 'Gray\'s Anatomy', 'joplin_image_v14_header']))
+    # Image without Header (tests large button & question text visibility)
+    deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '_media/answer_heart.jpg', 'Identify the chamber indicated by the arrow.', 'Left Ventricle', '', '', '', 'Pumps oxygenated blood to the rest of the body via the aorta.', '', '', 'Thoracic Cavity', '', 'joplin_image_v14_noheader']))
     
     print("8 test notes added to the deck for all types and header variations.")
     return deck
@@ -952,7 +961,7 @@ if __name__ == '__main__':
     output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    filename = os.path.join(output_directory, f"joplin_anki_ENHANCED_{timestamp}.apkg")
+    filename = os.path.join(output_directory, f"joplin_anki_ENHANCED_FINAL_{timestamp}.apkg")
 
     # For Image notes to work, create a 'media' folder and add placeholder images.
     media_directory = "media"
@@ -961,7 +970,7 @@ if __name__ == '__main__':
         # Create dummy image files if they don't exist
         for img_name in ['question_deltoid.jpg', 'answer_deltoid.jpg', 'question_heart.jpg', 'answer_heart.jpg']:
             with open(os.path.join(media_directory, img_name), 'w') as f:
-                f.write("placeholder") # create a dummy file
+                f.write("placeholder")
 
     media_files = [os.path.join(media_directory, f) for f in os.listdir(media_directory)]
     package = Package(deck)
@@ -971,11 +980,12 @@ if __name__ == '__main__':
     print("\n" + "="*60)
     print(f"✅ Success! Final package with all fixes created: {filename}")
     print("="*60)
-    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v13 - Final Fixes) ✨")
+    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v14) ✨")
     print("This version implements all requested changes:")
-    print("  • Theme toggle button in the meta-header has been moved up for better spacing.")
-    print("  • Action button text colors are now theme-specific and avoid pure white.")
-    print("  • All previous fixes for button positioning and color enhancements are included.")
+    print("  • MCQ Answer text is now high-contrast and theme-specific.")
+    print("  • Image Question text is now high-contrast and theme-specific.")
+    print("  • Large theme-toggle button size reduced to 1.4em.")
+    print("  • All previous fixes are included.")
     print("  • The test deck remains comprehensive for full verification.")
     print("\nIMPORTANT: For the Image notes to work, please place your images")
     print(" (e.g., 'question_deltoid.jpg') inside the 'media' folder before running.")
