@@ -1,4 +1,4 @@
-// anki-importer.js (DEFINITIVE INTELLIGENT VERSION 2.0)
+// anki-importer.js (FINAL, COMPLETE, AND CORRECTED)
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const MCQ_MIN_OPTIONS = 2;
@@ -35,8 +35,8 @@ const buildAnkiFieldsObject = (question, answer, jtaID, inferredType, enhancedFi
           fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["OptionA"] = enhancedFields.optionA;
           fields["OptionB"] = enhancedFields.optionB; fields["OptionC"] = enhancedFields.optionC; fields["OptionD"] = enhancedFields.optionD;
           fields["CorrectAnswer"] = enhancedFields.correctAnswer; fields["Explanation"] = enhancedFields.explanation;
-          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation; fields["Footer"] = enhancedFields.footer;
-          fields["Sources"] = enhancedFields.sources;
+          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
+          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
           break;
       case 'imageOcclusion':
           fields["Header"] = enhancedFields.header; fields["QuestionImagePath"] = enhancedFields.questionImagePath;
@@ -44,8 +44,8 @@ const buildAnkiFieldsObject = (question, answer, jtaID, inferredType, enhancedFi
           fields["Question"] = question; fields["Answer"] = answer; fields["Origin"] = enhancedFields.origin;
           fields["Insertion"] = enhancedFields.insertion; fields["Innervation"] = enhancedFields.innervation;
           fields["Action"] = enhancedFields.action; fields["Comments"] = enhancedFields.comments;
-          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation; fields["Footer"] = enhancedFields.footer;
-          fields["Sources"] = enhancedFields.sources;
+          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
+          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
           break;
   }
   return fields;
@@ -64,7 +64,6 @@ const validateImportData = (question, answer, jtaID, title, additionalFields = {
   return errors;
 };
 
-// --- THIS is the function that had the bug. It is now corrected. ---
 const inferCardType = (question, answer, enhancedFields = {}) => {
   if (/\{\{c\d+::[^}]+\}\}/g.test(question || "")) return "cloze";
   if ((enhancedFields.questionImagePath||'').trim() || (enhancedFields.answerImagePath||'').trim()) return "imageOcclusion";
@@ -75,7 +74,7 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   
   if (hasCorrectAnswer && hasMinOptions) return "mcq";
   
-  return "basic"; // No more "text" type
+  return "basic";
 };
 
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
@@ -89,7 +88,7 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
       throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
     }
 
-    const deckName = "default"; // Simplified
+    const deckName = "default";
     await client.ensureDeckExists(deckName);
     
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
@@ -151,7 +150,4 @@ const batchImporter = async (client, items, batchSize = 10, log) => {
   return results;
 };
 
-module.exports = { importer, batchImporter, buildAnkiFieldsObject };```
-
----
-
+module.exports = { importer, batchImporter, buildAnkiFieldsObject };
