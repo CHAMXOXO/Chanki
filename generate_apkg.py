@@ -5,7 +5,7 @@ import glob
 import os
 
 # ============================================
-# THEME SYSTEM JAVASCRIPT (Unchanged)
+# THEME SYSTEM JAVASCRIPT (Unchanged & Readable)
 # ============================================
 THEME_SCRIPT = '''
 <script>
@@ -428,9 +428,9 @@ css=THEME_CSS + '''
 .toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
 .toggle-btn:hover { transform: translateY(-3px) scale(1.05); }
 .toggle-btn:active { transform: translateY(0); }
-.explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3); }
-.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3); color: white; }
+.explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
+.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
 .hidden { display: none !important; }
 .explanation-section:not(.hidden), .correlation-section:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -555,10 +555,10 @@ css=THEME_CSS + '''
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
 .toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
 .toggle-btn:hover { transform: translateY(-3px) scale(1.05); } .toggle-btn:active { transform: translateY(0); }
-.explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3); }
-.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
-.extra-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3); color: white; }
+.explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
+.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+.extra-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
 .hidden { display: none !important; }
 .extra-info:not(.hidden), .explanation-info:not(.hidden), .correlation-info:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -694,9 +694,9 @@ css=THEME_CSS + '''
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
 .toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
 .toggle-btn:hover { transform: translateY(-3px) scale(1.05); } .toggle-btn:active { transform: translateY(0); }
-.explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 4px 15px rgba(56, 178, 172, 0.3); }
-.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3); color: white; }
+.explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
+.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
 .hidden { display: none !important; }
 .explanation-block:not(.hidden), .correlation-block:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -837,9 +837,9 @@ css=THEME_CSS + '''
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
 .toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
 .toggle-btn:hover { transform: translateY(-3px) scale(1.05); } .toggle-btn:active { transform: translateY(0); }
-.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
-.comments-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3); }
-.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3); color: white; }
+.correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
+.comments-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
+.showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
 .hidden { display: none !important; }
 .correlation-section:not(.hidden), .comments-block:not(.hidden) { animation: slideDown 0.3s ease-out; }
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
@@ -870,7 +870,7 @@ if __name__ == '__main__':
     deck = create_test_notes()
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     # Make sure to change the user path to your actual user path
-    output_directory = "/home/cindy/Downloads"
+    output_directory = "output" # Creates an 'output' folder in your project directory
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
     filename = os.path.join(output_directory, f"joplin_anki_FINAL_{timestamp}.apkg")
@@ -884,13 +884,11 @@ if __name__ == '__main__':
     print("="*60)
     print("\n✨ FINAL IMPLEMENTATION COMPLETE ✨")
     print("This version includes all requested refinements:")
-    print("  • NO MINIFICATION: JavaScript is fully readable for easy debugging.")
-    print("  • UNIFIED ANIMATION: Consistent 'bounceIn' effect for all card types.")
-    print("  • VIBRANT TITLES: All headers and section titles now have theme-specific colors.")
-    print("  • ELEGANT BACKGROUNDS: Image note anatomy fields feature high-contrast, clean backgrounds.")
-    print("  • All previous features (5 themes, mobile-friendly buttons, etc.) are retained.")
-    print("\nThis should be the definitive version. Thank you for the collaborative process!")
-
+    print("  • GLOWING BUTTONS: Action buttons now have a static, vibrant glow.")
+    print("  • THEMED CLOZE PULSE: Cloze deletions have unique, theme-specific pulsating glows.")
+    print("  • STABLE TOGGLES: Theme toggle icons are reliably positioned.")
+    print("  • NO MINIFICATION: All JavaScript and CSS is fully readable for easy debugging.")
+    print("\nThis should be the definitive version. You are now ready to generate and import!")
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
     for old_file in files[3:]: # Keep the latest 3 versions
