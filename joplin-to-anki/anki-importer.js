@@ -99,6 +99,8 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
 
 // anki-importer.js -> replace the importer function
 
+// anki-importer.js -> replace the importer function
+
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
@@ -111,7 +113,9 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     const deckName = "default";
     await client.ensureDeckExists(deckName);
     
+    // This object is now the single source of truth for the note's fields
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
+    
     const foundNoteIds = await client.findNote(jtaID, deckName);
 
     if (foundNoteIds && foundNoteIds.length > 0) {
@@ -133,10 +137,10 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
         return { action: "skipped", noteId: existingNoteId };
       }
 
-      // --- START OF CHANGE ---
-      // We now pass the correctly constructed 'joplinFields' object directly.
+      // --- THIS IS THE CRUCIAL CHANGE ---
+      // We no longer pass all the individual pieces. We pass the pre-built object.
       log(levelVerbose, `Note ${existingNoteId} has changed. Updating.`);
-      await client.updateNote(existingNoteId, joplinFields); // Pass the whole object
+      await client.updateNote(existingNoteId, joplinFields); 
       await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
       return { action: "updated", noteId: existingNoteId };
       // --- END OF CHANGE ---
