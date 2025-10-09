@@ -132,7 +132,7 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# FINALIZED THEME SYSTEM CSS (v3) - REVISED
+# FINALIZED THEME SYSTEM CSS (v4 with Animations) - REVISED
 # ============================================
 THEME_CSS = '''
 /* Theme Toggle Button - Positioned relative to the card container for stability */
@@ -141,6 +141,7 @@ THEME_CSS = '''
     background: none; border: none; cursor: pointer; z-index: 1000;
     padding: 8px; border-radius: 50%; transition: transform 0.2s ease, color 0.3s ease;
     line-height: 1; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    animation: pulse-button 3s ease-in-out infinite;
 }
 .theme-toggle:hover { transform: scale(1.2); }
 @media (max-width: 480px) { .theme-toggle { top: 10px; right: 10px; font-size: 1.5em; } }
@@ -303,12 +304,15 @@ body.theme-true-dark { background: #000000; }
 @keyframes highlight-balanced { 100% { box-shadow: 0 0 20px 5px rgba(96, 165, 250, 0.6); } }
 @keyframes highlight-dark-light { 100% { box-shadow: 0 0 20px 5px rgba(240, 113, 162, 0.7); } }
 @keyframes highlight-true-dark { 100% { box-shadow: 0 0 20px 5px rgba(220, 38, 38, 0.6); } }
+
+/* --- NEW GLOBAL ANIMATIONS --- */
+@keyframes pulse-button { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
 '''
 
 # ============================================
 # CARD MODELS AND TEMPLATES (FINAL VERSION)
 # ============================================
-# Basic model (v3)
+# Basic model (v4)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -402,7 +406,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v3) === */
+/* === FINAL LAYOUT CSS (v4) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
 .content-area img, .cloze-content img, .mcq-content img, .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -425,8 +429,8 @@ css=THEME_CSS + '''
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .divider { border: none; height: 2px; background: linear-gradient(90deg, transparent, #4facfe, transparent); margin: 20px 0; }
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
-.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
-.toggle-btn:hover { transform: translateY(-3px) scale(1.05); }
+.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; animation: pulse-button 3s ease-in-out infinite; }
+.toggle-btn:hover { transform: translateY(-3px) scale(1.05); animation-play-state: paused; }
 .toggle-btn:active { transform: translateY(0); }
 .explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
@@ -436,7 +440,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v3)
+# Cloze model (v4)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -530,7 +534,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v3) === */
+/* === FINAL LAYOUT CSS (v4) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
 .content-area img, .cloze-content img, .mcq-content img, .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -539,8 +543,11 @@ css=THEME_CSS + '''
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
 .cloze-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
-.cloze-icon { font-size: 2.5em; animation: rotate 3s ease-in-out infinite; }
-@keyframes rotate { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(10deg); } }
+.cloze-icon { font-size: 2.5em; }
+.cloze-container:not(.revealed) .cloze-icon { animation: rotate-wobble 4s ease-in-out infinite; }
+.cloze-container.revealed .cloze-icon { animation: rotate-full 4s linear infinite; }
+@keyframes rotate-wobble { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
+@keyframes rotate-full { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .cloze-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 .cloze-content { padding: 20px; font-size: 1.2em; line-height: 1.8; text-align: center; }
 .cloze { padding: 8px 16px; border-radius: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; margin: 0 4px; }
@@ -553,8 +560,8 @@ css=THEME_CSS + '''
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .cloze-divider { border: none; height: 3px; background: linear-gradient(90deg, transparent, #ff7675, transparent); margin: 25px 0; }
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
-.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
-.toggle-btn:hover { transform: translateY(-3px) scale(1.05); } .toggle-btn:active { transform: translateY(0); }
+.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; animation: pulse-button 3s ease-in-out infinite; }
+.toggle-btn:hover { transform: translateY(-3px) scale(1.05); animation-play-state: paused; } .toggle-btn:active { transform: translateY(0); }
 .explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
 .extra-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
@@ -565,7 +572,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v3)
+# MCQ model (v4)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -661,7 +668,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v3) === */
+/* === FINAL LAYOUT CSS (v4) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
 .content-area img, .cloze-content img, .mcq-content img, .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -692,8 +699,8 @@ css=THEME_CSS + '''
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .mcq-divider { border: none; height: 3px; background: linear-gradient(90deg, transparent, #0984e3, transparent); margin: 25px 0; }
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
-.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
-.toggle-btn:hover { transform: translateY(-3px) scale(1.05); } .toggle-btn:active { transform: translateY(0); }
+.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; animation: pulse-button 3s ease-in-out infinite; }
+.toggle-btn:hover { transform: translateY(-3px) scale(1.05); animation-play-state: paused; } .toggle-btn:active { transform: translateY(0); }
 .explanation-btn { background: linear-gradient(135deg, #38b2ac, #4fd1c5); box-shadow: 0 0 15px rgba(56, 178, 172, 0.4); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
 .showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
@@ -702,7 +709,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v3)
+# Image model (v4)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -801,7 +808,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v3) === */
+/* === FINAL LAYOUT CSS (v4) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
 .content-area img, .cloze-content img, .mcq-content img, .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -812,9 +819,9 @@ css=THEME_CSS + '''
 .image-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
 .image-icon { font-size: 2.5em; }
 .image-container:not(.revealed) .image-icon { animation: pulse 2s infinite; }
-.image-container.revealed .image-icon { animation: rotate 3s ease-in-out infinite; }
+.image-container.revealed .image-icon { animation: rotate-wobble 4s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
-@keyframes rotate { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(10deg); } }
+@keyframes rotate-wobble { 0%, 100% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
 .image-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; }
 .image-content { position: relative; padding: 30px; text-align: center; }
 .main-image { max-width: 100%; border-radius: 15px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease; display: block; margin: 0 auto; }
@@ -835,8 +842,8 @@ css=THEME_CSS + '''
 .anatomy-text { font-size: 1.1em; line-height: 1.6; }
 .custom-origin, .custom-insertion, .custom-innervation, .custom-action { font-weight: 600 !important; font-size: 1.2em !important; font-style: normal !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); }
 .toggle-controls { display: flex; justify-content: center; gap: 12px; margin: 25px 0; padding: 10px; flex-wrap: wrap; }
-.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
-.toggle-btn:hover { transform: translateY(-3px) scale(1.05); } .toggle-btn:active { transform: translateY(0); }
+.toggle-btn { border: none; padding: 12px 24px; border-radius: 25px; font-size: 1em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; animation: pulse-button 3s ease-in-out infinite; }
+.toggle-btn:hover { transform: translateY(-3px) scale(1.05); animation-play-state: paused; } .toggle-btn:active { transform: translateY(0); }
 .correlation-btn { background: linear-gradient(135deg, #8b5cf6, #a78bfa); box-shadow: 0 0 15px rgba(139, 92, 246, 0.4); }
 .comments-btn { background: linear-gradient(135deg, #f97316, #fb923c); box-shadow: 0 0 15px rgba(249, 115, 22, 0.4); }
 .showall-btn { background: linear-gradient(135deg, #6b7280, #4b5563); box-shadow: 0 0 15px rgba(107, 114, 128, 0.3); color: white; }
@@ -851,7 +858,7 @@ def create_deck(name):
 
 def create_test_notes():
     deck = create_deck('Joplin to Anki Enhanced - FINAL')
-    print("Creating test notes with final, polished design (v3)...")
+    print("Creating test notes with final, polished design (v4)...")
 
     # Basic, Cloze, MCQ, Image notes... (content is the same)
     basic_note = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final'])
@@ -869,8 +876,8 @@ def create_test_notes():
 if __name__ == '__main__':
     deck = create_test_notes()
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    # Make sure to change the user path to your actual user path
-    output_directory = "output" # Creates an 'output' folder in your project directory
+    # This creates an 'output' folder in your project directory
+    output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
     filename = os.path.join(output_directory, f"joplin_anki_FINAL_{timestamp}.apkg")
@@ -883,11 +890,11 @@ if __name__ == '__main__':
     print(f"✅ Success! Final package created: {filename}")
     print("="*60)
     print("\n✨ FINAL IMPLEMENTATION COMPLETE ✨")
-    print("This version includes all requested refinements:")
-    print("  • GLOWING BUTTONS: Action buttons now have a static, vibrant glow.")
-    print("  • THEMED CLOZE PULSE: Cloze deletions have unique, theme-specific pulsating glows.")
-    print("  • STABLE TOGGLES: Theme toggle icons are reliably positioned.")
-    print("  • NO MINIFICATION: All JavaScript and CSS is fully readable for easy debugging.")
+    print("This version includes all requested animations:")
+    print("  • PULSING BUTTONS: All action and theme toggles have a pulse animation.")
+    print("  • DYNAMIC ROTATION: The dartboard icon `🎯` does a full 360 spin.")
+    print("  • ENHANCED WOBBLE: The magnifying glass icon `🔍` has a more noticeable wobble.")
+    print("  • NO MINIFICATION: All code is fully readable for easy debugging.")
     print("\nThis should be the definitive version. You are now ready to generate and import!")
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
