@@ -1,0 +1,36 @@
+{
+  "name": "jta",
+  "version": "0.0.0",
+  "description": "Export from Joplin and import into Anki with enhanced beautiful templates",
+  "main": "bin/jta",
+  "bin": {
+    "jta": "./bin/jta"
+  },
+  "scripts": {
+    "test": "npm run test:joplin-exporter && npm run test:integration",
+    "test:joplin-exporter": "./node_modules/mocha/bin/mocha joplin.test.js",
+    "test:integration": "./node_modules/mocha/bin/mocha integration.test.js"
+  },
+  "keywords": [
+    "anki",
+    "joplin",
+    "import",
+    "export",
+    "srs"
+  ],
+  "author": "BartBucknill",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.12.1",
+    "cheerio": "^1.1.2",
+    "commander": "^5.0.0",
+    "configstore": "^5.0.1",
+    "dotenv": "^8.2.0",
+    "highlight": "^0.2.4",
+    "highlight.js": "^9.18.1",
+    "lodash": "^4.17.15",
+    "marked": "^0.8.2",
+    "mocha": "^7.1.1",
+    "prismjs": "^1.20.0"
+  }
+}
