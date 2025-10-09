@@ -44,7 +44,7 @@ const newClient = (url, token, log) => {
   });
 
   // Enhanced retry mechanism with exponential backoff
-  const makeRequestWithRetry = async (config, maxRetries = 3) => {
+  const makeRequestWithRetry = async (config, maxRetries = 5) => {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         log(levelDebug, `Request attempt ${attempt}/${maxRetries}: ${config.method} ${config.url}`);
