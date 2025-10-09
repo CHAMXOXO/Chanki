@@ -74,6 +74,8 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   return "basic";
 };
 
+// anki-importer.js -> replace the importer function
+
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
@@ -84,7 +86,9 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
     const deckName = "default";
-    await client.ensureDeckExists(deckname);
+    // --- THIS IS THE LINE WITH THE FIX ---
+    await client.ensureDeckExists(deckName); // Corrected from 'deckname' to 'deckName'
+    // --- END OF FIX ---
     
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
     const foundNoteIds = await client.findNote(jtaID, deckName);
