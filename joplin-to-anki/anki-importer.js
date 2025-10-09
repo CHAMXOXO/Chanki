@@ -67,8 +67,10 @@ if (inferredType === 'imageOcclusion') {
   if (!hasImages && (!answer || answer.toString().trim().length === 0)) {
     errors.push("Image Occlusion card requires either Answer text or image paths");
   }
+} else if (inferredType === 'cloze') {
+  // Cloze cards do not require a separate answer field, so we do nothing.
 } else {
-  // For other card types, Answer is required
+  // For all other card types (e.g., Basic, MCQ), the Answer is required.
   if (!answer || answer.toString().trim().length === 0) {
     errors.push("Answer is empty or missing");
   }
