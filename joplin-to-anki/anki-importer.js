@@ -76,6 +76,8 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
 
 // anki-importer.js -> replace the importer function
 
+// anki-importer.js -> replace the importer and batchImporter functions
+
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
@@ -86,14 +88,13 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
     const deckName = "default";
-    // --- THIS IS THE LINE WITH THE FIX ---
-    await client.ensureDeckExists(deckName); // Corrected from 'deckname' to 'deckName'
-    // --- END OF FIX ---
+    await client.ensureDeckExists(deckName);
     
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
     const foundNoteIds = await client.findNote(jtaID, deckName);
 
     if (foundNoteIds && foundNoteIds.length > 0) {
+      // --- UPDATE LOGIC (This part is mostly the same) ---
       const existingNoteId = foundNoteIds[0];
       const noteInfo = await client.getNoteInfo([existingNoteId]);
       const ankiNote = noteInfo && noteInfo[0];
@@ -112,31 +113,63 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
         return { action: "skipped", noteId: existingNoteId };
       }
 
-      log(levelVerbose, `Note ${existingNoteId} has changed. Updating.`);
+      log(levelVerbose, `Updating existing note ${existingNoteId}.`);
       await client.updateNote(existingNoteId, joplinFields); 
       await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
       return { action: "updated", noteId: existingNoteId };
 
     } else {
-      log(levelVerbose, `Creating new note for JTA ID ${jtaID}.`);
-      const createdNoteId = await client.createNote(question, answer, jtaID, title, notebook, normalizedTags, folders, additionalFields);
-      return { action: "created", noteId: createdNoteId };
+      // --- CREATE LOGIC (This is where the new self-healing logic is) ---
+      log(levelVerbose, `No existing note found for JTA ID ${jtaID}. Attempting to create a new one.`);
+      try {
+        const createdNoteId = await client.createNote(question, answer, jtaID, title, notebook, normalizedTags, folders, additionalFields);
+        return { action: "created", noteId: createdNoteId };
+      } catch (error) {
+        // SELF-HEALING BLOCK: This is the key to the fix.
+        // If creation fails because it's a duplicate, it means our initial `findNote` failed due to a connection error.
+        if (error.message.includes("duplicate")) {
+          log(levelApplication, `⚠️ Creation failed due to a duplicate. Recovering by treating as an update for JTA ID: ${jtaID}`);
+          
+          // Retry finding the note. If it fails now, something is seriously wrong, and we should let it fail.
+          const recoveredNoteIds = await client.findNote(jtaID, deckName);
+          if (recoveredNoteIds && recoveredNoteIds.length > 0) {
+            const recoveredNoteId = recoveredNoteIds[0];
+            log(levelVerbose, `Successfully recovered note ID ${recoveredNoteId}. Proceeding with update.`);
+            await client.updateNote(recoveredNoteId, joplinFields);
+            await client.updateNoteTags(recoveredNoteId, title, notebook, normalizedTags);
+            return { action: "updated", noteId: recoveredNoteId };
+          } else {
+            // This would be a very rare and critical error.
+            throw new Error(`Recovery failed. Could not find note ${jtaID} even after a duplicate error.`);
+          }
+        }
+        // If it's a different error (not a duplicate), we re-throw it.
+        throw error;
+      }
     }
   } catch (error) {
     throw new Error(`Importer failed for JTA ID ${jtaID}: ${error.message}`);
   }
 };
 
-// anki-importer.js
-
-// ... (keep the rest of the file the same)
-
 const batchImporter = async (client, items, batchSize = 10, log) => {
   const results = { created: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
+  const INTER_ITEM_DELAY_MS = 250; // A small delay to pace requests and prevent overwhelming AnkiConnect.
+
   log(levelApplication, `Starting batch import of ${items.length} items...`);
 
-  // Process items one by one to avoid overwhelming AnkiConnect
-  for (const item of items) {
+  // Anki health check is now done here, right before the heavy lifting starts.
+  // Note: Your main script already does a health check at the start, which is good. This is an extra safeguard.
+  try {
+    log(levelVerbose, "Performing pre-flight health check of AnkiConnect...");
+    await client.health();
+    log(levelVerbose, "AnkiConnect is responsive. Starting sync.");
+  } catch (err) {
+    log(levelApplication, `❌ CRITICAL: AnkiConnect is not responding. Aborting sync. Please ensure Anki is running with the AnkiConnect add-on enabled.`);
+    return; // Abort the entire function
+  }
+
+  for (const [index, item] of items.entries()) {
     try {
       const res = await importer(client, item.question, item.answer, item.jtaID, item.title, item.notebook, item.tags, item.folders, item.additionalFields || {}, log);
       if (res.action === "created") {
@@ -151,11 +184,18 @@ const batchImporter = async (client, items, batchSize = 10, log) => {
       results.errors.push({ item: item.jtaID, error: err.message });
       log(levelApplication, `Batch item failed: ${item.jtaID} - ${err.message}`);
     }
+
+    // Add a small delay after each item to avoid overwhelming AnkiConnect
+    if (index < items.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, INTER_ITEM_DELAY_MS));
+    }
   }
 
   log(levelApplication, `Batch import completed - Created: ${results.created}, Updated: ${results.updated}, Skipped: ${results.skipped}, Failed: ${results.failed}`);
   if (results.failed > 0) {
-    log(levelApplication, `Errors occurred for the following items:`, results.errors);
+    // Improved formatting for multiple errors
+    const errorDetails = results.errors.map(e => `\n   - Item ID: ${e.item}\n     Error: ${e.error}`).join('');
+    log(levelApplication, `Errors occurred for the following items:${errorDetails}`);
   }
   return results;
 };
