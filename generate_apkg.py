@@ -132,20 +132,33 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# FINALIZED THEME SYSTEM CSS (v7 with Animation Fix) - REVISED
+# FINALIZED THEME SYSTEM CSS (v8 with Conditional Placement) - REVISED
 # ============================================
 THEME_CSS = '''
-/* Theme Toggle Button - FINAL: Anchored inside the new .master-header container. */
+/* Theme Toggle Button - FINAL: Default position for main headers. */
 .theme-toggle {
     position: absolute; top: 10px; right: 10px; font-size: 2em;
     background: none; border: none; cursor: pointer; z-index: 1000;
     padding: 8px; border-radius: 50%;
-    transition: transform 0.2s ease, box-shadow 0.4s ease-out;
+    transition: transform 0.2s ease, box-shadow 0.4s ease-out, top 0.2s ease, right 0.2s ease;
     line-height: 1;
     animation: pulse-mode-toggle 2.5s ease-in-out infinite;
 }
 .theme-toggle:hover { transform: scale(1.2); animation-play-state: paused; }
 @media (max-width: 480px) { .theme-toggle { top: 8px; right: 8px; font-size: 1.5em; } }
+
+/* CONDITIONAL OVERRIDE: Tighter placement ONLY when the 'Header' field is used. */
+.card.Header .theme-toggle {
+    top: 4px;
+    right: 4px;
+}
+@media (max-width: 480px) {
+    .card.Header .theme-toggle {
+        top: 2px;
+        right: 2px;
+    }
+}
+
 
 /* ---------------------------------------------------- */
 /* --------------- 🌕 THEME: LIGHT -------------------- */
@@ -314,14 +327,14 @@ body.theme-true-dark { background: #000000; }
 @keyframes pulse-button { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
 @keyframes pulse-mode-toggle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes rotate-full { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-/* NEW Subtle animation for Cloze icon */
+/* Subtle animation for Cloze icon */
 @keyframes rotate-subtle { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 7)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 8)
 # ============================================
-# Basic model (v7)
+# Basic model (v8)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -404,10 +417,9 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v7) === */
+/* === FINAL LAYOUT CSS (v8) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
-/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
 .master-header { position: relative; }
 .content-area img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -440,7 +452,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v7)
+# Cloze model (v8)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -525,10 +537,9 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v7) === */
+/* === FINAL LAYOUT CSS (v8) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
-/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
 .master-header { position: relative; }
 .cloze-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -561,7 +572,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v7)
+# MCQ model (v8)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -652,10 +663,9 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v7) === */
+/* === FINAL LAYOUT CSS (v8) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
-/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
 .master-header { position: relative; }
 .mcq-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -695,7 +705,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v7)
+# Image model (v8)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -786,10 +796,9 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v7) === */
+/* === FINAL LAYOUT CSS (v8) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
-/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
 .master-header { position: relative; }
 .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -834,23 +843,17 @@ def create_deck(name):
     return Deck(2059400110, name)
 
 def create_test_notes():
-    deck = create_deck('Joplin to Anki Enhanced - DEFINITIVE')
-    print("Creating test notes with definitive design (v7)...")
+    deck = create_deck('Joplin to Anki Enhanced - FINAL')
+    print("Creating test notes with final conditional placement (v8)...")
     
-    # Note with a header to test the button position
-    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v7_header'])
-    # Note without a header to test the button position
-    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v7_noheader'])
-    cloze_note = Note(model=cloze_model, fields=['Cardiac Electrophysiology', 'The normal heart rate is {{c1::60-100}} bpm, controlled by the {{c2::SA node}}.', 'Additional info here.', 'The SA node is the primary pacemaker...', 'A malfunctioning SA node can lead to Sick Sinus Syndrome.', 'Section 12.3', 'Costanzo Physiology', 'joplin_cloze_final_v7'])
-    mcq_note = Note(model=mcq_model, fields=['', 'Which of the following is a fat-soluble vitamin?', 'Vitamin A', 'Vitamin C', 'Vitamin B6', 'Vitamin B12', 'A) Vitamin A', 'Vitamins A, D, E, and K are fat-soluble.', '', 'Biochemistry Basics', "Lehninger", 'joplin_mcq_final_v7'])
-    image_note = Note(model=image_model, fields=['Musculoskeletal Anatomy', "https://i.imgur.com/k9DkQyC.png", "https://i.imgur.com/r5bSnEK.png", "Identify the highlighted muscle.", "Deltoid", "Clavicle, acromion, and spine of scapula", "Deltoid tuberosity of humerus", "Axillary nerve (C5, C6)", "Abducts, flexes, extends arm", "Axillary nerve injury can paralyze the deltoid.", "Common site for IM injections.", "Upper Limb", "Netter's Atlas", "joplin_image_final_v7"])
+    # Note with a header to test the TIGHT button position
+    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v8_header'])
+    # Note without a header to test the SPACIOUS (default) button position
+    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v8_noheader'])
     
     deck.add_note(basic_note_with_header)
     deck.add_note(basic_note_no_header)
-    deck.add_note(cloze_note)
-    deck.add_note(mcq_note)
-    deck.add_note(image_note)
-    print("5 test notes added to the deck (including header/no-header variants).")
+    print("2 test notes added to the deck to demonstrate both button positions.")
     return deck
 
 if __name__ == '__main__':
@@ -859,20 +862,19 @@ if __name__ == '__main__':
     output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    filename = os.path.join(output_directory, f"joplin_anki_DEFINITIVE_{timestamp}.apkg")
+    filename = os.path.join(output_directory, f"joplin_anki_FINAL_{timestamp}.apkg")
 
     package = Package(deck)
     package.write_to_file(filename)
 
     print("\n" + "="*60)
-    print(f"✅ Success! Definitive package created: {filename}")
+    print(f"✅ Success! Final package created: {filename}")
     print("="*60)
-    print("\n✨ DEFINITIVE IMPLEMENTATION COMPLETE (v7) ✨")
-    print("This final version includes:")
-    print("  • HEADER ANCHOR FIX: Mode toggle is now perfectly positioned regardless of the Header field.")
-    print("  • SUBTLE ANIMATION: Cloze icon now has a gentle rocking motion instead of a full spin.")
-    print("  • NO MINIFICATION: All code is fully readable for easy review.")
-    print("\nThis resolves all identified issues. The design is now complete.")
+    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v8) ✨")
+    print("This version includes the CONDITIONAL POSITIONING fix:")
+    print("  • When `Header` is used: Button has TIGHT placement (4px/4px).")
+    print("  • When `Header` is NOT used: Button has SPACIOUS placement (10px/10px).")
+    print("\nThis should now precisely match your requirement. The desire is met.")
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
     for old_file in files[3:]: # Keep the latest 3 versions
