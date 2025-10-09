@@ -27,7 +27,7 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
 };
 
 // --- CHANGE 2: The function now accepts the note's stable ID ---
-// joplin-exporter.js -> Replace the entire extractQuiz function with this one
+// joplin-exporter.js -> Replace ONLY the extractQuiz function with this one
 
 const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   const $ = cheerio.load(body);
@@ -73,19 +73,33 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
     const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
     let cleanedQuestion = question.trim();
 
-    // --- NEW, IMPROVED MCQ CLEANING LOGIC ---
-    if (cardType === 'mcq' && question.length > 0) {
-        // This regex finds the first occurrence of a line break followed by an option letter (A, B, C, or D).
-        const firstOptionIndex = question.search(/<br[^>]*>\s*[A-D][\.\)]/i);
+    // --- RESTORED AND REFINED MCQ CLEANING LOGIC ---
+    if (cardType === 'mcq' && questionEl.length > 0) {
+        // We clone the element to avoid modifying the original during iteration
+        const questionClone = questionEl.clone();
+
+        // Step 1: Remove the text nodes that contain the options (e.g., "A) ...")
+        questionClone.contents().filter(function() {
+            const nodeValue = this.nodeValue || '';
+            return this.type === 'text' && /^\s*[A-D][).]?\s*/.test(nodeValue);
+        }).remove();
+
+        // Step 2: Remove any <br> tags that are immediately followed by what was an option text
+        questionClone.find('br').each((idx, br_el) => {
+            const nextNode = br_el.nextSibling;
+            if (nextNode && nextNode.type === 'text' && /^\s*[A-D][).]?\s*/.test(nextNode.nodeValue || '')) {
+                $(br_el).remove();
+            }
+        });
         
-        if (firstOptionIndex !== -1) {
-            // If an option is found, we truncate the question HTML right before that line break.
-            cleanedQuestion = question.substring(0, firstOptionIndex).trim();
-            log(levelDebug, `MCQ question cleaned by truncating at the first option.`);
-        }
-        // If no options are found within the question field, we just use the trimmed question as is.
+        let intermediateHtml = questionClone.html().trim();
+
+        // Step 3 (THE REFINEMENT): Remove any leftover trailing <br> tags, which cause the empty space.
+        cleanedQuestion = intermediateHtml.replace(/(<br\s*\/?>\s*)+$/, '');
+        
+        log(levelDebug, `MCQ question cleaned successfully.`);
     }
-    // --- END OF NEW LOGIC ---
+    // --- END OF REFINED LOGIC ---
 
     const hasQuestionOrAnswerText = cleanedQuestion.length > 0 || (answer && answer.trim().length > 0);
     const hasImagePaths = (additionalFields.questionImagePath && additionalFields.questionImagePath.trim().length > 0) ||
