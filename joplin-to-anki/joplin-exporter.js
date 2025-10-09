@@ -1,4 +1,4 @@
-// joplin-exporter.js (Complete and Corrected File)
+// joplin-exporter.js (FINAL CORRECTED VERSION)
 
 const cheerio = require("cheerio");
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
@@ -147,13 +147,22 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   const answerImgEl = $('img[data-jta-image-type="answer"]', jtaElement);
   if (answerImgEl.length > 0) fields.answerImagePath = answerImgEl.attr('src') || '';
 
-  const questionTextContent = ($('.image-question', jtaElement).length > 0) ? $('.image-question', jtaElement).text() : $('.question', jtaElement).text();
+  // --- START OF CHANGE 1: Corrected MCQ Option Extraction ---
+  const questionTextContent = ($('.question', jtaElement).text() || "");
   if (questionTextContent.length > 0) {
+    // This regex is now more precise to avoid grabbing parts of the main question
     const optionPatterns = [
-      /A[).]?\s*([^\n\r<]+)/i, /B[).]?\s*([^\n\r<]+)/i,
-      /C[).]?\s*([^\n\r<]+)/i, /D[).]?\s*([^\n\r<]+)/i
+        /(?:A\)|A\.)\s*([\s\S]*?)(?=\s*(?:B\)|B\.|$))/i,
+        /(?:B\)|B\.)\s*([\s\S]*?)(?=\s*(?:C\)|C\.|$))/i,
+        /(?:C\)|C\.)\s*([\s\S]*?)(?=\s*(?:D\)|D\.|$))/i,
+        /(?:D\)|D\.)\s*([\s\S]*?)(?=\s*$)/i
     ];
-    const optionMatches = optionPatterns.map(p => { const m = questionTextContent.match(p); return m ? m[1].trim() : ''; });
+    
+    const optionMatches = optionPatterns.map(pattern => {
+      const match = questionTextContent.match(pattern);
+      return match ? match[1].trim() : '';
+    });
+
     if (optionMatches.filter(Boolean).length >= 2) {
       if (!fields.optionA) fields.optionA = optionMatches[0] || '';
       if (!fields.optionB) fields.optionB = optionMatches[1] || '';
@@ -161,13 +170,27 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
       if (!fields.optionD) fields.optionD = optionMatches[3] || '';
     }
   }
+  // --- END OF CHANGE 1 ---
+
   return fields;
 };
 
 const detectCardTypeFromContent = (question, answer, additionalFields = {}, log) => {
   if (/\{\{c\d+::[^}]+\}\}/g.test(question || "")) return "cloze";
+  
   if ((additionalFields.questionImagePath||'').trim() || (additionalFields.answerImagePath||'').trim() || /<img[^>]+src/i.test(question||'') || /<img[^>]+src/i.test(answer||'')) return "imageOcclusion";
-  if ((additionalFields.optionA||'').trim() || (additionalFields.optionB||'').trim() || (additionalFields.correctAnswer||'').trim()) return "mcq";
+  
+  // --- START OF CHANGE 2: Corrected Card Type Detection ---
+  // A card is only an MCQ if it has a correct answer AND at least two options.
+  const hasCorrectAnswer = (additionalFields.correctAnswer || '').trim().length > 0;
+  const options = [additionalFields.optionA, additionalFields.optionB, additionalFields.optionC, additionalFields.optionD];
+  const hasMinOptions = options.filter(opt => (opt || '').trim().length > 0).length >= 2;
+
+  if (hasCorrectAnswer && hasMinOptions) {
+    return "mcq";
+  }
+  // --- END OF CHANGE 2 ---
+
   return "basic";
 };
 
