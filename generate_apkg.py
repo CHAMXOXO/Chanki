@@ -457,9 +457,30 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v14) === */
-.card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-.card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* === FINAL LAYOUT CSS (v14) - MODIFIED FOR SCREEN-RELATIVE SIZING === */
+.card { 
+    font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; 
+    line-height: 1.6; 
+    margin: 0; 
+    padding: 2.5vh 2.5vw; /* Use viewport units for padding */
+    box-sizing: border-box; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    min-height: 100vh; /* Ensure background covers the whole screen */
+}
+.card-container { 
+    width: 90vw; /* Occupy 90% of the viewport width */
+    max-width: 1100px; /* But not more than 1100px on wide screens */
+    max-height: 90vh; /* Occupy up to 90% of the viewport height */
+    overflow-y: auto; /* Add a scrollbar INSIDE the card if content is too long */
+    border-radius: 20px; 
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
+    overflow-x: hidden; /* Prevent horizontal overflow */
+    animation: bounceIn 0.8s ease-out; 
+    display: flex; /* Use flexbox for better structure */
+    flex-direction: column;
+}
 .master-header { position: relative; }
 .content-area img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -476,7 +497,7 @@ css=THEME_CSS + '''
 .custom-explanation, .custom-correlation { font-weight: 500 !important; font-size: 1em !important; font-style: italic !important; }
 .explanation-section, .correlation-section { margin-top: 25px; padding: 20px; border-radius: 15px; }
 .section-title { font-weight: 600; font-size: 1.1em; margin-bottom: 10px; }
-.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); }
+.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); margin-top: auto; /* Pushes footer to the bottom */ }
 .sources-section { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.85em; font-style: italic !important; border-top: 1px solid rgba(150,150,150,0.2); }
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .divider { border: none; height: 2px; background: linear-gradient(90deg, transparent, #4facfe, transparent); margin: 20px 0; }
@@ -591,9 +612,29 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v14) === */
-.card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-.cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* === FINAL LAYOUT CSS (v14) - MODIFIED FOR SCREEN-RELATIVE SIZING === */
+.card { 
+    font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; 
+    margin: 0; 
+    padding: 2.5vh 2.5vw; 
+    box-sizing: border-box; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh;
+}
+.cloze-container { 
+    width: 90vw;
+    max-width: 1200px; 
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 20px; 
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2); 
+    overflow-x: hidden;
+    animation: bounceIn 0.8s ease-out; 
+    display: flex;
+    flex-direction: column;
+}
 .master-header { position: relative; }
 .cloze-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -609,7 +650,7 @@ css=THEME_CSS + '''
 .extra-info, .explanation-info, .correlation-info { margin-top: 30px; padding: 25px; border-radius: 15px; font-size: 0.9em; text-align: left; line-height: 1.6; }
 .extra-title, .explanation-title, .correlation-title { font-weight: 600; font-size: 1.1em; margin-bottom: 15px; }
 .extra-content, .explanation-content, .correlation-content { font-size: 1.0em; white-space: pre-wrap; font-style: italic !important; }
-.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); }
+.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); margin-top: auto; }
 .sources-section { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.85em; font-style: italic !important; border-top: 1px solid rgba(150,150,150,0.2); }
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .cloze-divider { border: none; height: 3px; background: linear-gradient(90deg, transparent, #ff7675, transparent); margin: 25px 0; }
@@ -731,9 +772,29 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v14) === */
-.card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-.mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* === FINAL LAYOUT CSS (v14) - MODIFIED FOR SCREEN-RELATIVE SIZING === */
+.card { 
+    font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; 
+    margin: 0; 
+    padding: 2.5vh 2.5vw; 
+    box-sizing: border-box; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh;
+}
+.mcq-container { 
+    width: 90vw;
+    max-width: 1000px; 
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 20px; 
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2); 
+    overflow-x: hidden;
+    animation: bounceIn 0.8s ease-out; 
+    display: flex;
+    flex-direction: column;
+}
 .master-header { position: relative; }
 .mcq-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -758,7 +819,7 @@ css=THEME_CSS + '''
 .explanation-block, .correlation-block { margin-top: 20px; padding: 20px; border-radius: 15px; font-size: 1.0em; }
 .block-title { font-weight: 700; margin-bottom: 10px; }
 .block-content { font-size: 1.0em; }
-.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); }
+.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); margin-top: auto; }
 .sources-section { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.85em; font-style: italic !important; border-top: 1px solid rgba(150,150,150,0.2); }
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .mcq-divider { border: none; height: 3px; background: linear-gradient(90deg, transparent, #0984e3, transparent); margin: 25px 0; }
@@ -878,9 +939,29 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v14) === */
-.card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-.image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* === FINAL LAYOUT CSS (v14) - MODIFIED FOR SCREEN-RELATIVE SIZING === */
+.card { 
+    font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; 
+    margin: 0; 
+    padding: 2.5vh 2.5vw; 
+    box-sizing: border-box; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 100vh;
+}
+.image-container { 
+    width: 90vw;
+    max-width: 1200px; 
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 20px; 
+    box-shadow: 0 25px 50px rgba(0,0,0,0.2); 
+    overflow-x: hidden;
+    animation: bounceIn 0.8s ease-out; 
+    display: flex;
+    flex-direction: column;
+}
 .master-header { position: relative; }
 .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
@@ -901,7 +982,7 @@ css=THEME_CSS + '''
 .correlation-section, .comments-block { margin: 25px; padding: 20px; border-radius: 15px; }
 .section-title, .comments-title { font-weight: 600; margin-bottom: 10px; font-size: 1.1em; }
 .correlation-text, .comments-text { font-size: 1.0em; text-align: left; }
-.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); }
+.meta-footer { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.9em; border-top: 1px solid rgba(150,150,150,0.2); margin-top: auto; }
 .sources-section { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.85em; font-style: italic !important;; border-top: 1px solid rgba(150,150,150,0.2); }
 .sources-icon { font-size: 1.1em; } .sources-text { flex: 1; }
 .image-divider { border: none; height: 3px; background: linear-gradient(90deg, transparent, #74b9ff, transparent); margin: 25px 0; }
