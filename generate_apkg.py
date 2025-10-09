@@ -132,10 +132,10 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# FINALIZED THEME SYSTEM CSS (v6 with Edge Positioning) - REVISED
+# FINALIZED THEME SYSTEM CSS (v7 with Animation Fix) - REVISED
 # ============================================
 THEME_CSS = '''
-/* Theme Toggle Button - FINAL: Anchored to the very edge of the card container. */
+/* Theme Toggle Button - FINAL: Anchored inside the new .master-header container. */
 .theme-toggle {
     position: absolute; top: 10px; right: 10px; font-size: 2em;
     background: none; border: none; cursor: pointer; z-index: 1000;
@@ -314,12 +314,14 @@ body.theme-true-dark { background: #000000; }
 @keyframes pulse-button { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.03); } }
 @keyframes pulse-mode-toggle { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 @keyframes rotate-full { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+/* NEW Subtle animation for Cloze icon */
+@keyframes rotate-subtle { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 6)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 7)
 # ============================================
-# Basic model (v6)
+# Basic model (v7)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -332,18 +334,22 @@ templates=[
 'name': 'Enhanced Basic Card',
 'qfmt': '''
 <div class="card-container question-side">
-<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-{{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-<div class="header"><div class="question-icon">🧠</div><div class="card-type">Question</div></div>
-<div class="content-area"><div class="question-text custom-question">{{Question}}</div></div>
-{{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="header"><div class="question-icon">🧠</div><div class="card-type">Question</div></div>
+    </div>
+    <div class="content-area"><div class="question-text custom-question">{{Question}}</div></div>
+    {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
 </div>
 ''' + THEME_SCRIPT,
 'afmt': '''
 <div class="card-container answer-side">
-    <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-    {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-    <div class="header"><div class="answer-icon">✅</div><div class="card-type">Answer</div></div>
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="header"><div class="answer-icon">✅</div><div class="card-type">Answer</div></div>
+    </div>
     <div class="content-area">
         <div class="answer-text custom-answer">{{Answer}}</div>
         {{#Explanation}}<div class="explanation-section hidden" id="explanation"><div class="section-title">💡 Explanation</div><div class="explanation-text custom-explanation">{{Explanation}}</div></div>{{/Explanation}}
@@ -398,10 +404,11 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v6) === */
+/* === FINAL LAYOUT CSS (v7) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-/* KEY POSITIONING FIX: Sets the anchor point for the theme toggle button */
-.card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
+.card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
+.master-header { position: relative; }
 .content-area img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 .meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
@@ -433,7 +440,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v6)
+# Cloze model (v7)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -446,18 +453,22 @@ templates=[
 'name': 'Enhanced Cloze Card',
 'qfmt': '''
 <div class="cloze-container">
-<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-{{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-<div class="cloze-header"><div class="cloze-icon">🔍</div><div class="cloze-title">Fill in the Blanks</div></div>
-<div class="cloze-content">{{cloze:Text}}</div>
-{{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="cloze-header"><div class="cloze-icon">🔍</div><div class="cloze-title">Fill in the Blanks</div></div>
+    </div>
+    <div class="cloze-content">{{cloze:Text}}</div>
+    {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
 </div>
 ''' + THEME_SCRIPT,
 'afmt': '''
 <div class="cloze-container revealed">
-    <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-    {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-    <div class="cloze-header"><div class="cloze-icon">🎯</div><div class="cloze-title">Complete Answer</div></div>
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="cloze-header"><div class="cloze-icon">🎯</div><div class="cloze-title">Complete Answer</div></div>
+    </div>
     <div class="cloze-content">
         {{cloze:Text}}
         {{#Extra}}<div class="extra-info hidden" id="extra"><div class="extra-title">📚 Additional Information</div><div class="extra-content custom-extra">{{Extra}}</div></div>{{/Extra}}
@@ -514,19 +525,18 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v6) === */
+/* === FINAL LAYOUT CSS (v7) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-/* KEY POSITIONING FIX: Sets the anchor point for the theme toggle button */
-.cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
+.cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
+.master-header { position: relative; }
 .cloze-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 .meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
 .cloze-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
-.cloze-icon { font-size: 2.5em; }
-.cloze-container:not(.revealed) .cloze-icon { animation: rotate-full 4s linear infinite; }
-.cloze-container.revealed .cloze-icon { animation: rotate-full 4s linear infinite; }
+.cloze-icon { font-size: 2.5em; animation: rotate-subtle 3s ease-in-out infinite alternate; }
 .cloze-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 .cloze-content { padding: 20px; font-size: 1.2em; line-height: 1.8; text-align: center; }
 .cloze { padding: 8px 16px; border-radius: 25px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; margin: 0 4px; }
@@ -551,7 +561,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v6)
+# MCQ model (v7)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -565,26 +575,30 @@ templates=[
 'name': 'Enhanced MCQ Card',
 'qfmt': '''
 <div class="mcq-container">
-<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-{{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-<div class="mcq-header"><div class="mcq-icon">❓</div><div class="mcq-title">Multiple Choice</div></div>
-<div class="mcq-content">
-    <div class="question-section">{{Question}}</div>
-    <div class="options-grid">
-        {{#OptionA}}<div class="option option-a" data-option="A"><span class="option-letter">A</span><span class="option-text">{{OptionA}}</span></div>{{/OptionA}}
-        {{#OptionB}}<div class="option option-b" data-option="B"><span class="option-letter">B</span><span class="option-text">{{OptionB}}</span></div>{{/OptionB}}
-        {{#OptionC}}<div class="option option-c" data-option="C"><span class="option-letter">C</span><span class="option-text">{{OptionC}}</span></div>{{/OptionC}}
-        {{#OptionD}}<div class="option option-d" data-option="D"><span class="option-letter">D</span><span class="option-text">{{OptionD}}</span></div>{{/OptionD}}
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="mcq-header"><div class="mcq-icon">❓</div><div class="mcq-title">Multiple Choice</div></div>
     </div>
-</div>
-{{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
+    <div class="mcq-content">
+        <div class="question-section">{{Question}}</div>
+        <div class="options-grid">
+            {{#OptionA}}<div class="option option-a" data-option="A"><span class="option-letter">A</span><span class="option-text">{{OptionA}}</span></div>{{/OptionA}}
+            {{#OptionB}}<div class="option option-b" data-option="B"><span class="option-letter">B</span><span class="option-text">{{OptionB}}</span></div>{{/OptionB}}
+            {{#OptionC}}<div class="option option-c" data-option="C"><span class="option-letter">C</span><span class="option-text">{{OptionC}}</span></div>{{/OptionC}}
+            {{#OptionD}}<div class="option option-d" data-option="D"><span class="option-letter">D</span><span class="option-text">{{OptionD}}</span></div>{{/OptionD}}
+        </div>
+    </div>
+    {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
 </div>
 ''' + THEME_SCRIPT,
 'afmt': '''
 <div class="mcq-container answer-revealed">
-    <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-    {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-    <div class="mcq-header"><div class="mcq-icon">🎯</div><div class="mcq-title">Correct Answer</div></div>
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="mcq-header"><div class="mcq-icon">🎯</div><div class="mcq-title">Correct Answer</div></div>
+    </div>
     <div class="mcq-content">
         <div class="correct-answer"><div class="answer-label">✅ Correct Answer:</div><div class="answer-value">{{CorrectAnswer}}</div></div>
         {{#Explanation}}<div class="explanation-block hidden" id="explanation"><div class="block-title">💡 Explanation</div><div class="block-content custom-explanation">{{Explanation}}</div></div>{{/Explanation}}
@@ -638,10 +652,11 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v6) === */
+/* === FINAL LAYOUT CSS (v7) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-/* KEY POSITIONING FIX: Sets the anchor point for the theme toggle button */
-.mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
+.mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
+.master-header { position: relative; }
 .mcq-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 .meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
@@ -680,7 +695,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v6)
+# Image model (v7)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -695,21 +710,25 @@ templates=[
 'name': 'Enhanced Image Occlusion Card',
 'qfmt': '''
 <div class="image-container">
-<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-{{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-<div class="image-header"><div class="image-icon">🖼️</div><div class="image-title">Image Question</div></div>
-<div class="image-content">
-    {{#Question}}<div class="question-overlay custom-image-question">{{Question}}</div>{{/Question}}
-    <img src="{{QuestionImagePath}}" class="main-image">
-</div>
-{{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="image-header"><div class="image-icon">🖼️</div><div class="image-title">Image Question</div></div>
+    </div>
+    <div class="image-content">
+        {{#Question}}<div class="question-overlay custom-image-question">{{Question}}</div>{{/Question}}
+        <img src="{{QuestionImagePath}}" class="main-image">
+    </div>
+    {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
 </div>
 ''' + THEME_SCRIPT,
 'afmt': '''
 <div class="image-container revealed">
-    <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-    {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-    <div class="image-header"><div class="image-icon">🔍</div><div class="image-title">Answer Revealed</div></div>
+    <div class="master-header">
+        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
+        <div class="image-header"><div class="image-icon">💡</div><div class="image-title">Answer Revealed</div></div>
+    </div>
     <div class="image-content">
         {{#Answer}}<div class="answer-overlay custom-image-answer">{{Answer}}</div>{{/Answer}}
         {{#Origin}}<div class="anatomy-section origin-section"><div class="anatomy-title">🦴 Origin</div><div class="anatomy-text custom-origin">{{Origin}}</div></div>{{/Origin}}
@@ -767,19 +786,18 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v6) === */
+/* === FINAL LAYOUT CSS (v7) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
-/* KEY POSITIONING FIX: Sets the anchor point for the theme toggle button */
-.image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; position: relative; }
+.image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
+/* KEY POSITIONING FIX: Sets the anchor for the theme toggle button */
+.master-header { position: relative; }
 .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
 .meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
 .image-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
-.image-icon { font-size: 2.5em; }
-.image-container:not(.revealed) .image-icon { animation: pulse 2s infinite; }
-.image-container.revealed .image-icon { animation: rotate-full 4s linear infinite; }
+.image-icon { font-size: 2.5em; animation: pulse 2s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .image-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; }
 .image-content { position: relative; padding: 30px; text-align: center; }
@@ -816,19 +834,23 @@ def create_deck(name):
     return Deck(2059400110, name)
 
 def create_test_notes():
-    deck = create_deck('Joplin to Anki Enhanced - FINAL')
-    print("Creating test notes with final, polished design (v6)...")
+    deck = create_deck('Joplin to Anki Enhanced - DEFINITIVE')
+    print("Creating test notes with definitive design (v7)...")
     
-    basic_note = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v6'])
-    cloze_note = Note(model=cloze_model, fields=['Cardiac Electrophysiology', 'The normal heart rate is {{c1::60-100}} bpm, controlled by the {{c2::SA node}}.', 'Additional info here.', 'The SA node is the primary pacemaker...', 'A malfunctioning SA node can lead to Sick Sinus Syndrome.', 'Section 12.3', 'Costanzo Physiology', 'joplin_cloze_final_v6'])
-    mcq_note = Note(model=mcq_model, fields=['Heart Failure Etiology', 'Most common cause of heart failure?', 'Coronary artery disease', 'Hypertension', 'Valvular disease', 'Cardiomyopathy', 'A) Coronary artery disease', 'CAD is the leading cause...', 'Managing risk factors for CAD is key.', 'Module 4', "Harrison's Principles", 'joplin_mcq_final_v6'])
-    image_note = Note(model=image_model, fields=['Musculoskeletal Anatomy', "https://i.imgur.com/k9DkQyC.png", "https://i.imgur.com/r5bSnEK.png", "Identify the highlighted muscle.", "Deltoid", "Clavicle, acromion, and spine of scapula", "Deltoid tuberosity of humerus", "Axillary nerve (C5, C6)", "Abducts, flexes, extends arm", "Axillary nerve injury can paralyze the deltoid.", "Common site for IM injections.", "Upper Limb", "Netter's Atlas", "joplin_image_final_v6"])
+    # Note with a header to test the button position
+    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v7_header'])
+    # Note without a header to test the button position
+    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v7_noheader'])
+    cloze_note = Note(model=cloze_model, fields=['Cardiac Electrophysiology', 'The normal heart rate is {{c1::60-100}} bpm, controlled by the {{c2::SA node}}.', 'Additional info here.', 'The SA node is the primary pacemaker...', 'A malfunctioning SA node can lead to Sick Sinus Syndrome.', 'Section 12.3', 'Costanzo Physiology', 'joplin_cloze_final_v7'])
+    mcq_note = Note(model=mcq_model, fields=['', 'Which of the following is a fat-soluble vitamin?', 'Vitamin A', 'Vitamin C', 'Vitamin B6', 'Vitamin B12', 'A) Vitamin A', 'Vitamins A, D, E, and K are fat-soluble.', '', 'Biochemistry Basics', "Lehninger", 'joplin_mcq_final_v7'])
+    image_note = Note(model=image_model, fields=['Musculoskeletal Anatomy', "https://i.imgur.com/k9DkQyC.png", "https://i.imgur.com/r5bSnEK.png", "Identify the highlighted muscle.", "Deltoid", "Clavicle, acromion, and spine of scapula", "Deltoid tuberosity of humerus", "Axillary nerve (C5, C6)", "Abducts, flexes, extends arm", "Axillary nerve injury can paralyze the deltoid.", "Common site for IM injections.", "Upper Limb", "Netter's Atlas", "joplin_image_final_v7"])
     
-    deck.add_note(basic_note)
+    deck.add_note(basic_note_with_header)
+    deck.add_note(basic_note_no_header)
     deck.add_note(cloze_note)
     deck.add_note(mcq_note)
     deck.add_note(image_note)
-    print("4 test notes added to the deck.")
+    print("5 test notes added to the deck (including header/no-header variants).")
     return deck
 
 if __name__ == '__main__':
@@ -837,20 +859,20 @@ if __name__ == '__main__':
     output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    filename = os.path.join(output_directory, f"joplin_anki_FINAL_{timestamp}.apkg")
+    filename = os.path.join(output_directory, f"joplin_anki_DEFINITIVE_{timestamp}.apkg")
 
     package = Package(deck)
     package.write_to_file(filename)
 
     print("\n" + "="*60)
-    print(f"✅ Success! Final package created: {filename}")
+    print(f"✅ Success! Definitive package created: {filename}")
     print("="*60)
-    print("\n✨ DEFINITIVE IMPLEMENTATION COMPLETE (v6) ✨")
-    print("This final version includes the definitive positioning fix:")
-    print("  • EDGE POSITIONING: Mode toggle is now anchored to the very edge of the card.")
-    print("  • All other animations (pulse, glow, rotate) and fixes are included.")
-    print("  • NO MINIFICATION: All code is fully readable for easy debugging.")
-    print("\nThis should be the final version you need. Enjoy!")
+    print("\n✨ DEFINITIVE IMPLEMENTATION COMPLETE (v7) ✨")
+    print("This final version includes:")
+    print("  • HEADER ANCHOR FIX: Mode toggle is now perfectly positioned regardless of the Header field.")
+    print("  • SUBTLE ANIMATION: Cloze icon now has a gentle rocking motion instead of a full spin.")
+    print("  • NO MINIFICATION: All code is fully readable for easy review.")
+    print("\nThis resolves all identified issues. The design is now complete.")
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
     for old_file in files[3:]: # Keep the latest 3 versions
