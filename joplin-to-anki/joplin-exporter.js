@@ -55,30 +55,40 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
       }
     }
 
+    // --- START OF THE CORRECTED LOGIC FOR ANSWER EXTRACTION ---
     if (answerEl.length > 0) {
-      const specificAnswerEl = answerEl.find('.answer-text, .correct-answer');
-      if (specificAnswerEl.length > 0) {
-        answer = specificAnswerEl.html() || "";
-      } else {
-        const answerClone = answerEl.clone();
-        answerClone.find('summary').remove();
-        answerClone.find('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-        
-        // --- START OF THE FIX ---
-        // If an answer image path was successfully extracted into additionalFields,
-        // we must remove that specific <img> tag from the main answer content
-        // to prevent the image from being duplicated.
-        if (additionalFields.answerImagePath && additionalFields.answerImagePath.trim().length > 0) {
-            // Find the image by its exact 'src' which was already extracted.
-            answerClone.find(`img[src="${additionalFields.answerImagePath}"]`).remove();
-        }
-        // --- END OF THE FIX ---
+      // 1. Always start by cloning the main answer element to avoid modifying the original.
+      const answerClone = answerEl.clone();
 
-        const remainingHtml = answerClone.html() ? answerClone.html().trim() : '';
-        const remainingText = answerClone.text() ? answerClone.text().trim() : '';
-        answer = remainingHtml.length > 0 ? remainingHtml : remainingText;
+      // 2. CRITICAL FIX: Proactively remove the answer image tag from the cloned content.
+      //    This is done *before* extracting any text/HTML to prevent duplication.
+      //    We target the specific attribute used for extraction to be precise.
+      answerClone.find('img[data-jta-image-type="answer"]').remove();
+
+      // 3. Remove all other non-answer metadata sections.
+      answerClone.find('summary, .explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+
+      // 4. After cleaning, check if a specific '.answer-text' or '.correct-answer' element remains.
+      const specificAnswerContent = answerClone.find('.answer-text, .correct-answer');
+      let finalContentSource = answerClone; // Default to the cleaned main answer block
+
+      if (specificAnswerContent.length > 0) {
+        // If a specific container exists, use its content as the source.
+        finalContentSource = specificAnswerContent;
+      }
+      
+      // 5. Extract the final, cleaned HTML or text.
+      const remainingHtml = finalContentSource.html() ? finalContentSource.html().trim() : '';
+      const remainingText = finalContentSource.text() ? finalContentSource.text().trim() : '';
+
+      // Prefer HTML, but fall back to text if the HTML is empty or just contains breaks.
+      if (remainingHtml && remainingHtml.replace(/<br\s*\/?>/gi, '').trim().length > 0) {
+        answer = remainingHtml;
+      } else {
+        answer = remainingText;
       }
     }
+    // --- END OF THE CORRECTED LOGIC ---
 
     const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
     let cleanedQuestion = question.trim();
