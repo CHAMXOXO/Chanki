@@ -132,34 +132,37 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# FINALIZED THEME SYSTEM CSS (v10 with Definitive Sizing) - REVISED
+# FINALIZED THEME SYSTEM CSS (v11 with Structural Fix) - REVISED
 # ============================================
 THEME_CSS = '''
-/* Theme Toggle Button - FINAL: New default size and position. */
+/* Theme Toggle Button - Base Styles */
 .theme-toggle {
-    position: absolute; top: 10px; right: 10px; font-size: 1.5em; /* REVISED: New baseline size */
+    position: absolute;
     background: none; border: none; cursor: pointer; z-index: 1000;
-    padding: 8px; border-radius: 50%;
+    border-radius: 50%;
     transition: all 0.2s ease;
     line-height: 1;
     animation: pulse-mode-toggle 2.5s ease-in-out infinite;
 }
 .theme-toggle:hover { transform: scale(1.2); animation-play-state: paused; }
-@media (max-width: 480px) { .theme-toggle { top: 8px; right: 8px; font-size: 1.5em; } }
 
-/* DEFINITIVE OVERRIDE: Smaller, tighter placement ONLY when 'Header' is used. */
-.card.Header .theme-toggle {
-    top: 6px;       /* REVISED: Final position */
-    right: 6px;      /* REVISED: Final position */
-    padding: 3px;   /* REVISED: Reduced padding */
-    font-size: 1.3em; /* REVISED: Scaled-down icon */
+/* Rule for Main Headers (Default/Large Button) */
+.header .theme-toggle, .cloze-header .theme-toggle, .mcq-header .theme-toggle, .image-header .theme-toggle {
+    top: 10px; right: 10px; font-size: 1.5em; padding: 8px;
 }
 @media (max-width: 480px) {
-    .card.Header .theme-toggle {
-        top: 4px;       /* REVISED: Mobile position */
-        right: 4px;      /* REVISED: Mobile position */
-        padding: 2px;   /* REVISED: Mobile padding */
-        font-size: 1.2em; /* REVISED: Mobile size */
+    .header .theme-toggle, .cloze-header .theme-toggle, .mcq-header .theme-toggle, .image-header .theme-toggle {
+        top: 8px; right: 8px;
+    }
+}
+
+/* Rule for Meta Header (Small Button) */
+.meta-header .theme-toggle {
+    top: 6px; right: 6px; font-size: 1.3em; padding: 3px;
+}
+@media (max-width: 480px) {
+    .meta-header .theme-toggle {
+        top: 4px; right: 4px; font-size: 1.2em; padding: 2px;
     }
 }
 
@@ -336,9 +339,9 @@ body.theme-true-dark { background: #000000; }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 10)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 11 - STRUCTURAL FIX)
 # ============================================
-# Basic model (v10)
+# Basic model (v11)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -352,9 +355,16 @@ templates=[
 'qfmt': '''
 <div class="card-container question-side">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="header"><div class="question-icon">🧠</div><div class="card-type">Question</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="question-icon">🧠</div><div class="card-type">Question</div>
+        </div>
     </div>
     <div class="content-area"><div class="question-text custom-question">{{Question}}</div></div>
     {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
@@ -363,9 +373,16 @@ templates=[
 'afmt': '''
 <div class="card-container answer-side">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="header"><div class="answer-icon">✅</div><div class="card-type">Answer</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="answer-icon">✅</div><div class="card-type">Answer</div>
+        </div>
     </div>
     <div class="content-area">
         <div class="answer-text custom-answer">{{Answer}}</div>
@@ -421,16 +438,16 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v10) === */
+/* === FINAL LAYOUT CSS (v11) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
 .content-area img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.meta-header { position: relative; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
-.header { padding: 20px; display: flex; align-items: center; gap: 15px; }
+.header { position: relative; padding: 20px; display: flex; align-items: center; gap: 15px; }
 .question-icon, .answer-icon { font-size: 2em; animation: pulse 2s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .card-type { font-size: 1.4em; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
@@ -456,7 +473,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v10)
+# Cloze model (v11)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -470,9 +487,16 @@ templates=[
 'qfmt': '''
 <div class="cloze-container">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="cloze-header"><div class="cloze-icon">🔍</div><div class="cloze-title">Fill in the Blanks</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="cloze-header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="cloze-icon">🔍</div><div class="cloze-title">Fill in the Blanks</div>
+        </div>
     </div>
     <div class="cloze-content">{{cloze:Text}}</div>
     {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
@@ -481,9 +505,16 @@ templates=[
 'afmt': '''
 <div class="cloze-container revealed">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="cloze-header"><div class="cloze-icon">🎯</div><div class="cloze-title">Complete Answer</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="cloze-header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="cloze-icon">🎯</div><div class="cloze-title">Complete Answer</div>
+        </div>
     </div>
     <div class="cloze-content">
         {{cloze:Text}}
@@ -541,16 +572,16 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v10) === */
+/* === FINAL LAYOUT CSS (v11) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
 .cloze-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.meta-header { position: relative; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
-.cloze-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
+.cloze-header { position: relative; padding: 25px; display: flex; align-items: center; gap: 20px; }
 .cloze-icon { font-size: 2.5em; animation: rotate-subtle 3s ease-in-out infinite alternate; }
 .cloze-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
 .cloze-content { padding: 20px; font-size: 1.2em; line-height: 1.8; text-align: center; }
@@ -576,7 +607,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v10)
+# MCQ model (v11)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -591,9 +622,16 @@ templates=[
 'qfmt': '''
 <div class="mcq-container">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="mcq-header"><div class="mcq-icon">❓</div><div class="mcq-title">Multiple Choice</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="mcq-header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="mcq-icon">❓</div><div class="mcq-title">Multiple Choice</div>
+        </div>
     </div>
     <div class="mcq-content">
         <div class="question-section">{{Question}}</div>
@@ -610,9 +648,16 @@ templates=[
 'afmt': '''
 <div class="mcq-container answer-revealed">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="mcq-header"><div class="mcq-icon">🎯</div><div class="mcq-title">Correct Answer</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="mcq-header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="mcq-icon">🎯</div><div class="mcq-title">Correct Answer</div>
+        </div>
     </div>
     <div class="mcq-content">
         <div class="correct-answer"><div class="answer-label">✅ Correct Answer:</div><div class="answer-value">{{CorrectAnswer}}</div></div>
@@ -667,16 +712,16 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v10) === */
+/* === FINAL LAYOUT CSS (v11) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
 .mcq-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.meta-header { position: relative; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
-.mcq-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
+.mcq-header { position: relative; padding: 25px; display: flex; align-items: center; gap: 20px; }
 .mcq-icon { font-size: 2.5em; animation: pulse 2s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .mcq-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
@@ -709,7 +754,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v10)
+# Image model (v11)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -725,9 +770,16 @@ templates=[
 'qfmt': '''
 <div class="image-container">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="image-header"><div class="image-icon">🖼️</div><div class="image-title">Image Question</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="image-header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="image-icon">🖼️</div><div class="image-title">Image Question</div>
+        </div>
     </div>
     <div class="image-content">
         {{#Question}}<div class="question-overlay custom-image-question">{{Question}}</div>{{/Question}}
@@ -739,9 +791,16 @@ templates=[
 'afmt': '''
 <div class="image-container revealed">
     <div class="master-header">
-        <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
-        {{#Header}}<div class="meta-header"><span class="header-icon">📚</span><span class="header-text">{{Header}}</span></div>{{/Header}}
-        <div class="image-header"><div class="image-icon">💡</div><div class="image-title">Answer Revealed</div></div>
+        {{#Header}}
+        <div class="meta-header">
+            <button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>
+            <span class="header-icon">📚</span><span class="header-text">{{Header}}</span>
+        </div>
+        {{/Header}}
+        <div class="image-header">
+            {{^Header}}<button id="themeToggle" class="theme-toggle" onclick="cycleTheme()">🌕</button>{{/Header}}
+            <div class="image-icon">💡</div><div class="image-title">Answer Revealed</div>
+        </div>
     </div>
     <div class="image-content">
         {{#Answer}}<div class="answer-overlay custom-image-answer">{{Answer}}</div>{{/Answer}}
@@ -800,16 +859,16 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v10) === */
+/* === FINAL LAYOUT CSS (v11) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
 .image-content img { max-width: 100%; height: auto; display: block; margin: 1em auto; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
 @keyframes bounceIn { 0% { transform: scale(0.3) translateY(-50px); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1) translateY(0); opacity: 1; } }
-.meta-header { padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
+.meta-header { position: relative; padding: 12px 20px; display: flex; align-items: center; gap: 10px; font-size: 0.95em; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.2); }
 .header-icon, .footer-icon { font-size: 1.2em; }
 .header-text, .footer-text { flex: 1; }
-.image-header { padding: 25px; display: flex; align-items: center; gap: 20px; }
+.image-header { position: relative; padding: 25px; display: flex; align-items: center; gap: 20px; }
 .image-icon { font-size: 2.5em; animation: pulse 2s infinite; }
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
 .image-title { font-size: 1.5em; font-weight: 700; text-transform: uppercase; }
@@ -848,16 +907,16 @@ def create_deck(name):
 
 def create_test_notes():
     deck = create_deck('Joplin to Anki Enhanced - FINAL')
-    print("Creating test notes with final sizing and placement (v10)...")
+    print("Creating test notes with structural fix (v11)...")
     
-    # Note with a header to test the SMALLER button (1.3em)
-    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v10_header'])
-    # Note without a header to test the NEW DEFAULT button (1.5em)
-    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v10_noheader'])
+    # Note with a header to test the SMALLER button INSIDE the meta-header
+    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v11_header'])
+    # Note without a header to test the LARGER button INSIDE the main header
+    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v11_noheader'])
     
     deck.add_note(basic_note_with_header)
     deck.add_note(basic_note_no_header)
-    print("2 test notes added to the deck to demonstrate both final button sizes.")
+    print("2 test notes added to the deck to demonstrate both button positions and sizes.")
     return deck
 
 if __name__ == '__main__':
@@ -866,20 +925,20 @@ if __name__ == '__main__':
     output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    filename = os.path.join(output_directory, f"joplin_anki_DEFINITIVE_{timestamp}.apkg")
+    filename = os.path.join(output_directory, f"joplin_anki_STRUCTURAL_FIX_{timestamp}.apkg")
 
     package = Package(deck)
     package.write_to_file(filename)
 
     print("\n" + "="*60)
-    print(f"✅ Success! Definitive package created: {filename}")
+    print(f"✅ Success! Structurally correct package created: {filename}")
     print("="*60)
-    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v10) ✨")
-    print("This version includes the DEFINITIVE sizing and placement logic:")
-    print("  • Standard Header: New refined button size (1.5em).")
-    print("  • Meta-Header: Aggressive override for a smaller button (1.3em) with tighter padding.")
-    print("This prevents any visual overlap or 'crushing' of the border, even with the glow effect.")
-    print("\nWe are done. Thank you for your precise feedback.")
+    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v11 - Structural Fix) ✨")
+    print("This version implements the definitive architectural change:")
+    print("  • The theme toggle button is now rendered INSIDE the correct header.")
+    print("  • All headers are now proper positioning anchors (`position: relative`).")
+    print("  • CSS is simplified and no longer fragile.")
+    print("This permanently resolves the floating button issue. Thank you for your patience and clear diagnosis of the problem.")
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
     for old_file in files[3:]: # Keep the latest 3 versions
