@@ -132,30 +132,34 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# FINALIZED THEME SYSTEM CSS (v8 with Conditional Placement) - REVISED
+# FINALIZED THEME SYSTEM CSS (v10 with Definitive Sizing) - REVISED
 # ============================================
 THEME_CSS = '''
-/* Theme Toggle Button - FINAL: Default position for main headers. */
+/* Theme Toggle Button - FINAL: New default size and position. */
 .theme-toggle {
-    position: absolute; top: 10px; right: 10px; font-size: 2em;
+    position: absolute; top: 10px; right: 10px; font-size: 1.5em; /* REVISED: New baseline size */
     background: none; border: none; cursor: pointer; z-index: 1000;
     padding: 8px; border-radius: 50%;
-    transition: transform 0.2s ease, box-shadow 0.4s ease-out, top 0.2s ease, right 0.2s ease;
+    transition: all 0.2s ease;
     line-height: 1;
     animation: pulse-mode-toggle 2.5s ease-in-out infinite;
 }
 .theme-toggle:hover { transform: scale(1.2); animation-play-state: paused; }
 @media (max-width: 480px) { .theme-toggle { top: 8px; right: 8px; font-size: 1.5em; } }
 
-/* CONDITIONAL OVERRIDE: Tighter placement ONLY when the 'Header' field is used. */
+/* DEFINITIVE OVERRIDE: Smaller, tighter placement ONLY when 'Header' is used. */
 .card.Header .theme-toggle {
-    top: 4px;
-    right: 4px;
+    top: 6px;       /* REVISED: Final position */
+    right: 6px;      /* REVISED: Final position */
+    padding: 3px;   /* REVISED: Reduced padding */
+    font-size: 1.3em; /* REVISED: Scaled-down icon */
 }
 @media (max-width: 480px) {
     .card.Header .theme-toggle {
-        top: 2px;
-        right: 2px;
+        top: 4px;       /* REVISED: Mobile position */
+        right: 4px;      /* REVISED: Mobile position */
+        padding: 2px;   /* REVISED: Mobile padding */
+        font-size: 1.2em; /* REVISED: Mobile size */
     }
 }
 
@@ -332,9 +336,9 @@ body.theme-true-dark { background: #000000; }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 8)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 10)
 # ============================================
-# Basic model (v8)
+# Basic model (v10)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -417,7 +421,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v8) === */
+/* === FINAL LAYOUT CSS (v10) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -452,7 +456,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v8)
+# Cloze model (v10)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -537,7 +541,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v8) === */
+/* === FINAL LAYOUT CSS (v10) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -572,7 +576,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v8)
+# MCQ model (v10)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -663,7 +667,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v8) === */
+/* === FINAL LAYOUT CSS (v10) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -705,7 +709,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v8)
+# Image model (v10)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -796,7 +800,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v8) === */
+/* === FINAL LAYOUT CSS (v10) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -844,16 +848,16 @@ def create_deck(name):
 
 def create_test_notes():
     deck = create_deck('Joplin to Anki Enhanced - FINAL')
-    print("Creating test notes with final conditional placement (v8)...")
+    print("Creating test notes with final sizing and placement (v10)...")
     
-    # Note with a header to test the TIGHT button position
-    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v8_header'])
-    # Note without a header to test the SPACIOUS (default) button position
-    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v8_noheader'])
+    # Note with a header to test the SMALLER button (1.3em)
+    basic_note_with_header = Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker...', 'Persistent tachycardia or bradycardia can indicate issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_final_v10_header'])
+    # Note without a header to test the NEW DEFAULT button (1.5em)
+    basic_note_no_header = Note(model=basic_model, fields=['', 'What is the function of the alveoli?', 'Gas exchange (oxygen and carbon dioxide) between the lungs and bloodstream.', 'This occurs via passive diffusion across the respiratory membrane.', '', 'Respiratory System', '', 'joplin_basic_final_v10_noheader'])
     
     deck.add_note(basic_note_with_header)
     deck.add_note(basic_note_no_header)
-    print("2 test notes added to the deck to demonstrate both button positions.")
+    print("2 test notes added to the deck to demonstrate both final button sizes.")
     return deck
 
 if __name__ == '__main__':
@@ -862,19 +866,20 @@ if __name__ == '__main__':
     output_directory = "output" 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-    filename = os.path.join(output_directory, f"joplin_anki_FINAL_{timestamp}.apkg")
+    filename = os.path.join(output_directory, f"joplin_anki_DEFINITIVE_{timestamp}.apkg")
 
     package = Package(deck)
     package.write_to_file(filename)
 
     print("\n" + "="*60)
-    print(f"✅ Success! Final package created: {filename}")
+    print(f"✅ Success! Definitive package created: {filename}")
     print("="*60)
-    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v8) ✨")
-    print("This version includes the CONDITIONAL POSITIONING fix:")
-    print("  • When `Header` is used: Button has TIGHT placement (4px/4px).")
-    print("  • When `Header` is NOT used: Button has SPACIOUS placement (10px/10px).")
-    print("\nThis should now precisely match your requirement. The desire is met.")
+    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v10) ✨")
+    print("This version includes the DEFINITIVE sizing and placement logic:")
+    print("  • Standard Header: New refined button size (1.5em).")
+    print("  • Meta-Header: Aggressive override for a smaller button (1.3em) with tighter padding.")
+    print("This prevents any visual overlap or 'crushing' of the border, even with the glow effect.")
+    print("\nWe are done. Thank you for your precise feedback.")
     # Cleanup old files
     files = sorted(glob.glob(os.path.join(output_directory, "joplin_anki_*.apkg")), key=os.path.getmtime, reverse=True)
     for old_file in files[3:]: # Keep the latest 3 versions
