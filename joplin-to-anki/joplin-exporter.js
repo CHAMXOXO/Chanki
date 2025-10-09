@@ -27,6 +27,8 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
 };
 
 // --- CHANGE 2: The function now accepts the note's stable ID ---
+// joplin-exporter.js -> Replace the entire extractQuiz function with this one
+
 const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   const $ = cheerio.load(body);
   let output = [];
@@ -34,7 +36,6 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   $(".jta").each((i, el) => {
     let jtaID = $(el).attr("data-id");
     if (!jtaID || jtaID.trim().length === 0) {
-      // --- CHANGE 3: The stable noteId is used to generate the ID, not the content ---
       jtaID = generateUniqueID(noteId, i);
       log(levelDebug, `Auto-generated stable JTA ID: ${jtaID} for element index ${i} in note ${noteId}`);
     }
@@ -72,21 +73,19 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
     const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
     let cleanedQuestion = question.trim();
 
-    if (cardType === 'mcq' && questionEl.length > 0) {
-        const questionClone = questionEl.clone();
-        questionClone.contents().filter(function() {
-            const nodeValue = this.nodeValue || '';
-            return this.type === 'text' && /^\s*[A-D][).]?\s*/.test(nodeValue);
-        }).remove();
-        questionClone.find('br').each((idx, br_el) => {
-            const nextNode = br_el.nextSibling;
-            if (nextNode && nextNode.type === 'text' && /^\s*[A-D][).]?\s*/.test(nextNode.nodeValue || '')) {
-                $(br_el).remove();
-            }
-        });
-        cleanedQuestion = questionClone.html().trim();
-        log(levelDebug, `MCQ question cleaned successfully.`);
+    // --- NEW, IMPROVED MCQ CLEANING LOGIC ---
+    if (cardType === 'mcq' && question.length > 0) {
+        // This regex finds the first occurrence of a line break followed by an option letter (A, B, C, or D).
+        const firstOptionIndex = question.search(/<br[^>]*>\s*[A-D][\.\)]/i);
+        
+        if (firstOptionIndex !== -1) {
+            // If an option is found, we truncate the question HTML right before that line break.
+            cleanedQuestion = question.substring(0, firstOptionIndex).trim();
+            log(levelDebug, `MCQ question cleaned by truncating at the first option.`);
+        }
+        // If no options are found within the question field, we just use the trimmed question as is.
     }
+    // --- END OF NEW LOGIC ---
 
     const hasQuestionOrAnswerText = cleanedQuestion.length > 0 || (answer && answer.trim().length > 0);
     const hasImagePaths = (additionalFields.questionImagePath && additionalFields.questionImagePath.trim().length > 0) ||
