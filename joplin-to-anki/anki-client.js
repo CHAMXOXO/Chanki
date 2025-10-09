@@ -14,26 +14,49 @@ class AnkiClient {
     this.log(levelDebug, "AnkiClient initialized.");
   }
 
-  async doRequest(payload) {
-    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
-      try {
-        this.log(levelDebug, `Attempt ${attempt} for AnkiConnect action: ${payload.action}`);
-        const response = await axios.post(this.baseUrl, payload);
-        if (response.data.error) {
-          throw new Error(response.data.error);
+  // anki-client.js
+  
+    async doRequest(payload) {
+      // --- START OF MODIFICATIONS ---
+      const maxRetries = 5; // MODIFIED: Increased from 3 to 5 retries
+      
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          this.log(levelDebug, `Attempt ${attempt} for AnkiConnect action: ${payload.action}`);
+          
+          // MODIFIED: Added a specific timeout to the request
+          const response = await axios.post(this.baseUrl, payload, { timeout: 45000 }); // 45-second timeout
+  
+          if (response.data.error) {
+            throw new Error(response.data.error);
+          }
+          
+          this.log(levelDebug, `AnkiConnect action "${payload.action}" successful on attempt ${attempt}.`);
+          return response.data.result;
+  
+        } catch (error) {
+          // MODIFIED: Refined error message checking for network issues
+          const isNetworkError = error.code === 'ECONNRESET' || 
+                                 error.code === 'EPIPE' || 
+                                 error.code === 'ECONNABORTED' ||
+                                 error.message.includes('socket hang up') ||
+                                 error.message.includes('timeout');
+  
+          if (attempt === maxRetries) {
+            this.log(levelApplication, `❌ Failed after ${maxRetries} attempts for action "${payload.action}": ${error.message}`);
+            throw new Error(`Failed after ${maxRetries} attempts for action "${payload.action}": ${error.message}`);
+          }
+  
+          // MODIFIED: Implemented exponential backoff for retries
+          const backoffDelay = Math.min(2000 * Math.pow(2, attempt - 1), 20000); // Starts at 2s, doubles, max 20s
+          const retryMessage = isNetworkError ? `Retrying in ${backoffDelay}ms...` : `Retrying...`;
+  
+          this.log(levelApplication, `⚠️ Anki request attempt ${attempt} failed for action "${payload.action}": ${error.message}. ${retryMessage}`);
+          await new Promise(resolve => setTimeout(resolve, backoffDelay));
         }
-        this.log(levelDebug, `AnkiConnect action "${payload.action}" successful on attempt ${attempt}.`);
-        return response.data.result;
-      } catch (error) {
-        if (attempt === this.maxRetries) {
-          this.log(levelApplication, `❌ Failed after ${this.maxRetries} attempts for action "${payload.action}": ${error.message}`);
-          throw new Error(`Failed after ${this.maxRetries} attempts for action "${payload.action}": ${error.message}`);
-        }
-        this.log(levelApplication, `⚠️ Anki request attempt ${attempt} failed for action "${payload.action}": ${error.message}. Retrying...`);
-        await new Promise(resolve => setTimeout(resolve, this.retryDelay));
       }
+      // --- END OF MODIFICATIONS ---
     }
-  }
 
   async health() {
     return this.healthCheck();
