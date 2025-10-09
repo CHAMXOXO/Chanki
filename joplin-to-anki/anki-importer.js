@@ -97,6 +97,8 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   return "basic";
 };
 
+// anki-importer.js -> replace the importer function
+
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
@@ -131,10 +133,14 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
         return { action: "skipped", noteId: existingNoteId };
       }
 
+      // --- START OF CHANGE ---
+      // We now pass the correctly constructed 'joplinFields' object directly.
       log(levelVerbose, `Note ${existingNoteId} has changed. Updating.`);
-      await client.updateNote(existingNoteId, question, answer, additionalFields);
+      await client.updateNote(existingNoteId, joplinFields); // Pass the whole object
       await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
       return { action: "updated", noteId: existingNoteId };
+      // --- END OF CHANGE ---
+
     } else {
       log(levelVerbose, `Creating new note for JTA ID ${jtaID}.`);
       const createdNoteId = await client.createNote(question, answer, jtaID, title, notebook, normalizedTags, folders, additionalFields);
