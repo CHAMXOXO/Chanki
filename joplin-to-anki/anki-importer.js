@@ -127,27 +127,37 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
   }
 };
 
+// anki-importer.js
+
+// ... (keep the rest of the file the same)
+
 const batchImporter = async (client, items, batchSize = 10, log) => {
   const results = { created: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
   log(levelApplication, `Starting batch import of ${items.length} items...`);
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    const promises = batch.map(async (item) => {
-      try {
-        const res = await importer(client, item.question, item.answer, item.jtaID, item.title, item.notebook, item.tags, item.folders, item.additionalFields || {}, log);
-        if (res.action === "created") results.created++;
-        else if (res.action === "updated") results.updated++;
-        else if (res.action === "skipped") results.skipped++;
-      } catch (err) {
-        results.failed++;
-        results.errors.push({ item: item.jtaID, error: err.message });
-        log(levelApplication, `Batch item failed: ${item.jtaID} - ${err.message}`);
+
+  // Process items one by one to avoid overwhelming AnkiConnect
+  for (const item of items) {
+    try {
+      const res = await importer(client, item.question, item.answer, item.jtaID, item.title, item.notebook, item.tags, item.folders, item.additionalFields || {}, log);
+      if (res.action === "created") {
+        results.created++;
+      } else if (res.action === "updated") {
+        results.updated++;
+      } else if (res.action === "skipped") {
+        results.skipped++;
       }
-    });
-    await Promise.allSettled(promises);
+    } catch (err) {
+      results.failed++;
+      results.errors.push({ item: item.jtaID, error: err.message });
+      log(levelApplication, `Batch item failed: ${item.jtaID} - ${err.message}`);
+    }
   }
+
   log(levelApplication, `Batch import completed - Created: ${results.created}, Updated: ${results.updated}, Skipped: ${results.skipped}, Failed: ${results.failed}`);
+  if (results.failed > 0) {
+    log(levelApplication, `Errors occurred for the following items:`, results.errors);
+  }
   return results;
 };
 
-module.exports = { importer, batchImporter };
+module.exports = { importer, batchImporter };;
