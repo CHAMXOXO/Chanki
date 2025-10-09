@@ -123,32 +123,48 @@ class AnkiClient {
     return result;
   }
   
-  async updateNote(noteId, question, answer, additionalFields = {}) {
-      const cardType = this.detectCardType(question, answer, additionalFields);
-      this.log(levelVerbose, `Preparing to update a ${cardType} card (Anki Note ID: ${noteId})`);
+  // anki-client.js -> Replace from here to the end of the file
+  
+    async updateNote(noteId, fieldsToUpdate) {
+      this.log(levelVerbose, `Updating fields for Anki Note ID: ${noteId}`);
       
-      const fields = buildAnkiFieldsObject(question, answer, '', cardType, additionalFields);
-      delete fields['Joplin to Anki ID'];
-
-      await this.doRequest({ action: "updateNoteFields", version: 6, params: { note: { id: noteId, fields: fields } } });
-      this.log(levelApplication, `✅ Updated ${cardType} card (Anki Note ID: ${noteId})`);
-  }
-
-  async updateNoteTags(noteId, title, notebook, tags = []) {
-    const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
-    try {
-      await this.doRequest({ action: "updateNoteTags", version: 6, params: { note: noteId, tags: noteTags.join(" ") } });
-    } catch (error) {
-      this.log(levelApplication, `⚠️ Could not update tags for note ${noteId}: ${error.message}`);
+      // Create the final payload for AnkiConnect
+      const notePayload = {
+          id: noteId,
+          fields: fieldsToUpdate
+      };
+      
+      // IMPORTANT: We never want to change the unique ID, so we delete it from the fields payload
+      // before sending it to Anki. This prevents the ID from being accidentally erased.
+      delete notePayload.fields['Joplin to Anki ID'];
+    
+      await this.doRequest({ 
+          action: "updateNoteFields", 
+          version: 6, 
+          params: { 
+              note: notePayload
+          } 
+      });
+    
+      this.log(levelApplication, `✅ Updated card (Anki Note ID: ${noteId})`);
+    }
+  
+    // This function is preserved and remains unchanged
+    async updateNoteTags(noteId, title, notebook, tags = []) {
+      const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
+      try {
+        await this.doRequest({ action: "updateNoteTags", version: 6, params: { note: noteId, tags: noteTags.join(" ") } });
+      } catch (error) {
+        this.log(levelApplication, `⚠️ Could not update tags for note ${noteId}: ${error.message}`);
+      }
     }
   }
-}
-
-const models = {
-  basic: { name: "Joplin to Anki Basic Enhanced", fields: [ "Header", "Question", "Answer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
-  cloze: { name: "Joplin to Anki Cloze Enhanced", fields: [ "Header", "Text", "Extra", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ], isCloze: true },
-  mcq: { name: "Joplin to Anki MCQ Enhanced", fields: [ "Header", "Question", "OptionA", "OptionB", "OptionC", "OptionD", "CorrectAnswer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
-  imageOcclusion: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
-};
-
-module.exports = AnkiClient;
+  
+  const models = {
+    basic: { name: "Joplin to Anki Basic Enhanced", fields: [ "Header", "Question", "Answer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
+    cloze: { name: "Joplin to Anki Cloze Enhanced", fields: [ "Header", "Text", "Extra", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ], isCloze: true },
+    mcq: { name: "Joplin to Anki MCQ Enhanced", fields: [ "Header", "Question", "OptionA", "OptionB", "OptionC", "OptionD", "CorrectAnswer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
+    imageOcclusion: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
+  };
+  
+  module.exports = AnkiClient;
