@@ -74,40 +74,34 @@ const extractQuiz = (body, title, notebook, tags, log) => {
       }
     }
 
-    // Get answer - look inside details/summary structure
+    // --- START OF MODIFIED ANSWER EXTRACTION LOGIC ---
     if (answerEl.length > 0) {
-      const answerClone = answerEl.clone();
+      // First, try to find a specific answer container like '.answer-text' or '.correct-answer'
+      const specificAnswerEl = answerEl.find('.answer-text, .correct-answer');
+      if (specificAnswerEl.length > 0) {
+        // If found, use its content as the definitive answer
+        answer = specificAnswerEl.html() || "";
+        log(levelDebug, `Extracted answer from specific container (.answer-text/.correct-answer): ${answer.substring(0, 50)}...`);
+      } else {
+        // If no specific container, use the original, more brittle fallback method
+        const answerClone = answerEl.clone();
+        
+        // Remove known non-answer elements
+        answerClone.find('summary').remove();
+        answerClone.find('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+        answerClone.find('img[data-jta-image-type]').remove();
 
-      // Remove summary element
-      answerClone.find('summary').remove();
+        // What remains is the answer content. Prioritize HTML to preserve formatting.
+        const remainingHtml = answerClone.html() ? answerClone.html().trim() : '';
+        const remainingText = answerClone.text() ? answerClone.text().trim() : '';
 
-      // Remove nested fields that should be extracted separately (these are already handled by additionalFields)
-      answerClone.find('.explanation').remove();
-      answerClone.find('.correlation').remove();
-      answerClone.find('.comments').remove();
-      answerClone.find('.extra').remove();
-      answerClone.find('.correct-answer').remove();
-      answerClone.find('.image-question').remove();
-      // The .footer and .sources are intentionally removed from the *answer content*
-      // so they are not duplicated if the user wants them in separate Anki fields.
-      // They are already extracted into additionalFields.footer and additionalFields.sources.
-      // --- CRITICAL: Ensure .header is also removed if it could be nested ---
-      answerClone.find('.header').remove();
-      answerClone.find('.footer').remove();
-      answerClone.find('.sources').remove();
-      answerClone.find('.origin').remove(); 
-      answerClone.find('.insertion').remove();
-      answerClone.find('.innervation').remove();
-      answerClone.find('.action').remove();
-      answerClone.find('img[data-jta-image-type="answer"]').remove();
-      answerClone.find('img[data-jta-image-type="question"]').remove();
-
-      // What remains is the actual answer content - prioritize text over HTML
-      const answerText = answerClone.text().trim();
-      answer = answerText.length > 0 ? answerText : answerClone.html() || "";
-      log(levelDebug, `Extracted answer text: ${answer.substring(0, 50)}...`);
+        // Only use the content if it's not just empty space
+        answer = remainingHtml.length > 0 ? remainingHtml : remainingText;
+        log(levelDebug, `Extracted answer via fallback method: ${answer.substring(0, 50)}...`);
+      }
     }
-
+    // --- END OF MODIFIED ANSWER EXTRACTION LOGIC ---
+    
     // Must have either a valid question/answer or image paths for a valid card
     const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
 
