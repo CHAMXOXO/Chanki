@@ -63,7 +63,17 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
         const answerClone = answerEl.clone();
         answerClone.find('summary').remove();
         answerClone.find('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-        answerClone.find('img[data-jta-image-type]').remove();
+        
+        // --- START OF THE FIX ---
+        // If an answer image path was successfully extracted into additionalFields,
+        // we must remove that specific <img> tag from the main answer content
+        // to prevent the image from being duplicated.
+        if (additionalFields.answerImagePath && additionalFields.answerImagePath.trim().length > 0) {
+            // Find the image by its exact 'src' which was already extracted.
+            answerClone.find(`img[src="${additionalFields.answerImagePath}"]`).remove();
+        }
+        // --- END OF THE FIX ---
+
         const remainingHtml = answerClone.html() ? answerClone.html().trim() : '';
         const remainingText = answerClone.text() ? answerClone.text().trim() : '';
         answer = remainingHtml.length > 0 ? remainingHtml : remainingText;
@@ -75,28 +85,19 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
 
     // --- RESTORED AND REFINED MCQ CLEANING LOGIC ---
     if (cardType === 'mcq' && questionEl.length > 0) {
-        // We clone the element to avoid modifying the original during iteration
         const questionClone = questionEl.clone();
-
-        // Step 1: Remove the text nodes that contain the options (e.g., "A) ...")
         questionClone.contents().filter(function() {
             const nodeValue = this.nodeValue || '';
             return this.type === 'text' && /^\s*[A-D][).]?\s*/.test(nodeValue);
         }).remove();
-
-        // Step 2: Remove any <br> tags that are immediately followed by what was an option text
         questionClone.find('br').each((idx, br_el) => {
             const nextNode = br_el.nextSibling;
             if (nextNode && nextNode.type === 'text' && /^\s*[A-D][).]?\s*/.test(nextNode.nodeValue || '')) {
                 $(br_el).remove();
             }
         });
-        
         let intermediateHtml = questionClone.html().trim();
-
-        // Step 3 (THE REFINEMENT): Remove any leftover trailing <br> tags, which cause the empty space.
         cleanedQuestion = intermediateHtml.replace(/(<br\s*\/?>\s*)+$/, '');
-        
         log(levelDebug, `MCQ question cleaned successfully.`);
     }
     // --- END OF REFINED LOGIC ---
