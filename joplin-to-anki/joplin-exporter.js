@@ -33,123 +33,92 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
 
 
 // joplin-exporter.js
-
-// STRICT extraction - Look for .jta class elements (with auto-ID generation)
-const extractQuiz = (body, title, notebook, tags, log) => {
-  const $ = cheerio.load(body);
-  let output = [];
-
-  // Look for .jta class elements (with or without data-id)
-  $(".jta").each((i, el) => {
-    let jtaID = $(el).attr("data-id");
-
-    // Auto-generate ID if missing
-    if (!jtaID || jtaID.trim().length === 0) {
-      const elementContent = $(el).text().trim();
-      jtaID = generateUniqueID(elementContent, title, i);
-      log(levelDebug, `Auto-generated JTA ID: ${jtaID} for element index ${i} in note ${title}`);
-    }
-
-    // Extract additional fields
-    const additionalFields = extractAdditionalFieldsFromElement($, el, log);
-
-    // Extract question and answer from within the jta element
-    const questionEl = $(".question", el);
-    const answerEl = $(".answer", el);
-
-    let question = "";
-    let answer = "";
-
-    // Get question text
-    if (questionEl.length > 0) {
-      // Get content of .image-question specifically for text overlay
-      const imageQuestionTextEl = $(".image-question", questionEl);
-      if (imageQuestionTextEl.length > 0) {
-        question = imageQuestionTextEl.html() || "";
-        log(levelDebug, `Extracted image-question text: ${question.substring(0, 50)}...`);
-      } else {
-        // Fallback to full question content
-        question = questionEl.html() || "";
-        log(levelDebug, `Extracted full question html: ${question.substring(0, 50)}...`);
-      }
-    }
     
-    // --- MODIFIED & IMPROVED ANSWER EXTRACTION LOGIC (from previous step) ---
-    if (answerEl.length > 0) {
-      const specificAnswerEl = answerEl.find('.answer-text, .correct-answer');
-      if (specificAnswerEl.length > 0) {
-        answer = specificAnswerEl.html() || "";
-        log(levelDebug, `Extracted answer from specific container (.answer-text/.correct-answer): ${answer.substring(0, 50)}...`);
-      } else {
-        const answerClone = answerEl.clone();
-        answerClone.find('summary').remove();
-        answerClone.find('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-        answerClone.find('img[data-jta-image-type]').remove();
-        const remainingHtml = answerClone.html() ? answerClone.html().trim() : '';
-        const remainingText = answerClone.text() ? answerClone.text().trim() : '';
-        answer = remainingHtml.length > 0 ? remainingHtml : remainingText;
-        log(levelDebug, `Extracted answer via fallback method: ${answer.substring(0, 50)}...`);
-      }
-    }
+    // STRICT extraction - Look for .jta class elements (with auto-ID generation)
+    const extractQuiz = (body, title, notebook, tags, log) => {
+      const $ = cheerio.load(body);
+      let output = [];
     
-    // Detect card type before cleaning, as cleaning depends on the type
-    const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
-    let cleanedQuestion = question.trim();
-
-    // --- NEW & ROBUST MCQ QUESTION CLEANING LOGIC ---
-    if (cardType === 'mcq' && questionEl.length > 0) {
-        const questionClone = questionEl.clone(); // Work on a copy
-
-        // Find all text nodes directly inside the .question span, but not inside other elements
-        questionClone.contents().filter(function() {
-            // This regex matches lines that start with A), B), C), or D) and removes them
-            const nodeValue = this.nodeValue || '';
-            return this.type === 'text' && /^\s*[A-D][).]?\s*/.test(nodeValue);
-        }).remove();
-
-        // Also remove <br> tags that are followed by option text
-        questionClone.find('br').each((idx, br_el) => {
-            const nextNode = br_el.nextSibling;
-            if (nextNode && nextNode.type === 'text' && /^\s*[A-D][).]?\s*/.test(nextNode.nodeValue || '')) {
-                $(br_el).remove();
-            }
-        });
-
-        cleanedQuestion = questionClone.html().trim();
-        log(levelDebug, `MCQ question cleaned: Original: "${question.substring(0, 100)}..." Cleaned: "${cleanedQuestion.substring(0, 100)}..."`);
-    }
-    // --- END OF NEW LOGIC ---
-
-    const hasQuestionOrAnswerText = cleanedQuestion.length > 0 || (answer && answer.trim().length > 0);
-    const hasImagePaths = (additionalFields.questionImagePath && additionalFields.questionImagePath.trim().length > 0) ||
-                          (additionalFields.answerImagePath && additionalFields.answerImagePath.trim().length > 0);
-
-    if (hasQuestionOrAnswerText || hasImagePaths) {
-      output.push({
-        question: cleanedQuestion,
-        answer: answer ? answer.trim() : '',
-        jtaID: jtaID.trim(),
-        title,
-        notebook,
-        tags,
-        type: cardType,
-        source: 'jta-class',
-        additionalFields
-      });
-
-      log(levelDebug, `Extracted JTA item:
-        - Title: "${title}"
-        - JTA ID: "${jtaID}"
-        - Type: ${cardType}
-        - Question length: ${cleanedQuestion.length}
-        - Answer length: ${answer ? answer.length : 0}`);
-    } else {
-      log(levelDebug, `Skipping JTA element (ID: ${jtaID}) due to empty question/answer and no image paths.`);
-    }
-  });
-
-  return output;
-};
+      // Look for .jta class elements (with or without data-id)
+      $(".jta").each((i, el) => {
+        let jtaID = $(el).attr("data-id");
+    
+        // Auto-generate ID if missing
+        if (!jtaID || jtaID.trim().length === 0) {
+          const elementContent = $(el).text().trim();
+          jtaID = generateUniqueID(elementContent, title, i);
+          log(levelDebug, `Auto-generated JTA ID: ${jtaID} for element index ${i} in note ${title}`);
+        }
+    
+        // Extract additional fields
+        const additionalFields = extractAdditionalFieldsFromElement($, el, log);
+    
+        // Extract question and answer from within the jta element
+        const questionEl = $(".question", el);
+        const answerEl = $(".answer", el);
+    
+        let question = "";
+        let answer = "";
+    
+        // Get question text
+        if (questionEl.length > 0) {
+          // Get content of .image-question specifically for text overlay
+          const imageQuestionTextEl = $(".image-question", questionEl);
+          if (imageQuestionTextEl.length > 0) {
+            question = imageQuestionTextEl.html() || "";
+            log(levelDebug, `Extracted image-question text: ${question.substring(0, 50)}...`);
+          } else {
+            // Fallback to full question content
+            question = questionEl.html() || "";
+            log(levelDebug, `Extracted full question html: ${question.substring(0, 50)}...`);
+          }
+        }
+        
+        // --- MODIFIED & IMPROVED ANSWER EXTRACTION LOGIC (from previous step) ---
+        if (answerEl.length > 0) {
+          const specificAnswerEl = answerEl.find('.answer-text, .correct-answer');
+          if (specificAnswerEl.length > 0) {
+            answer = specificAnswerEl.html() || "";
+            log(levelDebug, `Extracted answer from specific container (.answer-text/.correct-answer): ${answer.substring(0, 50)}...`);
+          } else {
+            const answerClone = answerEl.clone();
+            answerClone.find('summary').remove();
+            answerClone.find('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+            answerClone.find('img[data-jta-image-type]').remove();
+            const remainingHtml = answerClone.html() ? answerClone.html().trim() : '';
+            const remainingText = answerClone.text() ? answerClone.text().trim() : '';
+            answer = remainingHtml.length > 0 ? remainingHtml : remainingText;
+            log(levelDebug, `Extracted answer via fallback method: ${answer.substring(0, 50)}...`);
+          }
+        }
+        
+        // Detect card type before cleaning, as cleaning depends on the type
+        const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
+        let cleanedQuestion = question.trim();
+    
+        // --- NEW & ROBUST MCQ QUESTION CLEANING LOGIC ---
+        if (cardType === 'mcq' && questionEl.length > 0) {
+            const questionClone = questionEl.clone(); // Work on a copy
+    
+            // Find all text nodes directly inside the .question span, but not inside other elements
+            questionClone.contents().filter(function() {
+                // This regex matches lines that start with A), B), C), or D) and removes them
+                const nodeValue = this.nodeValue || '';
+                return this.type === 'text' && /^\s*[A-D][).]?\s*/.test(nodeValue);
+            }).remove();
+    
+            // Also remove <br> tags that are followed by option text
+            questionClone.find('br').each((idx, br_el) => {
+                const nextNode = br_el.nextSibling;
+                if (nextNode && nextNode.type === 'text' && /^\s*[A-D][).]?\s*/.test(nextNode.nodeValue || '')) {
+                    $(br_el).remove();
+                }
+            });
+    
+            cleanedQuestion = questionClone.html().trim();
+            log(levelDebug, `MCQ question cleaned: Original: "${question.substring(0, 100)}..." Cleaned: "${cleanedQuestion.substring(0, 100)}..."`);
+        }
+        // --- END OF NEW LOGIC ---
     
         const hasQuestionOrAnswerText = cleanedQuestion.length > 0 || (answer && answer.trim().length > 0);
         const hasImagePaths = (additionalFields.questionImagePath && additionalFields.questionImagePath.trim().length > 0) ||
