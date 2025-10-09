@@ -1,12 +1,14 @@
-// joplin-exporter.js (FINAL CORRECTED VERSION)
+// joplin-exporter.js (FINAL STABLE ID VERSION)
 
 const cheerio = require("cheerio");
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
-const generateUniqueID = (content, title, index = 0) => {
+// --- CHANGE 1: The ID is now generated from stable data (noteId + index) ---
+const generateUniqueID = (noteId, index = 0) => {
   const crypto = require('crypto');
-  const hash = crypto.createHash('md5').update(`${title}${content}${index}`).digest('hex');
-  return `auto_${hash.substring(0, 12)}`;
+  // Using the Joplin Note ID and the block's index ensures the ID is permanent.
+  const hash = crypto.createHash('md5').update(`${noteId}${index}`).digest('hex');
+  return `joplin_${hash.substring(0, 12)}`; // A clearer prefix
 };
 
 const getCleanContent = ($, element, log, fieldName = "field") => {
@@ -24,16 +26,17 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
     return content;
 };
 
-const extractQuiz = (body, title, notebook, tags, log) => {
+// --- CHANGE 2: The function now accepts the note's stable ID ---
+const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   const $ = cheerio.load(body);
   let output = [];
 
   $(".jta").each((i, el) => {
     let jtaID = $(el).attr("data-id");
     if (!jtaID || jtaID.trim().length === 0) {
-      const elementContent = $(el).text().trim();
-      jtaID = generateUniqueID(elementContent, title, i);
-      log(levelDebug, `Auto-generated JTA ID: ${jtaID} for element index ${i}`);
+      // --- CHANGE 3: The stable noteId is used to generate the ID, not the content ---
+      jtaID = generateUniqueID(noteId, i);
+      log(levelDebug, `Auto-generated stable JTA ID: ${jtaID} for element index ${i} in note ${noteId}`);
     }
 
     const additionalFields = extractAdditionalFieldsFromElement($, el, log);
@@ -108,6 +111,8 @@ const extractQuiz = (body, title, notebook, tags, log) => {
   return output;
 };
 
+// ... (The rest of the file remains the same until the exporter generator function)
+
 const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   const fields = {
     explanation: '', clinicalCorrelation: '', extra: '', header: '', footer: '', sources: '',
@@ -146,11 +151,9 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   }
   const answerImgEl = $('img[data-jta-image-type="answer"]', jtaElement);
   if (answerImgEl.length > 0) fields.answerImagePath = answerImgEl.attr('src') || '';
-
-  // --- START OF CHANGE 1: Corrected MCQ Option Extraction ---
+  
   const questionTextContent = ($('.question', jtaElement).text() || "");
   if (questionTextContent.length > 0) {
-    // This regex is now more precise to avoid grabbing parts of the main question
     const optionPatterns = [
         /(?:A\)|A\.)\s*([\s\S]*?)(?=\s*(?:B\)|B\.|$))/i,
         /(?:B\)|B\.)\s*([\s\S]*?)(?=\s*(?:C\)|C\.|$))/i,
@@ -170,18 +173,14 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
       if (!fields.optionD) fields.optionD = optionMatches[3] || '';
     }
   }
-  // --- END OF CHANGE 1 ---
 
   return fields;
 };
 
 const detectCardTypeFromContent = (question, answer, additionalFields = {}, log) => {
   if (/\{\{c\d+::[^}]+\}\}/g.test(question || "")) return "cloze";
-  
   if ((additionalFields.questionImagePath||'').trim() || (additionalFields.answerImagePath||'').trim() || /<img[^>]+src/i.test(question||'') || /<img[^>]+src/i.test(answer||'')) return "imageOcclusion";
   
-  // --- START OF CHANGE 2: Corrected Card Type Detection ---
-  // A card is only an MCQ if it has a correct answer AND at least two options.
   const hasCorrectAnswer = (additionalFields.correctAnswer || '').trim().length > 0;
   const options = [additionalFields.optionA, additionalFields.optionB, additionalFields.optionC, additionalFields.optionD];
   const hasMinOptions = options.filter(opt => (opt || '').trim().length > 0).length >= 2;
@@ -189,7 +188,6 @@ const detectCardTypeFromContent = (question, answer, additionalFields = {}, log)
   if (hasCorrectAnswer && hasMinOptions) {
     return "mcq";
   }
-  // --- END OF CHANGE 2 ---
 
   return "basic";
 };
@@ -239,7 +237,9 @@ async function* exporter(client, datetime, log) {
         if (!noteDetails || !noteDetails.note) continue;
 
         const { note: fullNote, notebook, tags, resources } = noteDetails;
-        const jtaItems = extractQuiz(fullNote.body, fullNote.title, notebook, tags, log);
+        
+        // --- CHANGE 4: The stable note.id is now passed to extractQuiz ---
+        const jtaItems = extractQuiz(fullNote.body, fullNote.title, notebook, tags, log, note.id);
         if (jtaItems.length === 0) continue;
 
         const itemsWithResources = addResources(jtaItems, resources, log);
