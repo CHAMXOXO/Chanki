@@ -146,6 +146,7 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   const clozePattern = /\{\{c\d+::[^}]+\}\}/g;
   if (clozePattern.test((question || "") + (answer || ""))) return "cloze";
 
+  // Check for image paths
   if ((enhancedFields.questionImagePath && enhancedFields.questionImagePath.trim().length > 0) ||
       (enhancedFields.answerImagePath && enhancedFields.answerImagePath.trim().length > 0)) {
       return "imageOcclusion";
