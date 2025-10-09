@@ -1,4 +1,4 @@
-// anki-importer.js (FINAL, COMPLETE, AND CORRECTED)
+// anki-importer.js (DEFINITIVE, FINAL, CORRECTED VERSION)
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const MCQ_MIN_OPTIONS = 2;
@@ -22,36 +22,59 @@ const buildAnkiFieldsObject = (question, answer, jtaID, inferredType, enhancedFi
   let fields = { "Joplin to Anki ID": jtaID };
   switch (inferredType) {
       case 'basic':
-          fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["Answer"] = answer;
-          fields["Explanation"] = enhancedFields.explanation; fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
+          fields["Header"] = enhancedFields.header;
+          fields["Question"] = question;
+          fields["Answer"] = answer;
+          fields["Explanation"] = enhancedFields.explanation;
+          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
+          fields["Footer"] = enhancedFields.footer;
+          fields["Sources"] = enhancedFields.sources;
           break;
       case 'cloze':
-          fields["Header"] = enhancedFields.header; fields["Text"] = question; fields["Extra"] = enhancedFields.extra;
-          fields["Explanation"] = enhancedFields.explanation; fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
-          break;
-      case 'mcq':
-          fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["OptionA"] = enhancedFields.optionA;
-          fields["OptionB"] = enhancedFields.optionB; fields["OptionC"] = enhancedFields.optionC; fields["OptionD"] = enhancedFields.optionD;
-          fields["CorrectAnswer"] = enhancedFields.correctAnswer; fields["Explanation"] = enhancedFields.explanation;
+          // --- THIS WAS THE BUG. IT IS NOW CORRECTED ---
+          fields["Header"] = enhancedFields.header;
+          fields["Text"] = question; // CORRECTED: Cloze content goes into the "Text" field.
+          fields["Extra"] = enhancedFields.extra;
+          fields["Explanation"] = enhancedFields.explanation;
           fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
+          fields["Footer"] = enhancedFields.footer;
+          fields["Sources"] = enhancedFields.sources;
+          break;
+          // --- END OF CORRECTION ---
+      case 'mcq':
+          fields["Header"] = enhancedFields.header;
+          fields["Question"] = question;
+          fields["OptionA"] = enhancedFields.optionA;
+          fields["OptionB"] = enhancedFields.optionB;
+          fields["OptionC"] = enhancedFields.optionC;
+          fields["OptionD"] = enhancedFields.optionD;
+          fields["CorrectAnswer"] = enhancedFields.correctAnswer;
+          fields["Explanation"] = enhancedFields.explanation;
+          fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
+          fields["Footer"] = enhancedFields.footer;
+          fields["Sources"] = enhancedFields.sources;
           break;
       case 'imageOcclusion':
-          fields["Header"] = enhancedFields.header; fields["QuestionImagePath"] = enhancedFields.questionImagePath;
-          fields["AnswerImagePath"] = enhancedFields.answerImagePath; fields["AltText"] = enhancedFields.altText;
-          fields["Question"] = question; fields["Answer"] = answer; fields["Origin"] = enhancedFields.origin;
-          fields["Insertion"] = enhancedFields.insertion; fields["Innervation"] = enhancedFields.innervation;
-          fields["Action"] = enhancedFields.action; fields["Comments"] = enhancedFields.comments;
+          fields["Header"] = enhancedFields.header;
+          fields["QuestionImagePath"] = enhancedFields.questionImagePath;
+          fields["AnswerImagePath"] = enhancedFields.answerImagePath;
+          fields["AltText"] = enhancedFields.altText;
+          fields["Question"] = question;
+          fields["Answer"] = answer;
+          fields["Origin"] = enhancedFields.origin;
+          fields["Insertion"] = enhancedFields.insertion;
+          fields["Innervation"] = enhancedFields.innervation;
+          fields["Action"] = enhancedFields.action;
+          fields["Comments"] = enhancedFields.comments;
           fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-          fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
+          fields["Footer"] = enhancedFields.footer;
+          fields["Sources"] = enhancedFields.sources;
           break;
   }
   return fields;
 };
 
-const validateImportData = (question, answer, jtaID, title, additionalFields = {}, inferredType) => {
+const validateImportData = (question, answer, jtaID, title, inferredType) => {
   const errors = [];
   if (inferredType !== 'cloze' && (!question || question.toString().trim().length === 0)) {
       errors.push("Question is empty or missing");
@@ -67,13 +90,10 @@ const validateImportData = (question, answer, jtaID, title, additionalFields = {
 const inferCardType = (question, answer, enhancedFields = {}) => {
   if (/\{\{c\d+::[^}]+\}\}/g.test(question || "")) return "cloze";
   if ((enhancedFields.questionImagePath||'').trim() || (enhancedFields.answerImagePath||'').trim()) return "imageOcclusion";
-  
   const hasCorrectAnswer = (enhancedFields.correctAnswer || '').trim().length > 0;
   const options = [enhancedFields.optionA, enhancedFields.optionB, enhancedFields.optionC, enhancedFields.optionD];
   const hasMinOptions = options.filter(opt => (opt || '').trim().length > 0).length >= 2;
-  
   if (hasCorrectAnswer && hasMinOptions) return "mcq";
-  
   return "basic";
 };
 
@@ -83,10 +103,8 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     const enhancedFields = buildEnhancedFields(additionalFields);
     const inferredType = inferCardType(question, answer, enhancedFields);
 
-    const validationErrors = validateImportData(question, answer, jtaID, title, enhancedFields, inferredType);
-    if (validationErrors.length > 0) {
-      throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
-    }
+    const validationErrors = validateImportData(question, answer, jtaID, title, inferredType);
+    if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
     const deckName = "default";
     await client.ensureDeckExists(deckName);
