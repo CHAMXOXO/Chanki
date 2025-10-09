@@ -132,7 +132,7 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 '''
 
 # ============================================
-# REVISED THEME SYSTEM CSS (v12 with Color Enhancements)
+# REVISED THEME SYSTEM CSS (v13 with Final Fixes)
 # ============================================
 THEME_CSS = '''
 /* Theme Toggle Button - Base Styles */
@@ -156,13 +156,13 @@ THEME_CSS = '''
     }
 }
 
-/* Rule for Meta Header (Small Button) */
+/* Rule for Meta Header (Small Button) - POSITION ADJUSTED */
 .meta-header .theme-toggle {
-    top: 6px; right: 6px; font-size: 1.3em; padding: 3px;
+    top: 4px; right: 6px; font-size: 1.3em; padding: 3px;
 }
 @media (max-width: 480px) {
     .meta-header .theme-toggle {
-        top: 4px; right: 4px; font-size: 1.2em; padding: 2px;
+        top: 2px; right: 4px; font-size: 1.2em; padding: 2px;
     }
 }
 
@@ -198,7 +198,7 @@ body.theme-light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)
 .theme-light .option-b { border-left-color: #4caf50 !important; } .theme-light .option-b .option-letter { background: linear-gradient(135deg, #4caf50, #81c784); color: #E8F5E9 !important; } .theme-light .option-b .option-text { color: #14532d !important; }
 .theme-light .option-c { border-left-color: #ff9800 !important; } .theme-light .option-c .option-letter { background: linear-gradient(135deg, #ff9800, #ffb74d); color: #FFF8E1 !important; } .theme-light .option-c .option-text { color: #854d0e !important; }
 .theme-light .option-d { border-left-color: #f44336 !important; } .theme-light .option-d .option-letter { background: linear-gradient(135deg, #f44336, #ef5350); color: #FFEBEE !important; } .theme-light .option-d .option-text { color: #7f1d1d !important; }
-.theme-light .explanation-btn { color: #083344; } .theme-light .correlation-btn { color: #EBE5FF; } .theme-light .extra-btn { color: #fff; } .theme-light .comments-btn { color: #fff; }
+.theme-light .explanation-btn { color: #083344; } .theme-light .correlation-btn { color: #3b0764; } .theme-light .extra-btn, .theme-light .comments-btn { color: #451a03; }
 
 /* ---------------------------------------------------- */
 /* -------------- 🌖 THEME: LIGHT-DARK ---------------- */
@@ -230,7 +230,7 @@ body.theme-light-dark { background: linear-gradient(135deg, #4c5c96 0%, #1f2937 
 .theme-light-dark .option-b { border-left-color: #34d399 !important; } .theme-light-dark .option-b .option-letter { background: linear-gradient(135deg, #10b981, #34d399); color: #D1FAE5 !important; } .theme-light-dark .option-b .option-text { color: #d1fae5 !important; }
 .theme-light-dark .option-c { border-left-color: #60a5fa !important; } .theme-light-dark .option-c .option-letter { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #DBEAFE !important; } .theme-light-dark .option-c .option-text { color: #dbeafe !important; }
 .theme-light-dark .option-d { border-left-color: #c084fc !important; } .theme-light-dark .option-d .option-letter { background: linear-gradient(135deg, #a855f7, #c084fc); color: #F3E8FF !important; } .theme-light-dark .option-d .option-text { color: #f3e8ff !important; }
-.theme-light-dark .toggle-btn { color: #FDF2F8; }
+.theme-light-dark .explanation-btn { color: #A7F3D0; } .theme-light-dark .correlation-btn { color: #FBCFE8; } .theme-light-dark .extra-btn, .theme-light-dark .comments-btn { color: #FED7AA; } .theme-light-dark .showall-btn { color: #EAE0E0; }
 
 /* ---------------------------------------------------- */
 /* --------------- 🌗 THEME: BALANCED ----------------- */
@@ -262,7 +262,7 @@ body.theme-balanced { background: linear-gradient(to top, #30cfd0 0%, #330867 10
 .theme-balanced .option-b { border-left-color: #a78bfa !important; } .theme-balanced .option-b .option-letter { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #EDE9FE !important; } .theme-balanced .option-b .option-text { color: #ede9fe !important; }
 .theme-balanced .option-c { border-left-color: #f472b6 !important; } .theme-balanced .option-c .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FCE7F3 !important; } .theme-balanced .option-c .option-text { color: #fce7f3 !important; }
 .theme-balanced .option-d { border-left-color: #fbbf24 !important; } .theme-balanced .option-d .option-letter { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #FEFCE8 !important; } .theme-balanced .option-d .option-text { color: #fefce8 !important; }
-.theme-balanced .toggle-btn { color: #E0F2FE; }
+.theme-balanced .explanation-btn { color: #CFFAFE; } .theme-balanced .correlation-btn { color: #EDE9FE; } .theme-balanced .extra-btn, .theme-balanced .comments-btn { color: #FEF9C3; } .theme-balanced .showall-btn { color: #E0F2FE; }
 
 /* ---------------------------------------------------- */
 /* -------------- 🌘 THEME: DARK-LIGHT ---------------- */
@@ -294,10 +294,7 @@ body.theme-dark-light { background: linear-gradient(135deg, #0f172a 0%, #1e293b 
 .theme-dark-light .option-b { border-left-color: #c084fc !important; } .theme-dark-light .option-b .option-letter { background: linear-gradient(135deg, #a855f7, #c084fc); color: #0f172a !important; font-weight: 700 !important; } .theme-dark-light .option-b .option-text { color: #e9d5ff !important; }
 .theme-dark-light .option-c { border-left-color: #f87171 !important; } .theme-dark-light .option-c .option-letter { background: linear-gradient(135deg, #ef4444, #f87171); color: #0f172a !important; font-weight: 700 !important; } .theme-dark-light .option-c .option-text { color: #fecaca !important; }
 .theme-dark-light .option-d { border-left-color: #fb923c !important; } .theme-dark-light .option-d .option-letter { background: linear-gradient(135deg, #f97316, #fb923c); color: #0f172a !important; font-weight: 700 !important; } .theme-dark-light .option-d .option-text { color: #ffedd5 !important; }
-.theme-dark-light .explanation-btn { color: #99F6E4; }
-.theme-dark-light .correlation-btn { color: #E0F2FE; }
-.theme-dark-light .extra-btn { color: #F3E8FF; }
-.theme-dark-light .comments-btn { color: #F3E8FF; }
+.theme-dark-light .explanation-btn { color: #99F6E4; } .theme-dark-light .correlation-btn { color: #E0F2FE; } .theme-dark-light .extra-btn, .theme-dark-light .comments-btn { color: #F3E8FF; }
 
 /* ---------------------------------------------------- */
 /* --------------- 🌑 THEME: TRUE-DARK ---------------- */
@@ -351,9 +348,9 @@ body.theme-true-dark { background: #000000; }
 '''
 
 # ============================================
-# CARD MODELS AND TEMPLATES (FINAL VERSION 12 - COLOR & FIX)
+# CARD MODELS AND TEMPLATES (FINAL VERSION 13 - FINAL FIX)
 # ============================================
-# Basic model (v12)
+# Basic model (v13)
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
@@ -450,7 +447,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v12) === */
+/* === FINAL LAYOUT CSS (v13) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; line-height: 1.6; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .card-container { width: 100%; max-width: 1100px; border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -485,7 +482,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Cloze model (v12)
+# Cloze model (v13)
 cloze_model = Model(
 1607392320,
 'Joplin to Anki Cloze Enhanced',
@@ -584,7 +581,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v12) === */
+/* === FINAL LAYOUT CSS (v13) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .cloze-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -619,7 +616,7 @@ css=THEME_CSS + '''
 ''',
 model_type=1
 )
-# MCQ model (v12)
+# MCQ model (v13)
 mcq_model = Model(
 1607392321,
 'Joplin to Anki MCQ Enhanced',
@@ -724,7 +721,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v12) === */
+/* === FINAL LAYOUT CSS (v13) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .mcq-container { width: 100%; max-width: 1000px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -766,7 +763,7 @@ css=THEME_CSS + '''
 @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 '''
 )
-# Image model (v12)
+# Image model (v13)
 image_model = Model(
 1607392322,
 'Joplin to Anki Image Enhanced',
@@ -871,7 +868,7 @@ templates=[
 },
 ],
 css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v12) === */
+/* === FINAL LAYOUT CSS (v13) === */
 .card { font-family: 'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif; min-height: 100vh; margin: 0; padding: 25px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; }
 .image-container { width: 100%; max-width: 1200px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.2); overflow: hidden; animation: bounceIn 0.8s ease-out; }
 .master-header { position: relative; }
@@ -919,32 +916,32 @@ def create_deck(name):
 
 def create_test_notes():
     deck = create_deck('Joplin to Anki Enhanced - FULL TEST SUITE')
-    print("Creating a comprehensive test suite with 8 notes (v12)...")
+    print("Creating a comprehensive test suite with 8 notes (v13)...")
     
     # === BASIC NOTES ===
     # Basic with Header (tests small button)
-    deck.add_note(Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker.', 'Persistent tachycardia can indicate underlying issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_v12_header']))
+    deck.add_note(Note(model=basic_model, fields=['Cardiovascular Physiology', 'What is the normal resting heart rate for adults?', '60-100 beats per minute', 'The SA node acts as the natural pacemaker.', 'Persistent tachycardia can indicate underlying issues.', 'Chapter 12', 'Guyton & Hall', 'joplin_basic_v13_header']))
     # Basic without Header (tests large button)
-    deck.add_note(Note(model=basic_model, fields=['', 'What is the primary function of alveoli?', 'Gas exchange between the lungs and bloodstream.', 'This occurs via passive diffusion.', '', 'Respiratory System', '', 'joplin_basic_v12_noheader']))
+    deck.add_note(Note(model=basic_model, fields=['', 'What is the primary function of alveoli?', 'Gas exchange between the lungs and bloodstream.', 'This occurs via passive diffusion.', '', 'Respiratory System', '', 'joplin_basic_v13_noheader']))
 
     # === CLOZE NOTES ===
     # Cloze with Header (tests small button)
-    deck.add_note(Note(model=cloze_model, fields=['Neuroscience', 'The {{c1::hippocampus}} is a complex brain structure embedded deep into the temporal lobe, with a major role in learning and {{c2::memory}}.', 'It is a plastic and vulnerable structure.', 'Damage can lead to anterograde amnesia.', 'Alzheimer\'s disease often impacts this area first.', 'Unit 3', 'Kandel, Principles of Neural Science', 'joplin_cloze_v12_header']))
+    deck.add_note(Note(model=cloze_model, fields=['Neuroscience', 'The {{c1::hippocampus}} is a complex brain structure embedded deep into the temporal lobe, with a major role in learning and {{c2::memory}}.', 'It is a plastic and vulnerable structure.', 'Damage can lead to anterograde amnesia.', 'Alzheimer\'s disease often impacts this area first.', 'Unit 3', 'Kandel, Principles of Neural Science', 'joplin_cloze_v13_header']))
     # Cloze without Header (tests large button)
-    deck.add_note(Note(model=cloze_model, fields=['', 'The powerhouse of the cell is the {{c1::mitochondrion}}.', '', 'It generates most of the cell\'s supply of adenosine triphosphate (ATP).', '', 'Cell Biology', '', 'joplin_cloze_v12_noheader']))
+    deck.add_note(Note(model=cloze_model, fields=['', 'The powerhouse of the cell is the {{c1::mitochondrion}}.', '', 'It generates most of the cell\'s supply of adenosine triphosphate (ATP).', '', 'Cell Biology', '', 'joplin_cloze_v13_noheader']))
 
     # === MCQ NOTES ===
     # MCQ with Header (tests small button)
-    deck.add_note(Note(model=mcq_model, fields=['Pharmacology', 'Which of the following drugs is a proton-pump inhibitor?', 'Ranitidine', 'Omeprazole', 'Loperamide', 'Ondansetron', 'B', 'Omeprazole works by irreversibly blocking the H+/K+ ATPase in gastric parietal cells.', 'Often used for GERD and peptic ulcers.', 'Chapter 45', 'Katzung & Trevor\'s Pharmacology', 'joplin_mcq_v12_header']))
+    deck.add_note(Note(model=mcq_model, fields=['Pharmacology', 'Which of the following drugs is a proton-pump inhibitor?', 'Ranitidine', 'Omeprazole', 'Loperamide', 'Ondansetron', 'B', 'Omeprazole works by irreversibly blocking the H+/K+ ATPase in gastric parietal cells.', 'Often used for GERD and peptic ulcers.', 'Chapter 45', 'Katzung & Trevor\'s Pharmacology', 'joplin_mcq_v13_header']))
     # MCQ without Header (tests large button)
-    deck.add_note(Note(model=mcq_model, fields=['', 'What is the capital of Japan?', 'Beijing', 'Seoul', 'Tokyo', 'Bangkok', 'C', '', '', 'Geography 101', '', 'joplin_mcq_v12_noheader']))
+    deck.add_note(Note(model=mcq_model, fields=['', 'What is the capital of Japan?', 'Beijing', 'Seoul', 'Tokyo', 'Bangkok', 'C', '', '', 'Geography 101', '', 'joplin_mcq_v13_noheader']))
 
     # === IMAGE NOTES ===
     # Image with Header (tests small button)
     # NOTE: You must place 'question_deltoid.jpg' and 'answer_deltoid.jpg' in a 'media' folder next to the script.
-    deck.add_note(Note(model=image_model, fields=['Anatomy - Upper Limb', '_media/question_deltoid.jpg', '_media/answer_deltoid.jpg', 'Identify the highlighted muscle.', 'Deltoid Muscle', 'Lateral third of clavicle, acromion, and spine of scapula', 'Deltoid tuberosity of humerus', 'Axillary nerve (C5, C6)', 'Abduction, flexion, and extension of the shoulder', 'Axillary nerve damage can paralyze the deltoid.', 'Key for arm abduction beyond 15 degrees.', 'Shoulder Joint', 'Gray\'s Anatomy', 'joplin_image_v12_header']))
+    deck.add_note(Note(model=image_model, fields=['Anatomy - Upper Limb', '_media/question_deltoid.jpg', '_media/answer_deltoid.jpg', 'Identify the highlighted muscle.', 'Deltoid Muscle', 'Lateral third of clavicle, acromion, and spine of scapula', 'Deltoid tuberosity of humerus', 'Axillary nerve (C5, C6)', 'Abduction, flexion, and extension of the shoulder', 'Axillary nerve damage can paralyze the deltoid.', 'Key for arm abduction beyond 15 degrees.', 'Shoulder Joint', 'Gray\'s Anatomy', 'joplin_image_v13_header']))
     # Image without Header (tests large button)
-    deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '_media/answer_heart.jpg', 'Identify the chamber indicated by the arrow.', 'Left Ventricle', '', '', '', 'Pumps oxygenated blood to the rest of the body via the aorta.', '', '', 'Thoracic Cavity', '', 'joplin_image_v12_noheader']))
+    deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '_media/answer_heart.jpg', 'Identify the chamber indicated by the arrow.', 'Left Ventricle', '', '', '', 'Pumps oxygenated blood to the rest of the body via the aorta.', '', '', 'Thoracic Cavity', '', 'joplin_image_v13_noheader']))
     
     print("8 test notes added to the deck for all types and header variations.")
     return deck
@@ -972,14 +969,14 @@ if __name__ == '__main__':
     package.write_to_file(filename)
 
     print("\n" + "="*60)
-    print(f"✅ Success! Enhanced package with all fixes created: {filename}")
+    print(f"✅ Success! Final package with all fixes created: {filename}")
     print("="*60)
-    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v12 - Color & Fix) ✨")
+    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v13 - Final Fixes) ✨")
     print("This version implements all requested changes:")
-    print("  • Theme toggle button positioning is now CORRECT for all note types.")
-    print("  • Text colors for headers, Q&A, and buttons are now vibrant and theme-specific.")
-    print("  • The test deck now includes 8 notes to verify all card types and layouts.")
-    print("  • Code remains readable and unminified for easy debugging.")
+    print("  • Theme toggle button in the meta-header has been moved up for better spacing.")
+    print("  • Action button text colors are now theme-specific and avoid pure white.")
+    print("  • All previous fixes for button positioning and color enhancements are included.")
+    print("  • The test deck remains comprehensive for full verification.")
     print("\nIMPORTANT: For the Image notes to work, please place your images")
     print(" (e.g., 'question_deltoid.jpg') inside the 'media' folder before running.")
     
