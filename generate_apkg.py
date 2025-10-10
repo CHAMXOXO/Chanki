@@ -985,7 +985,7 @@ css=THEME_CSS + '''
 '''
 )
 def create_deck(name):
-return Deck(2059400110, name)
+ return Deck(2059400110, name)
 def create_test_notes():
 deck = create_deck('Joplin to Anki Enhanced - FINAL TEST SUITE')
 print("Creating a comprehensive test suite with 8 notes (v14)...")
