@@ -129,8 +129,21 @@ def apply_global_theme(theme_name: str):
     current_family = theme_name.split('-')[0]
     is_dark = current_family in dark_families
     
-    if is_dark != mw.pm.night_mode():
-        mw.pm.toggle_night_mode()
+    # Updated for Anki 25.09+ API
+    try:
+        from aqt.theme import theme_manager
+        current_theme = theme_manager.night_mode
+        if is_dark != current_theme:
+            theme_manager.night_mode = is_dark
+            mw.reset()
+    except:
+        # Fallback for older Anki versions
+        try:
+            if is_dark != mw.pm.night_mode():
+                mw.pm.set_night_mode(is_dark)
+                mw.reset()
+        except:
+            pass
         
     if mw.state == "review":
         mw.reviewer.refresh()
