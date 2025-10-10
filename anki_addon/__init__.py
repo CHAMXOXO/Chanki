@@ -4,6 +4,7 @@
 # --- IMPORTS ---
 from aqt import mw, gui_hooks
 from aqt.qt import QAction, QMenu
+from aqt.utils import tooltip
 from typing import Any, List, Dict
 
 # ==============================================================================
@@ -148,7 +149,7 @@ def apply_global_theme(theme_name: str):
     if mw.state == "review":
         mw.reviewer.refresh()
     
-    mw.tooltip(f"Theme set to {theme_name.replace('-', ' ').title()}")
+    tooltip(f"Theme set to {theme_name.replace('-', ' ').title()}")
 
 # ==============================================================================
 # =====================  STEP 3: DYNAMIC INJECTION HOOKS =======================
