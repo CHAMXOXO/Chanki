@@ -205,70 +205,72 @@ body.theme-light { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)
 /* ---------------------------------------------------- */
 /* -------------- 🌖 THEME: LIGHT-DARK ---------------- */
 /* ---------------------------------------------------- */
-body.theme-light-dark { background: linear-gradient(135deg, #4c5c96 0%, #1f2937 100%); }
+/* --- STYLES SWAPPED WITH BALANCED THEME --- */
+body.theme-light-dark { background: linear-gradient(to top, #30cfd0 0%, #330867 100%); }
 .theme-light-dark .card-container, .theme-light-dark .cloze-container, .theme-light-dark .mcq-container, .theme-light-dark .image-container {
-    background: rgba(31, 41, 55, 0.85); backdrop-filter: blur(12px); color: #EAE0E0; border: 1px solid rgba(75, 85, 99, 0.9);
+    background: rgba(45, 55, 72, 0.85); backdrop-filter: blur(12px); color: #A0AEC0; border: 1px solid rgba(113, 128, 150, 0.8);
 }
 .theme-light-dark .meta-header, .theme-light-dark .header, .theme-light-dark .cloze-header, .theme-light-dark .mcq-header, .theme-light-dark .image-header {
-    background: linear-gradient(135deg, #be185d 0%, #ec4899 100%);
+    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
 }
-.theme-light-dark .theme-toggle { color: #FCE7F3; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.5); }
-.theme-light-dark .card-type, .theme-light-dark .cloze-title, .theme-light-dark .mcq-title, .theme-light-dark .image-title, .theme-light-dark .header-text { color: #FCE7F3 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-.theme-light-dark .question-text, .theme-light-dark .question-section { color: #FBCFE8 !important; }
-.theme-light-dark .question-overlay { color: #831843 !important; }
-.theme-light-dark .answer-text, .theme-light-dark .answer-overlay { color: #A7F3D0 !important; }
-.theme-light-dark .correct-answer .answer-value { color: #831843 !important; }
-.theme-light-dark .section-title, .theme-light-dark .block-title, .theme-light-dark .extra-title, .theme-light-dark .comments-title, .theme-light-dark .anatomy-title { color: #FBCFE8 !important; }
-.theme-light-dark .cloze { background: linear-gradient(135deg, #ec4899, #f472b6) !important; color: #FDF2F8; font-weight: 700; animation: highlight-light-dark 2s ease-in-out infinite alternate; }
-.theme-light-dark .explanation-block, .theme-light-dark .explanation-section, .theme-light-dark .explanation-info { background: rgba(92, 44, 64, 0.8); border-left: 5px solid #EC4899; }
-.theme-light-dark .correlation-block, .theme-light-dark .correlation-section, .theme-light-dark .correlation-info { background: rgba(17, 94, 89, 0.8); border-left: 5px solid #14B8A6; }
-.theme-light-dark .extra-info, .theme-light-dark .comments-block { background: rgba(109, 40, 217, 0.6); border-left: 5px solid #A855F7; }
-.theme-light-dark .custom-explanation { color: #fbcfe8 !important; } .theme-light-dark .custom-correlation { color: #a7f3d0 !important; } .theme-light-dark .custom-extra, .theme-light-dark .custom-comments { color: #e9d5ff !important; }
-.theme-light-dark .origin-section { background-color: rgba(190, 24, 93, 0.7); border-left: 5px solid #F472B6; }
-.theme-light-dark .insertion-section { background-color: rgba(15, 118, 110, 0.7); border-left: 5px solid #14B8A6; }
-.theme-light-dark .innervation-section { background-color: rgba(109, 40, 217, 0.7); border-left: 5px solid #A855F7; }
-.theme-light-dark .action-section { background-color: rgba(234, 88, 12, 0.7); border-left: 5px solid #F97316; }
-.theme-light-dark .custom-origin { color: #fbcfe8 !important; } .theme-light-dark .custom-insertion { color: #a7f3d0 !important; } .theme-light-dark .custom-innervation { color: #e9d5ff !important; } .theme-light-dark .custom-action { color: #fed7aa !important; }
-.theme-light-dark .option { background: rgba(55, 65, 81, 0.7); }
-.theme-light-dark .option-a { border-left-color: #f472b6 !important; } .theme-light-dark .option-a .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FDF2F8 !important; } .theme-light-dark .option-a .option-text { color: #fce7f3 !important; }
-.theme-light-dark .option-b { border-left-color: #34d399 !important; } .theme-light-dark .option-b .option-letter { background: linear-gradient(135deg, #10b981, #34d399); color: #D1FAE5 !important; } .theme-light-dark .option-b .option-text { color: #d1fae5 !important; }
-.theme-light-dark .option-c { border-left-color: #60a5fa !important; } .theme-light-dark .option-c .option-letter { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #DBEAFE !important; } .theme-light-dark .option-c .option-text { color: #dbeafe !important; }
-.theme-light-dark .option-d { border-left-color: #c084fc !important; } .theme-light-dark .option-d .option-letter { background: linear-gradient(135deg, #a855f7, #c084fc); color: #F3E8FF !important; } .theme-light-dark .option-d .option-text { color: #f3e8ff !important; }
-.theme-light-dark .explanation-btn { color: #A7F3D0; } .theme-light-dark .correlation-btn { color: #FBCFE8; } .theme-light-dark .extra-btn, .theme-light-dark .comments-btn { color: #FED7AA; } .theme-light-dark .showall-btn { color: #EAE0E0; }
+.theme-light-dark .theme-toggle { color: #E0F2FE; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(6, 182, 212, 0.6); }
+.theme-light-dark .card-type, .theme-light-dark .cloze-title, .theme-light-dark .mcq-title, .theme-light-dark .image-title, .theme-light-dark .header-text { color: #E0F2FE !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+.theme-light-dark .question-text, .theme-light-dark .question-section { color: #CFFAFE !important; }
+.theme-light-dark .question-overlay { color: #164e63 !important; }
+.theme-light-dark .answer-text, .theme-light-dark .answer-overlay { color: #F0ABFC !important; }
+.theme-light-dark .correct-answer .answer-value { color: #1e3a8a !important; }
+.theme-light-dark .section-title, .theme-light-dark .block-title, .theme-light-dark .extra-title, .theme-light-dark .comments-title, .theme-light-dark .anatomy-title { color: #CFFAFE !important; }
+.theme-light-dark .cloze { background: linear-gradient(135deg, #3b82f6, #60a5fa) !important; color: #EBF8FF; font-weight: 700; animation: highlight-balanced 2s ease-in-out infinite alternate; }
+.theme-light-dark .explanation-block, .theme-light-dark .explanation-section, .theme-light-dark .explanation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #3B82F6; }
+.theme-light-dark .correlation-block, .theme-light-dark .correlation-section, .theme-light-dark .correlation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #06B6D4; }
+.theme-light-dark .extra-info, .theme-light-dark .comments-block { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #D946EF; }
+.theme-light-dark .custom-explanation { color: #93c5fd !important; } .theme-light-dark .custom-correlation { color: #67e8f9 !important; } .theme-light-dark .custom-extra, .theme-light-dark .custom-comments { color: #f0abfc !important; }
+.theme-light-dark .origin-section { background-color: rgba(59, 130, 246, 0.6); border-left: 5px solid #60A5FA; }
+.theme-light-dark .insertion-section { background-color: rgba(6, 182, 212, 0.6); border-left: 5px solid #2DD4BF; }
+.theme-light-dark .innervation-section { background-color: rgba(217, 70, 239, 0.6); border-left: 5px solid #F472B6; }
+.theme-light-dark .action-section { background-color: rgba(245, 158, 11, 0.6); border-left: 5px solid #FBBF24; }
+.theme-light-dark .custom-origin { color: #dbeafe !important; } .theme-light-dark .custom-insertion { color: #cffafe !important; } .theme-light-dark .custom-innervation { color: #fae8ff !important; } .theme-light-dark .custom-action { color: #fef9c3 !important; }
+.theme-light-dark .option { background: rgba(26, 32, 44, 0.75); }
+.theme-light-dark .option-a { border-left-color: #38bdf8 !important; } .theme-light-dark .option-a .option-letter { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #E0F2FE !important; } .theme-light-dark .option-a .option-text { color: #e0f2fe !important; }
+.theme-light-dark .option-b { border-left-color: #a78bfa !important; } .theme-light-dark .option-b .option-letter { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #EDE9FE !important; } .theme-light-dark .option-b .option-text { color: #ede9fe !important; }
+.theme-light-dark .option-c { border-left-color: #f472b6 !important; } .theme-light-dark .option-c .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FCE7F3 !important; } .theme-light-dark .option-c .option-text { color: #fce7f3 !important; }
+.theme-light-dark .option-d { border-left-color: #fbbf24 !important; } .theme-light-dark .option-d .option-letter { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #FEFCE8 !important; } .theme-light-dark .option-d .option-text { color: #fefce8 !important; }
+.theme-light-dark .explanation-btn { color: #CFFAFE; } .theme-light-dark .correlation-btn { color: #EDE9FE; } .theme-light-dark .extra-btn, .theme-light-dark .comments-btn { color: #FEF9C3; } .theme-light-dark .showall-btn { color: #E0F2FE; }
 
 /* ---------------------------------------------------- */
 /* --------------- 🌗 THEME: BALANCED ----------------- */
 /* ---------------------------------------------------- */
-body.theme-balanced { background: linear-gradient(to top, #30cfd0 0%, #330867 100%); }
+/* --- STYLES SWAPPED WITH LIGHT-DARK THEME --- */
+body.theme-balanced { background: linear-gradient(135deg, #4c5c96 0%, #1f2937 100%); }
 .theme-balanced .card-container, .theme-balanced .cloze-container, .theme-balanced .mcq-container, .theme-balanced .image-container {
-    background: rgba(45, 55, 72, 0.85); backdrop-filter: blur(12px); color: #A0AEC0; border: 1px solid rgba(113, 128, 150, 0.8);
+    background: rgba(31, 41, 55, 0.85); backdrop-filter: blur(12px); color: #EAE0E0; border: 1px solid rgba(75, 85, 99, 0.9);
 }
 .theme-balanced .meta-header, .theme-balanced .header, .theme-balanced .cloze-header, .theme-balanced .mcq-header, .theme-balanced .image-header {
-    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    background: linear-gradient(135deg, #be185d 0%, #ec4899 100%);
 }
-.theme-balanced .theme-toggle { color: #E0F2FE; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(6, 182, 212, 0.6); }
-.theme-balanced .card-type, .theme-balanced .cloze-title, .theme-balanced .mcq-title, .theme-balanced .image-title, .theme-balanced .header-text { color: #E0F2FE !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
-.theme-balanced .question-text, .theme-balanced .question-section { color: #CFFAFE !important; }
-.theme-balanced .question-overlay { color: #164e63 !important; }
-.theme-balanced .answer-text, .theme-balanced .answer-overlay { color: #F0ABFC !important; }
-.theme-balanced .correct-answer .answer-value { color: #1e3a8a !important; }
-.theme-balanced .section-title, .theme-balanced .block-title, .theme-balanced .extra-title, .theme-balanced .comments-title, .theme-balanced .anatomy-title { color: #CFFAFE !important; }
-.theme-balanced .cloze { background: linear-gradient(135deg, #3b82f6, #60a5fa) !important; color: #EBF8FF; font-weight: 700; animation: highlight-balanced 2s ease-in-out infinite alternate; }
-.theme-balanced .explanation-block, .theme-balanced .explanation-section, .theme-balanced .explanation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #3B82F6; }
-.theme-balanced .correlation-block, .theme-balanced .correlation-section, .theme-balanced .correlation-info { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #06B6D4; }
-.theme-balanced .extra-info, .theme-balanced .comments-block { background: rgba(26, 32, 44, 0.8); border-left: 5px solid #D946EF; }
-.theme-balanced .custom-explanation { color: #93c5fd !important; } .theme-balanced .custom-correlation { color: #67e8f9 !important; } .theme-balanced .custom-extra, .theme-balanced .custom-comments { color: #f0abfc !important; }
-.theme-balanced .origin-section { background-color: rgba(59, 130, 246, 0.6); border-left: 5px solid #60A5FA; }
-.theme-balanced .insertion-section { background-color: rgba(6, 182, 212, 0.6); border-left: 5px solid #2DD4BF; }
-.theme-balanced .innervation-section { background-color: rgba(217, 70, 239, 0.6); border-left: 5px solid #F472B6; }
-.theme-balanced .action-section { background-color: rgba(245, 158, 11, 0.6); border-left: 5px solid #FBBF24; }
-.theme-balanced .custom-origin { color: #dbeafe !important; } .theme-balanced .custom-insertion { color: #cffafe !important; } .theme-balanced .custom-innervation { color: #fae8ff !important; } .theme-balanced .custom-action { color: #fef9c3 !important; }
-.theme-balanced .option { background: rgba(26, 32, 44, 0.75); }
-.theme-balanced .option-a { border-left-color: #38bdf8 !important; } .theme-balanced .option-a .option-letter { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #E0F2FE !important; } .theme-balanced .option-a .option-text { color: #e0f2fe !important; }
-.theme-balanced .option-b { border-left-color: #a78bfa !important; } .theme-balanced .option-b .option-letter { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #EDE9FE !important; } .theme-balanced .option-b .option-text { color: #ede9fe !important; }
-.theme-balanced .option-c { border-left-color: #f472b6 !important; } .theme-balanced .option-c .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FCE7F3 !important; } .theme-balanced .option-c .option-text { color: #fce7f3 !important; }
-.theme-balanced .option-d { border-left-color: #fbbf24 !important; } .theme-balanced .option-d .option-letter { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #FEFCE8 !important; } .theme-balanced .option-d .option-text { color: #fefce8 !important; }
-.theme-balanced .explanation-btn { color: #CFFAFE; } .theme-balanced .correlation-btn { color: #EDE9FE; } .theme-balanced .extra-btn, .theme-balanced .comments-btn { color: #FEF9C3; } .theme-balanced .showall-btn { color: #E0F2FE; }
+.theme-balanced .theme-toggle { color: #FCE7F3; text-shadow: 0 2px 4px rgba(0,0,0,0.4); box-shadow: 0 0 20px 5px rgba(236, 72, 153, 0.5); }
+.theme-balanced .card-type, .theme-balanced .cloze-title, .theme-balanced .mcq-title, .theme-balanced .image-title, .theme-balanced .header-text { color: #FCE7F3 !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
+.theme-balanced .question-text, .theme-balanced .question-section { color: #FBCFE8 !important; }
+.theme-balanced .question-overlay { color: #831843 !important; }
+.theme-balanced .answer-text, .theme-balanced .answer-overlay { color: #A7F3D0 !important; }
+.theme-balanced .correct-answer .answer-value { color: #831843 !important; }
+.theme-balanced .section-title, .theme-balanced .block-title, .theme-balanced .extra-title, .theme-balanced .comments-title, .theme-balanced .anatomy-title { color: #FBCFE8 !important; }
+.theme-balanced .cloze { background: linear-gradient(135deg, #ec4899, #f472b6) !important; color: #FDF2F8; font-weight: 700; animation: highlight-light-dark 2s ease-in-out infinite alternate; }
+.theme-balanced .explanation-block, .theme-balanced .explanation-section, .theme-balanced .explanation-info { background: rgba(92, 44, 64, 0.8); border-left: 5px solid #EC4899; }
+.theme-balanced .correlation-block, .theme-balanced .correlation-section, .theme-balanced .correlation-info { background: rgba(17, 94, 89, 0.8); border-left: 5px solid #14B8A6; }
+.theme-balanced .extra-info, .theme-balanced .comments-block { background: rgba(109, 40, 217, 0.6); border-left: 5px solid #A855F7; }
+.theme-balanced .custom-explanation { color: #fbcfe8 !important; } .theme-balanced .custom-correlation { color: #a7f3d0 !important; } .theme-balanced .custom-extra, .theme-balanced .custom-comments { color: #e9d5ff !important; }
+.theme-balanced .origin-section { background-color: rgba(190, 24, 93, 0.7); border-left: 5px solid #F472B6; }
+.theme-balanced .insertion-section { background-color: rgba(15, 118, 110, 0.7); border-left: 5px solid #14B8A6; }
+.theme-balanced .innervation-section { background-color: rgba(109, 40, 217, 0.7); border-left: 5px solid #A855F7; }
+.theme-balanced .action-section { background-color: rgba(234, 88, 12, 0.7); border-left: 5px solid #F97316; }
+.theme-balanced .custom-origin { color: #fbcfe8 !important; } .theme-balanced .custom-insertion { color: #a7f3d0 !important; } .theme-balanced .custom-innervation { color: #e9d5ff !important; } .theme-balanced .custom-action { color: #fed7aa !important; }
+.theme-balanced .option { background: rgba(55, 65, 81, 0.7); }
+.theme-balanced .option-a { border-left-color: #f472b6 !important; } .theme-balanced .option-a .option-letter { background: linear-gradient(135deg, #ec4899, #f472b6); color: #FDF2F8 !important; } .theme-balanced .option-a .option-text { color: #fce7f3 !important; }
+.theme-balanced .option-b { border-left-color: #34d399 !important; } .theme-balanced .option-b .option-letter { background: linear-gradient(135deg, #10b981, #34d399); color: #D1FAE5 !important; } .theme-balanced .option-b .option-text { color: #d1fae5 !important; }
+.theme-balanced .option-c { border-left-color: #60a5fa !important; } .theme-balanced .option-c .option-letter { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: #DBEAFE !important; } .theme-balanced .option-c .option-text { color: #dbeafe !important; }
+.theme-balanced .option-d { border-left-color: #c084fc !important; } .theme-balanced .option-d .option-letter { background: linear-gradient(135deg, #a855f7, #c084fc); color: #F3E8FF !important; } .theme-balanced .option-d .option-text { color: #f3e8ff !important; }
+.theme-balanced .explanation-btn { color: #A7F3D0; } .theme-balanced .correlation-btn { color: #FBCFE8; } .theme-balanced .extra-btn, .theme-balanced .comments-btn { color: #FED7AA; } .theme-balanced .showall-btn { color: #EAE0E0; }
 
 /* ---------------------------------------------------- */
 /* -------------- 🌘 THEME: DARK-LIGHT ---------------- */
@@ -1061,12 +1063,11 @@ if __name__ == '__main__':
     print("\n" + "="*60)
     print(f"✅ Success! Final package with all fixes created: {filename}")
     print("="*60)
-    print("\n✨ FINAL IMPLEMENTATION COMPLETE (v14) ✨")
-    print("This version implements all requested changes:")
-    print("  • MCQ Answer text is now high-contrast and theme-specific.")
-    print("  • Image Question text is now high-contrast and theme-specific.")
-    print("  • Large theme-toggle button size reduced to 1.4em.")
-    print("  • All previous fixes are included.")
+    print("\n✨ THEME SWAP IMPLEMENTED (v14) ✨")
+    print("This version implements the requested theme change:")
+    print("  • The CSS styles for 'light-dark' (🌖) and 'balanced' (🌗) have been swapped.")
+    print("  • The emojis and theme names in the cycle order remain the same.")
+    print("  • All other code and functionality are preserved.")
     print("  • The test deck remains comprehensive for full verification.")
     print("\nIMPORTANT: For the Image notes to work, please place your images")
     print(" (e.g., 'question_deltoid.jpg') inside the 'media' folder before running.")
