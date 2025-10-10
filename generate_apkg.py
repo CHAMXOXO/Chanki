@@ -1022,7 +1022,7 @@ if name == 'main':
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 output_directory = "output"
 if not os.path.exists(output_directory):
-os.makedirs(output_directory)
+  os.makedirs(output_directory)
 filename = os.path.join(output_directory, f"joplin_anki_ENHANCED_FINAL_{timestamp}.apkg")
 code
 Code
