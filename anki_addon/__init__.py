@@ -259,16 +259,22 @@ def get_main_window_css(theme: str) -> str:
 def get_theme() -> str:
     """Get saved theme from multiple sources"""
     # Try profile config first
-    if hasattr(mw, 'pm') and mw.pm.profile.get('joplin_theme'):
-        theme = mw.pm.profile['joplin_theme']
-        if theme in THEMES:
-            return theme
+    if hasattr(mw, 'pm') and hasattr(mw.pm, 'profile'):
+        try:
+            theme = mw.pm.profile.get('joplin_theme', None)
+            if theme and theme in THEMES:
+                return theme
+        except (AttributeError, TypeError):
+            pass
     
     # Try collection config
     if mw.col:
-        theme = mw.col.conf.get(THEME_KEY, 'light-full-moon')
-        if theme in THEMES:
-            return theme
+        try:
+            theme = mw.col.conf.get(THEME_KEY, 'light-full-moon')
+            if theme in THEMES:
+                return theme
+        except (AttributeError, TypeError):
+            pass
     
     return 'light-full-moon'
 
@@ -278,14 +284,20 @@ def save_theme(theme: str):
         return
     
     # Save to profile (persists across collection changes)
-    if hasattr(mw, 'pm'):
-        mw.pm.profile['joplin_theme'] = theme
-        mw.pm.save()
+    if hasattr(mw, 'pm') and hasattr(mw.pm, 'profile'):
+        try:
+            mw.pm.profile['joplin_theme'] = theme
+            mw.pm.save()
+        except (AttributeError, TypeError):
+            pass
     
     # Save to collection
     if mw.col:
-        mw.col.conf[THEME_KEY] = theme
-        mw.col.setMod()
+        try:
+            mw.col.conf[THEME_KEY] = theme
+            mw.col.setMod()
+        except (AttributeError, TypeError):
+            pass
 
 def is_dark_theme(theme: str) -> bool:
     """Check if theme needs dark mode"""
@@ -363,13 +375,16 @@ def inject_card_theme(html: str, card: Any, context: Any) -> str:
 
 def on_webview_will_set_content(web_content, context):
     """Inject theme into all webviews"""
-    theme = get_theme()
-    css_injection = f"<style>{THEME_CSS}</style>"
-    
-    if hasattr(web_content, 'head'):
-        web_content.head += css_injection
-    elif hasattr(web_content, 'body'):
-        web_content.body = css_injection + web_content.body
+    try:
+        theme = get_theme()
+        css_injection = f"<style>{THEME_CSS}</style>"
+        
+        if hasattr(web_content, 'head'):
+            web_content.head += css_injection
+        elif hasattr(web_content, 'body'):
+            web_content.body = css_injection + web_content.body
+    except Exception:
+        pass  # Silently fail to prevent startup crashes
 
 # ==============================================================================
 # MENU
@@ -415,28 +430,52 @@ def setup_theme_menu():
 # ==============================================================================
 def init_addon():
     """Initialize addon on startup"""
-    theme = get_theme()
-    
-    # Set Anki's base mode
-    needs_dark = is_dark_theme(theme)
     try:
-        from aqt.theme import theme_manager
-        theme_manager.night_mode = needs_dark
-    except:
-        if hasattr(mw, 'pm'):
-            mw.pm.set_night_mode(needs_dark)
-    
-    # Apply to main window
-    apply_theme_to_main_window(theme)
-    
-    # Setup menu
-    setup_theme_menu()
+        theme = get_theme()
+        
+        # Set Anki's base mode
+        needs_dark = is_dark_theme(theme)
+        try:
+            from aqt.theme import theme_manager
+            theme_manager.night_mode = needs_dark
+        except:
+            if hasattr(mw, 'pm'):
+                try:
+                    mw.pm.set_night_mode(needs_dark)
+                except:
+                    pass
+        
+        # Apply to main window
+        apply_theme_to_main_window(theme)
+        
+        # Setup menu
+        setup_theme_menu()
+    except Exception as e:
+        print(f"JoplinSync Theme initialization error: {e}")
+        # Continue anyway to prevent Anki crash
 
-# Register hooks
-gui_hooks.card_will_show.append(inject_card_theme)
-gui_hooks.main_window_did_init.append(init_addon)
-gui_hooks.profile_did_open.append(lambda: apply_theme_to_main_window(get_theme()))
-gui_hooks.webview_will_set_content.append(on_webview_will_set_content)
+# Register hooks with error protection
+try:
+    gui_hooks.card_will_show.append(inject_card_theme)
+except Exception as e:
+    print(f"Failed to register card_will_show hook: {e}")
 
-# Refresh on state change
-gui_hooks.state_did_change.append(lambda new_state, old_state: apply_theme_to_main_window(get_theme()))
+try:
+    gui_hooks.main_window_did_init.append(init_addon)
+except Exception as e:
+    print(f"Failed to register main_window_did_init hook: {e}")
+
+try:
+    gui_hooks.profile_did_open.append(lambda: apply_theme_to_main_window(get_theme()))
+except Exception as e:
+    print(f"Failed to register profile_did_open hook: {e}")
+
+try:
+    gui_hooks.webview_will_set_content.append(on_webview_will_set_content)
+except Exception as e:
+    print(f"Failed to register webview_will_set_content hook: {e}")
+
+try:
+    gui_hooks.state_did_change.append(lambda new_state, old_state: apply_theme_to_main_window(get_theme()))
+except Exception as e:
+    print(f"Failed to register state_did_change hook: {e}")
