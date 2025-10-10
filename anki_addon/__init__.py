@@ -1,4 +1,4 @@
-# __init__.py (FINAL UNIFIED VERSION)
+# __init__.py (FINAL CORRECTED VERSION for Anki 24.09+)
 # -*- coding: utf-8 -*-
 
 # --- IMPORTS ---
@@ -20,7 +20,7 @@ THEMES = [
     'dark-saturn', 'dark-mars-rover', 'dark-neptune-deep', 'dark-black-hole', 'dark-starless-sky'
 ]
 
-# --- FULL THEME CSS (Button styles removed as they are no longer on the card) ---
+# --- FULL THEME CSS ---
 THEME_CSS = """
 /* =================================================================== */
 /* =================== 🌕 FAMILY: LIGHT THEMES ======================= */
@@ -314,7 +314,7 @@ body.theme-dark-starless-sky{background:#000}
 .theme-dark-starless-sky .extra-info,.theme-dark-starless-sky .comments-block{background:#09090B;border-left:5px solid #A855F7}
 """
 
-# --- MODIFIED THEME SCRIPT (Button logic and observers removed) ---
+# --- MODIFIED THEME SCRIPT ---
 THEME_SCRIPT = """
 // --- Configuration ---
 const THEME_FAMILIES = {
@@ -335,7 +335,7 @@ const THEME_FAMILIES = {
     }
 };
 const ALL_THEMES = Object.values(THEME_FAMILIES).flatMap(f => f.modes);
-const THEME_KEY = 'JoplinSyncSuite_Theme_v1'; // CRITICAL: This now matches the Python add-on's key.
+const THEME_KEY = 'JoplinSyncSuite_Theme_v1';
 
 // --- Core Helper Function ---
 function applyTheme(theme) {
@@ -355,13 +355,10 @@ function applyTheme(theme) {
 
 // --- Core Storage Function ---
 function loadTheme() {
-    // Priority 1: Check the meta tag injected by the add-on. This is the fastest and most reliable.
     const metaTheme = document.querySelector('meta[name="anki-theme"]');
     if (metaTheme && metaTheme.content && ALL_THEMES.includes(metaTheme.content)) {
         return metaTheme.content;
     }
-    
-    // Priority 2: Check local storage (might be stale but is a good fallback)
     try {
         const localTheme = localStorage.getItem(THEME_KEY);
         if (localTheme && ALL_THEMES.includes(localTheme)) {
@@ -379,13 +376,11 @@ function initTheme() {
 }
 
 // --- Run Logic ---
-// Run the theme logic when the card's content is ready.
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTheme);
 } else {
-    initTheme(); // Already loaded
+    initTheme();
 }
-// Also run on Anki's specific event for dynamic content loading.
 window.addEventListener('ankiCardShown', initTheme);
 """
 
@@ -409,14 +404,12 @@ def apply_global_theme(theme_name: str):
     current_family = theme_name.split('-')[0]
     is_dark = current_family in dark_families
     
-    # Use the official Anki property to check the current mode
     if is_dark != mw.pm.night_mode():
         mw.pm.toggle_night_mode()
         
     if mw.state == "review":
         mw.reviewer.refresh()
     
-    # Show a tooltip confirmation
     mw.tooltip(f"Theme set to {theme_name.replace('-', ' ').title()}")
 
 # ==============================================================================
@@ -427,7 +420,6 @@ def inject_theme_assets(html: str, card, context: Any) -> str:
     theme = get_theme()
     meta_tag = f'<meta name="anki-theme" content="{theme}">'
     
-    # Using triple quotes for multi-line f-string for clarity
     injection_payload = f'''
 {meta_tag}
 <style>{THEME_CSS}</style>
@@ -437,7 +429,6 @@ def inject_theme_assets(html: str, card, context: Any) -> str:
     if "</head>" in html:
         return html.replace("</head>", f"{injection_payload}</head>", 1)
     
-    # Fallback for templates without a <head> tag
     return injection_payload + html
 
 gui_hooks.card_will_show.append(inject_theme_assets)
@@ -455,43 +446,34 @@ def setup_theme_menu():
         'Dark 🪐': [t for t in THEMES if t.startswith('dark-')]
     }
     
-    # Use a unique object name to prevent conflicts and allow for cleanup
     action_name = f"{ADDON_NAME}_theme_menu_action"
     
     # Gracefully remove the old menu if the add-on is reloaded
-    for action in mw.form.mainToolBar.actions():
+    # FIX: Use mw.toolbar instead of mw.form.mainToolBar for modern Anki versions
+    for action in mw.toolbar.actions():
         if action.objectName() == action_name:
-            mw.form.mainToolBar.removeAction(action)
+            mw.toolbar.removeAction(action)
             break
 
-    # Create the top-level menu that the toolbar button will show
     main_menu = QMenu("Change Theme", mw)
     
-    # Build the sub-menus for each theme family
     for family_name, theme_list in theme_families.items():
         sub_menu = QMenu(family_name, mw)
         for theme_name in theme_list:
-            # Create a user-friendly name (e.g., "Full Moon" from "light-full-moon")
             display_name = theme_name.replace(theme_name.split('-')[0] + '-', '').replace('-', ' ').title()
-            
             action = QAction(display_name, mw)
-            # Connect the action's trigger to our function using a lambda to pass the theme name
             action.triggered.connect(lambda checked, name=theme_name: apply_global_theme(name))
             sub_menu.addAction(action)
-            
         main_menu.addMenu(sub_menu)
         
-    # Create the main toolbar button
     main_toolbar_action = QAction("🎨 Themes", mw)
     main_toolbar_action.setObjectName(action_name)
     main_toolbar_action.setMenu(main_menu)
     
-    # Add the button to Anki's toolbar
-    mw.form.mainToolBar.addAction(main_toolbar_action)
+    # FIX: Use mw.toolbar instead of mw.form.mainToolBar for modern Anki versions
+    mw.toolbar.addAction(main_toolbar_action)
 
 # ==============================================================================
 # ==========================  STEP 5: INITIALIZATION ===========================
 # ==============================================================================
-# Defer menu creation until the main window and all its components are fully loaded.
-# This is the most robust way to ensure the toolbar exists.
 gui_hooks.main_window_did_init.append(setup_theme_menu)
