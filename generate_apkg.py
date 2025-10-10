@@ -342,9 +342,7 @@ background: #1F2937;
 / Subtle animation for Cloze icon */
 @keyframes rotate-subtle { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 '''
-============================================
-CARD MODELS AND TEMPLATES (FINAL VERSION 14)
-============================================
+
 Basic model (v14)
 basic_model = Model(
 1607392319,
