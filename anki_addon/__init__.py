@@ -1,16 +1,18 @@
-# __init__.py - FINAL VERSION with Advanced Styling
+# __init__.py - ENHANCED VERSION with Robust Persistence
 # -*- coding: utf-8 -*-
 
 from aqt import mw, gui_hooks
 from aqt.qt import QAction, QMenu
-from aqt.utils import tooltip
-from typing import Any, List, Dict
+from aqt.utils import tooltip, showInfo
+from typing import Any, List, Dict, Optional
+import json
 
 # ==============================================================================
 # CONFIGURATION
 # ==============================================================================
 ADDON_NAME = "JoplinSyncSuite"
 THEME_KEY = f"{ADDON_NAME}_Theme_v1"
+CONFIG_KEY = f"{ADDON_NAME}_config"
 
 THEMES = [
     'light-full-moon', 'light-waning-gibbous', 'light-last-quarter', 'light-waning-crescent', 'light-new-moon',
@@ -21,9 +23,7 @@ THEMES = [
 ]
 
 # ==============================================================================
-# ADVANCED THEME CSS - With all requested animations and unique color palettes.
-# These styles are critical for ensuring a consistent and dynamic user
-# experience, and their proper sync via this add-on is essential.
+# ADVANCED THEME CSS
 # ==============================================================================
 THEME_CSS = """
 /* Base Reset and Container Setup */
@@ -61,19 +61,16 @@ body.card {
 /* =================== GENERIC ELEMENT STYLES ======================== */
 /* =================================================================== */
 
-/* Light Bulb Emoji Sizing - Reduced as requested */
 .light-bulb-emoji {
-    font-size: 0.8em !important; /* Approx 2em reduction in visual impact */
+    font-size: 0.8em !important;
     display: inline-block !important;
 }
 
-/* Emoji Animation in Cloze */
 .cloze .emoji {
     display: inline-block;
     animation: rotate-emoji 3s infinite linear !important;
 }
 
-/* General Field Styling */
 .card-container, .cloze-container, .mcq-container, .image-container {
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
@@ -84,7 +81,6 @@ body.card {
     margin-bottom: 20px !important;
 }
 
-/* Action Button Base Styling */
 .show-answer-button {
     padding: 12px 25px !important;
     border: none !important;
@@ -101,7 +97,6 @@ body.card {
     box-shadow: 0 0 15px, 0 0 25px !important;
 }
 
-/* MCQ Options Base Styling */
 .mcq-option {
     padding: 15px !important;
     margin: 8px 0 !important;
@@ -116,7 +111,6 @@ body.card {
     box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
 }
 
-/* Cloze Deletion Text Styling */
 .cloze {
     font-weight: bold !important;
     animation-name: pulsating-glow !important;
@@ -147,9 +141,6 @@ body.theme-light-waning-gibbous { background: linear-gradient(135deg, #ffecd2 0%
 .theme-light-waning-gibbous .mcq-option:nth-of-type(1) { background: #fed7d7 !important; color: #742a2a !important; }
 .theme-light-waning-gibbous .mcq-option:nth-of-type(2) { background: #feebc8 !important; color: #744210 !important; }
 .theme-light-waning-gibbous .mcq-option:nth-of-type(3) { background: #fefcbf !important; color: #744210 !important; }
-
-/* ... (and so on for all 25 themes) ... */
-
 
 /* =================================================================== */
 /* =================== 🪐 FAMILY: DARK THEMES ======================== */
@@ -204,143 +195,240 @@ body.theme-dark-starless-sky { background: linear-gradient(135deg, #000000 0%, #
 .theme-dark-starless-sky .mcq-option:nth-of-type(1) { background: #4a5568 !important; color: #f7fafc !important; }
 .theme-dark-starless-sky .mcq-option:nth-of-type(2) { background: #2d3748 !important; color: #f7fafc !important; }
 .theme-dark-starless-sky .mcq-option:nth-of-type(3) { background: #171923 !important; color: #f7fafc !important; }
-
 """
 
-
 # ==============================================================================
-# THEME JAVASCRIPT - ORIGINAL WITH FIXES
+# ENHANCED THEME JAVASCRIPT WITH PERSISTENCE
 # ==============================================================================
 THEME_SCRIPT = """
-// --- Configuration ---
-const THEME_FAMILIES = {
-    'light': ['light-full-moon', 'light-waning-gibbous', 'light-last-quarter', 'light-waning-crescent', 'light-new-moon'],
-    'nord': ['nord-bright-sun', 'nord-overcast-day', 'nord-stormy-sky', 'nord-aurora', 'nord-polar-night'],
-    'balanced': ['balanced-star', 'balanced-nebula', 'balanced-supernova', 'balanced-galaxy', 'balanced-comet'],
-    'twilight': ['twilight-crescent-moon', 'twilight-city-night', 'twilight-deep-forest', 'twilight-moonlit-ocean', 'twilight-dusk'],
-    'dark': ['dark-saturn', 'dark-mars-rover', 'dark-neptune-deep', 'dark-black-hole', 'dark-starless-sky']
-};
-const ALL_THEMES = Object.values(THEME_FAMILIES).flat();
-const THEME_KEY = 'JoplinSyncSuite_Theme_v1';
-
-// --- Enhanced Theme Application ---
-function applyTheme(theme) {
-    if (!theme || !ALL_THEMES.includes(theme)) {
-        theme = 'light-full-moon';
+(function() {
+    'use strict';
+    
+    // --- Configuration ---
+    const THEME_FAMILIES = {
+        'light': ['light-full-moon', 'light-waning-gibbous', 'light-last-quarter', 'light-waning-crescent', 'light-new-moon'],
+        'nord': ['nord-bright-sun', 'nord-overcast-day', 'nord-stormy-sky', 'nord-aurora', 'nord-polar-night'],
+        'balanced': ['balanced-star', 'balanced-nebula', 'balanced-supernova', 'balanced-galaxy', 'balanced-comet'],
+        'twilight': ['twilight-crescent-moon', 'twilight-city-night', 'twilight-deep-forest', 'twilight-moonlit-ocean', 'twilight-dusk'],
+        'dark': ['dark-saturn', 'dark-mars-rover', 'dark-neptune-deep', 'dark-black-hole', 'dark-starless-sky']
+    };
+    const ALL_THEMES = Object.values(THEME_FAMILIES).flat();
+    const THEME_KEY = 'JoplinSyncSuite_Theme_v1';
+    
+    let currentTheme = null;
+    let initCount = 0;
+    
+    // --- Enhanced Theme Application ---
+    function applyTheme(theme, source) {
+        if (!theme || !ALL_THEMES.includes(theme)) {
+            theme = 'light-full-moon';
+        }
+        
+        // Prevent redundant applications
+        if (currentTheme === theme && initCount > 0) {
+            console.log('[JoplinSync] Theme already applied:', theme);
+            return;
+        }
+        
+        console.log('[JoplinSync] Applying theme:', theme, 'from:', source);
+        
+        const body = document.body;
+        
+        // Remove all theme classes efficiently
+        const classesToRemove = Array.from(body.classList).filter(c => c.startsWith('theme-'));
+        classesToRemove.forEach(c => body.classList.remove(c));
+        
+        // Add the new theme class
+        body.classList.add('theme-' + theme);
+        
+        // Ensure card class is present
+        if (!body.classList.contains('card')) {
+            body.classList.add('card');
+        }
+        
+        // Force style recalculation
+        void body.offsetHeight;
+        
+        currentTheme = theme;
+        console.log('[JoplinSync] Theme applied successfully. Classes:', body.className);
+        
+        // Persist to localStorage
+        saveThemeToLocal(theme);
+        
+        return true;
     }
     
-    console.log('[JoplinSync] Applying theme:', theme);
-    
-    // Remove all theme classes efficiently
-    const body = document.body;
-    const classesToRemove = [];
-    body.classList.forEach(c => {
-        if (c.startsWith('theme-')) {
-            classesToRemove.push(c);
+    // --- Multi-source Theme Loading with Priority ---
+    function loadTheme() {
+        // Priority 1: Server-injected meta tag (from Python)
+        const metaTheme = document.querySelector('meta[name="anki-theme"]');
+        if (metaTheme && metaTheme.content && ALL_THEMES.includes(metaTheme.content)) {
+            console.log('[JoplinSync] Theme from meta tag:', metaTheme.content);
+            return metaTheme.content;
         }
+        
+        // Priority 2: Check if pycmd is available (Anki bridge)
+        if (typeof pycmd !== 'undefined') {
+            // Theme will be set via meta tag on next card load
+            console.log('[JoplinSync] pycmd available, waiting for meta tag');
+        }
+        
+        // Priority 3: localStorage (client-side persistence)
+        try {
+            const localTheme = localStorage.getItem(THEME_KEY);
+            if (localTheme && ALL_THEMES.includes(localTheme)) {
+                console.log('[JoplinSync] Theme from localStorage:', localTheme);
+                return localTheme;
+            }
+        } catch(e) {
+            console.warn('[JoplinSync] localStorage not available:', e);
+        }
+        
+        // Priority 4: Default fallback
+        console.log('[JoplinSync] Using default theme');
+        return 'light-full-moon';
+    }
+    
+    // --- Save theme to localStorage ---
+    function saveThemeToLocal(theme) {
+        try {
+            localStorage.setItem(THEME_KEY, theme);
+            console.log('[JoplinSync] Theme persisted to localStorage:', theme);
+        } catch(e) {
+            console.warn('[JoplinSync] Could not save theme to localStorage:', e);
+        }
+    }
+    
+    // --- Notify Python backend of theme change (if available) ---
+    function notifyPython(theme) {
+        try {
+            if (typeof pycmd !== 'undefined') {
+                pycmd('joplinsync_theme:' + theme);
+                console.log('[JoplinSync] Notified Python backend:', theme);
+            }
+        } catch(e) {
+            console.warn('[JoplinSync] Could not notify Python:', e);
+        }
+    }
+    
+    // --- Initialization with persistence ---
+    function initTheme() {
+        initCount++;
+        const themeToApply = loadTheme();
+        console.log('[JoplinSync] Init #' + initCount + ' with theme:', themeToApply);
+        const applied = applyTheme(themeToApply, 'init-' + initCount);
+        
+        if (applied && initCount === 1) {
+            // First successful init, ensure it's synced
+            notifyPython(themeToApply);
+        }
+    }
+    
+    // --- Make globally available ---
+    window.applyTheme = function(theme) {
+        return applyTheme(theme, 'external-call');
+    };
+    window.loadTheme = loadTheme;
+    window.getCurrentTheme = function() { return currentTheme; };
+    
+    // --- Robust initialization sequence ---
+    
+    // Method 1: Immediate execution
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTheme);
+    } else {
+        initTheme();
+    }
+    
+    // Method 2: Window load event
+    window.addEventListener('load', function() {
+        if (initCount === 0) initTheme();
     });
-    classesToRemove.forEach(c => body.classList.remove(c));
     
-    // Add the new theme class
-    body.classList.add('theme-' + theme);
+    // Method 3: Delayed fallbacks for reliability
+    setTimeout(function() {
+        if (initCount === 0) initTheme();
+    }, 0);
     
-    // Ensure card class is present
-    if (!body.classList.contains('card')) {
-        body.classList.add('card');
+    setTimeout(function() {
+        if (initCount < 2) initTheme();
+    }, 100);
+    
+    setTimeout(function() {
+        if (initCount < 3) initTheme();
+    }, 300);
+    
+    // Method 4: Listen for Anki's card show events
+    if (typeof AnkiCardShown !== 'undefined') {
+        document.addEventListener('AnkiCardShown', initTheme);
     }
     
-    // Force style recalculation
-    void body.offsetHeight;
-    
-    console.log('[JoplinSync] Theme applied. Classes:', body.className);
-}
-
-// --- Enhanced Storage Function ---
-function loadTheme() {
-    // First check meta tag (from server)
-    const metaTheme = document.querySelector('meta[name="anki-theme"]');
-    if (metaTheme && metaTheme.content && ALL_THEMES.includes(metaTheme.content)) {
-        return metaTheme.content;
-    }
-    
-    // Then check localStorage
-    try {
-        const localTheme = localStorage.getItem(THEME_KEY);
-        if (localTheme && ALL_THEMES.includes(localTheme)) {
-            return localTheme;
-        }
-    } catch(e) {
-        console.warn('[JoplinSync] localStorage not available:', e);
-    }
-    
-    return 'light-full-moon';
-}
-
-// --- Save theme to localStorage ---
-function saveThemeToLocal(theme) {
-    try {
-        localStorage.setItem(THEME_KEY, theme);
-        console.log('[JoplinSync] Theme saved to localStorage:', theme);
-    } catch(e) {
-        console.warn('[JoplinSync] Could not save theme to localStorage:', e);
-    }
-}
-
-// --- Initialization with persistence ---
-function initTheme() {
-    const themeToApply = loadTheme();
-    console.log('[JoplinSync] Initializing with theme:', themeToApply);
-    applyTheme(themeToApply);
-    saveThemeToLocal(themeToApply);
-}
-
-// Make globally available for Python to call
-window.applyTheme = applyTheme;
-window.loadTheme = loadTheme;
-
-// --- Multiple initialization points for reliability ---
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTheme);
-} else {
-    initTheme();
-}
-
-// Anki-specific events
-window.addEventListener('load', initTheme);
-
-// Also run immediately and with delays for reliability
-setTimeout(initTheme, 0);
-setTimeout(initTheme, 50);
-setTimeout(initTheme, 100);
-
-console.log('[JoplinSync] Theme script loaded');
+    console.log('[JoplinSync] Theme script loaded and initialized');
+})();
 """
 
 # ==============================================================================
-# CORE FUNCTIONS
+# ENHANCED PERSISTENCE FUNCTIONS
 # ==============================================================================
 def get_theme() -> str:
-    """Gets the saved theme from Anki's configuration."""
-    try:
-        if mw.col:
-            theme = mw.col.conf.get(THEME_KEY, 'light-full-moon')
-            if theme in THEMES:
-                return theme
-    except:
-        pass
-    return 'light-full-moon'
-
-def save_theme(theme: str):
-    """Saves the selected theme to Anki's configuration if it's valid."""
-    if theme not in THEMES:
-        return
+    """Gets the saved theme with multiple fallback mechanisms."""
+    theme = None
     
+    # Method 1: Anki collection config (primary storage)
     try:
-        if mw.col:
+        if mw and mw.col:
+            theme = mw.col.conf.get(THEME_KEY)
+            if theme and theme in THEMES:
+                return theme
+    except Exception as e:
+        print(f"[JoplinSync] Error reading from col.conf: {e}")
+    
+    # Method 2: Addon config (secondary storage)
+    try:
+        config = mw.addonManager.getConfig(__name__)
+        if config and 'theme' in config:
+            theme = config['theme']
+            if theme in THEMES:
+                # Sync back to col.conf
+                save_theme(theme)
+                return theme
+    except Exception as e:
+        print(f"[JoplinSync] Error reading addon config: {e}")
+    
+    # Method 3: Default fallback
+    default_theme = 'light-full-moon'
+    save_theme(default_theme)
+    return default_theme
+
+def save_theme(theme: str, sync_to_all: bool = True):
+    """Saves the selected theme to multiple storage locations for redundancy."""
+    if theme not in THEMES:
+        print(f"[JoplinSync] Invalid theme: {theme}")
+        return False
+    
+    success = False
+    
+    # Storage 1: Anki collection config (survives profile switches)
+    try:
+        if mw and mw.col:
             mw.col.conf[THEME_KEY] = theme
             mw.col.setMod()
-    except:
-        pass
+            success = True
+            print(f"[JoplinSync] Theme saved to col.conf: {theme}")
+    except Exception as e:
+        print(f"[JoplinSync] Error saving to col.conf: {e}")
+    
+    # Storage 2: Addon config (additional redundancy)
+    if sync_to_all:
+        try:
+            config = mw.addonManager.getConfig(__name__) or {}
+            config['theme'] = theme
+            mw.addonManager.writeConfig(__name__, config)
+            print(f"[JoplinSync] Theme saved to addon config: {theme}")
+        except Exception as e:
+            print(f"[JoplinSync] Error saving addon config: {e}")
+    
+    return success
 
 def is_dark_theme(theme_name: str) -> bool:
     """Determines if a theme should use dark mode."""
@@ -354,54 +442,74 @@ def is_dark_theme(theme_name: str) -> bool:
     }
     return theme_name in dark_themes
 
-def apply_global_theme(theme_name: str):
-    """Saves the theme and updates Anki's UI."""
+def apply_global_theme(theme_name: str, show_tooltip: bool = True):
+    """Saves the theme and updates Anki's UI with enhanced persistence."""
     if theme_name not in THEMES:
+        print(f"[JoplinSync] Invalid theme: {theme_name}")
         return
     
-    save_theme(theme_name)
+    # Save with full redundancy
+    if not save_theme(theme_name, sync_to_all=True):
+        if show_tooltip:
+            tooltip("⚠️ Failed to save theme", period=2000)
+        return
     
     # Determine if we need dark mode
     needs_dark = is_dark_theme(theme_name)
     
-    # Try modern Anki API first (25.09+)
+    # Update Anki's night mode
     try:
         from aqt.theme import theme_manager
-        if theme_manager.night_mode != needs_dark:
-            theme_manager.night_mode = needs_dark
-    except:
-        pass
+        if hasattr(theme_manager, 'night_mode'):
+            if theme_manager.night_mode != needs_dark:
+                theme_manager.night_mode = needs_dark
+                print(f"[JoplinSync] Night mode set to: {needs_dark}")
+    except Exception as e:
+        print(f"[JoplinSync] Error setting night mode: {e}")
     
     # Force JavaScript to apply theme immediately if in review
     if mw.state == "review" and hasattr(mw.reviewer, 'web'):
         try:
-            mw.reviewer.web.eval(f"""
-                if (typeof applyTheme === 'function') {{
-                    applyTheme('{theme_name}');
-                }}
-            """)
-        except:
-            pass
+            js_code = f"""
+                (function() {{
+                    console.log('[JoplinSync] Applying theme via Python injection: {theme_name}');
+                    if (typeof applyTheme === 'function') {{
+                        applyTheme('{theme_name}');
+                    }} else {{
+                        console.error('[JoplinSync] applyTheme function not found');
+                    }}
+                }})();
+            """
+            mw.reviewer.web.eval(js_code)
+            print(f"[JoplinSync] JavaScript theme application triggered")
+        except Exception as e:
+            print(f"[JoplinSync] Error applying theme via JS: {e}")
     
     # Refresh reviewer if active
     if mw.state == "review":
         try:
             mw.reviewer.refresh()
-        except:
-            pass
+            print(f"[JoplinSync] Reviewer refreshed")
+        except Exception as e:
+            print(f"[JoplinSync] Error refreshing reviewer: {e}")
     
-    tooltip(f"✨ Theme: {theme_name.replace('-', ' ').title()}", period=2000)
+    if show_tooltip:
+        tooltip(f"✨ Theme: {theme_name.replace('-', ' ').title()}", period=2000)
+    
+    print(f"[JoplinSync] Theme applied globally: {theme_name}")
 
 # ==============================================================================
-# INJECTION HOOK
+# INJECTION HOOK WITH ENHANCED METADATA
 # ==============================================================================
 def inject_theme_assets(html: str, card: Any, context: Any) -> str:
-    """Injects CSS, JS, and meta tag into the card's HTML."""
+    """Injects CSS, JS, and meta tag into the card's HTML with persistence metadata."""
     theme = get_theme()
     
-    # Create injection payload with theme metadata
+    # Create comprehensive injection payload
     injection_payload = f'''
 <meta name="anki-theme" content="{theme}">
+<meta name="anki-theme-version" content="1.0">
+<meta name="anki-theme-timestamp" content="{mw.col.sched.dayCutoff if mw.col else 0}">
 <style id="joplin-theme-css">
 {THEME_CSS}
 </style>
@@ -412,15 +520,33 @@ def inject_theme_assets(html: str, card: Any, context: Any) -> str:
     
     # Inject before </head> if exists, otherwise at the beginning
     if "</head>" in html:
-        return html.replace("</head>", f"{injection_payload}</head>", 1)
+        html = html.replace("</head>", f"{injection_payload}</head>", 1)
     else:
-        return injection_payload + html
+        html = injection_payload + html
+    
+    return html
 
-# Register the hook
+# Register the injection hook
 gui_hooks.card_will_show.append(inject_theme_assets)
 
 # ==============================================================================
-# MENU CREATION
+# PYCMD BRIDGE FOR BIDIRECTIONAL COMMUNICATION
+# ==============================================================================
+def handle_theme_message(handled: tuple, message: str, context: Any) -> tuple:
+    """Handles theme change messages from JavaScript."""
+    if message.startswith("joplinsync_theme:"):
+        theme = message.replace("joplinsync_theme:", "")
+        if theme in THEMES:
+            save_theme(theme, sync_to_all=True)
+            print(f"[JoplinSync] Theme updated from JS: {theme}")
+        return (True, None)
+    return handled
+
+# Register the message handler
+gui_hooks.webview_did_receive_js_message.append(handle_theme_message)
+
+# ==============================================================================
+# MENU CREATION WITH PERSISTENCE INDICATOR
 # ==============================================================================
 _MENU_CREATED = False
 
@@ -442,9 +568,10 @@ def setup_theme_menu():
     # Create main menu
     main_menu = QMenu("🎨 Chanki Themes", mw)
     
-    # Add current theme indicator
+    # Add current theme indicator with persistence status
     current_theme = get_theme()
-    current_action = QAction(f"Current: {current_theme.replace('-', ' ').title()}", mw)
+    current_display = f"✓ Current: {current_theme.replace('-', ' ').title()}"
+    current_action = QAction(current_display, mw)
     current_action.setEnabled(False)
     main_menu.addAction(current_action)
     main_menu.addSeparator()
@@ -463,36 +590,167 @@ def setup_theme_menu():
             sub_menu.addAction(action)
         main_menu.addMenu(sub_menu)
     
+    # Add utility actions
+    main_menu.addSeparator()
+    
+    # Reset to default action
+    reset_action = QAction("🔄 Reset to Default", mw)
+    reset_action.triggered.connect(lambda: apply_global_theme('light-full-moon'))
+    main_menu.addAction(reset_action)
+    
+    # Force refresh action
+    refresh_action = QAction("⚡ Force Refresh Theme", mw)
+    refresh_action.triggered.connect(force_refresh_theme)
+    main_menu.addAction(refresh_action)
+    
     # Add to Tools menu
     mw.form.menuTools.addSeparator()
     mw.form.menuTools.addMenu(main_menu)
     
     _MENU_CREATED = True
+    print("[JoplinSync] Theme menu created")
+
+def force_refresh_theme():
+    """Forces a complete theme refresh across all components."""
+    current_theme = get_theme()
+    print(f"[JoplinSync] Force refreshing theme: {current_theme}")
+    
+    # Re-save to all storage locations
+    save_theme(current_theme, sync_to_all=True)
+    
+    # Re-apply globally
+    apply_global_theme(current_theme, show_tooltip=False)
+    
+    tooltip(f"🔄 Theme Refreshed: {current_theme.replace('-', ' ').title()}", period=2000)
 
 # ==============================================================================
-# INITIALIZATION
+# PROFILE CHANGE HANDLER - Ensures persistence across profiles
 # ==============================================================================
-def init_addon():
-    """Initialize the addon and apply saved theme."""
+def on_profile_loaded():
+    """Reapplies theme when profile is loaded."""
     try:
-        # Apply the saved theme on startup
         theme = get_theme()
         needs_dark = is_dark_theme(theme)
         
+        # Apply night mode setting
         try:
             from aqt.theme import theme_manager
-            theme_manager.night_mode = needs_dark
+            if hasattr(theme_manager, 'night_mode'):
+                theme_manager.night_mode = needs_dark
         except:
             pass
+        
+        print(f"[JoplinSync] Profile loaded, theme restored: {theme}")
+    except Exception as e:
+        print(f"[JoplinSync] Error in profile load: {e}")
+
+# Register profile load hook
+gui_hooks.profile_did_open.append(on_profile_loaded)
+
+# ==============================================================================
+# COLLECTION LOAD HANDLER - Ensures persistence on collection load
+# ==============================================================================
+def on_collection_loaded(col):
+    """Ensures theme is synced when collection loads."""
+    try:
+        theme = get_theme()
+        print(f"[JoplinSync] Collection loaded, theme confirmed: {theme}")
+    except Exception as e:
+        print(f"[JoplinSync] Error in collection load: {e}")
+
+# Register collection load hook (if available in Anki 25.09+)
+try:
+    gui_hooks.collection_did_load.append(on_collection_loaded)
+except AttributeError:
+    print("[JoplinSync] collection_did_load hook not available")
+
+# ==============================================================================
+# REVIEWER STATE CHANGE HANDLER - Reapplies theme on state changes
+# ==============================================================================
+def on_reviewer_state_change(state: str, *args):
+    """Reapplies theme when reviewer state changes."""
+    if state == "review":
+        try:
+            theme = get_theme()
+            if hasattr(mw.reviewer, 'web'):
+                js_code = f"""
+                    setTimeout(function() {{
+                        if (typeof applyTheme === 'function') {{
+                            console.log('[JoplinSync] Reapplying theme on state change: {theme}');
+                            applyTheme('{theme}');
+                        }}
+                    }}, 50);
+                """
+                mw.reviewer.web.eval(js_code)
+        except Exception as e:
+            print(f"[JoplinSync] Error in state change: {e}")
+
+# Register state change hook
+gui_hooks.state_did_change.append(on_reviewer_state_change)
+
+# ==============================================================================
+# INITIALIZATION WITH ENHANCED PERSISTENCE
+# ==============================================================================
+def init_addon():
+    """Initialize the addon with enhanced persistence mechanisms."""
+    try:
+        print("[JoplinSync] Initializing addon...")
+        
+        # Ensure theme is properly saved in all locations
+        theme = get_theme()
+        save_theme(theme, sync_to_all=True)
+        
+        # Apply night mode based on theme
+        needs_dark = is_dark_theme(theme)
+        try:
+            from aqt.theme import theme_manager
+            if hasattr(theme_manager, 'night_mode'):
+                theme_manager.night_mode = needs_dark
+                print(f"[JoplinSync] Night mode initialized: {needs_dark}")
+        except Exception as e:
+            print(f"[JoplinSync] Could not set night mode: {e}")
         
         # Setup menu
         setup_theme_menu()
         
-        print(f"[JoplinSync] Addon initialized with theme: {theme}")
+        print(f"[JoplinSync] ✓ Addon initialized successfully with theme: {theme}")
+        
     except Exception as e:
-        print(f"[JoplinSync] Init error: {e}")
+        print(f"[JoplinSync] ✗ Init error: {e}")
+        import traceback
+        traceback.print_exc()
 
-# Register initialization
+# Register initialization with multiple hooks for reliability
 gui_hooks.main_window_did_init.append(init_addon)
 
-print("[JoplinSync] Theme addon loaded")
+# ==============================================================================
+# ADDON CONFIG TEMPLATE
+# ==============================================================================
+# This should be saved as config.json in the addon directory
+"""
+{
+    "theme": "light-full-moon",
+    "auto_persist": true,
+    "sync_across_devices": true
+}
+"""
+
+# ==============================================================================
+# ADDON METADATA
+# ==============================================================================
+# This should be saved as manifest.json in the addon directory
+"""
+{
+    "name": "JoplinSync Suite - Advanced Themes",
+    "package": "joplin_sync_suite",
+    "ankiweb_id": "",
+    "author": "Your Name",
+    "version": "1.0.0",
+    "homepage": "",
+    "conflicts": [],
+    "min_point_version": 231000,
+    "max_point_version": 0
+}
+"""
+
+print("[JoplinSync] ✓ Theme addon loaded with enhanced persistence")
