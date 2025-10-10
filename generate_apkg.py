@@ -1018,7 +1018,7 @@ deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '
 print("8 test notes added to the deck for all types and header variations.")
 return deck
 if name == 'main':
-deck = create_test_notes()
+ deck = create_test_notes()
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 output_directory = "output"
 if not os.path.exists(output_directory):
