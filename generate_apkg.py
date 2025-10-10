@@ -343,7 +343,7 @@ background: #1F2937;
 @keyframes rotate-subtle { from { transform: rotate(-25deg); } to { transform: rotate(25deg); } }
 '''
 
-// Basic Model
+# Basic Model
 basic_model = Model(
 1607392319,
 'Joplin to Anki Basic Enhanced',
