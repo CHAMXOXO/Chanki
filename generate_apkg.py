@@ -127,9 +127,7 @@ window.addEventListener('ankiCardShown', initTheme);
 contentObserver.observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
 </script>
 '''
-============================================
-REVISED THEME SYSTEM CSS (v14 with Final Fixes)
-============================================
+
 THEME_CSS = '''
 /* Theme Toggle Button - Base Styles */
 .theme-toggle {
