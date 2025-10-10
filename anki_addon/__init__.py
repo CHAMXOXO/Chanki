@@ -1,4 +1,4 @@
-# __init__.py (FINAL CORRECTED VERSION for Anki 24.09+)
+# __init__.py (FINAL CORRECTED VERSION for Anki 24.09+ / 25.09+)
 # -*- coding: utf-8 -*-
 
 # --- IMPORTS ---
@@ -448,12 +448,11 @@ def setup_theme_menu():
     
     action_name = f"{ADDON_NAME}_theme_menu_action"
     
-    # Gracefully remove the old menu if the add-on is reloaded
-    # FIX: Use mw.toolbar instead of mw.form.mainToolBar for modern Anki versions
-    for action in mw.toolbar.actions():
-        if action.objectName() == action_name:
-            mw.toolbar.removeAction(action)
-            break
+    # Gracefully remove the old menu if the add-on is reloaded.
+    # FIX #2: Use findChild() to locate the action by its object name,
+    # which is the correct method for modern Anki versions.
+    if old_action := mw.toolbar.findChild(QAction, action_name):
+        mw.toolbar.removeAction(old_action)
 
     main_menu = QMenu("Change Theme", mw)
     
@@ -470,7 +469,6 @@ def setup_theme_menu():
     main_toolbar_action.setObjectName(action_name)
     main_toolbar_action.setMenu(main_menu)
     
-    # FIX: Use mw.toolbar instead of mw.form.mainToolBar for modern Anki versions
     mw.toolbar.addAction(main_toolbar_action)
 
 # ==============================================================================
