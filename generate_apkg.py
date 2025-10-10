@@ -1108,7 +1108,7 @@ mcq_model = Model(
         </div>
         {{/Header}}
         <div class="mcq-header">
-            {{^Header}}''' + THEME_UI_HTML + '''{{/Header}}}
+            {{^Header}}''' + THEME_UI_HTML + '''{{/Header}}
             <div class="mcq-icon">❓</div><div class="mcq-title">Multiple Choice</div>
         </div>
     </div>
