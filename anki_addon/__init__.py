@@ -445,17 +445,19 @@ def setup_theme_menu():
         'Twilight 🌙': [t for t in THEMES if t.startswith('twilight-')],
         'Dark 🪐': [t for t in THEMES if t.startswith('dark-')]
     }
-    
+
     action_name = f"{ADDON_NAME}_theme_menu_action"
-    
+
+    # --- FIX ---
     # Gracefully remove the old menu if the add-on is reloaded.
-    # FIX #2: Use findChild() to locate the action by its object name,
-    # which is the correct method for modern Anki versions.
-    if old_action := mw.toolbar.findChild(QAction, action_name):
-        mw.toolbar.removeAction(old_action)
+    # Instead of findChild, iterate through the toolbar's actions to find the old one by its object name.
+    for action in mw.toolbar.actions():
+        if action.objectName() == action_name:
+            mw.toolbar.removeAction(action)
+            break  # Exit loop once found and removed
 
     main_menu = QMenu("Change Theme", mw)
-    
+
     for family_name, theme_list in theme_families.items():
         sub_menu = QMenu(family_name, mw)
         for theme_name in theme_list:
@@ -464,11 +466,11 @@ def setup_theme_menu():
             action.triggered.connect(lambda checked, name=theme_name: apply_global_theme(name))
             sub_menu.addAction(action)
         main_menu.addMenu(sub_menu)
-        
+
     main_toolbar_action = QAction("🎨 Themes", mw)
     main_toolbar_action.setObjectName(action_name)
     main_toolbar_action.setMenu(main_menu)
-    
+
     mw.toolbar.addAction(main_toolbar_action)
 
 # ==============================================================================
