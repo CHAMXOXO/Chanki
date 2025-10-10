@@ -4,9 +4,6 @@ import datetime
 import glob
 import os
 
-============================================
-THEME SYSTEM JAVASCRIPT (Unchanged & Readable)
-============================================
 THEME_SCRIPT = '''
 <script>
 // --- Configuration ---
