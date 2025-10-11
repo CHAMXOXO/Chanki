@@ -118,7 +118,9 @@ body.card .image-container,
 .card .show-answer-button,
 body.card .show-answer-button,
 .show-answer-button,
-button.show-answer-button {
+button.show-answer-button,
+input[type="button"].show-answer-button,
+a.show-answer-button {
     padding: 12px 25px !important;
     border: none !important;
     border-radius: 10px !important;
@@ -126,15 +128,32 @@ button.show-answer-button {
     font-weight: bold !important;
     cursor: pointer !important;
     transition: all 0.3s ease !important;
-    animation: pulse-button 2.5s infinite !important;
+    animation: pulse-button 2.5s infinite ease-in-out !important;
     display: inline-block !important;
 }
 
 .card .show-answer-button:hover,
 body.card .show-answer-button:hover,
-.show-answer-button:hover {
+.show-answer-button:hover,
+button.show-answer-button:hover {
     transform: scale(1.1) !important;
     box-shadow: 0 0 15px, 0 0 25px !important;
+    animation: pulse-button 1s infinite ease-in-out !important;
+}
+
+/* If your button uses different class, add these too */
+button, 
+input[type="button"],
+.button,
+#answer,
+.answer-button {
+    transition: all 0.3s ease !important;
+}
+
+button:hover,
+input[type="button"]:hover,
+.button:hover {
+    transform: scale(1.05) !important;
 }
 
 /* MCQ Options with maximum specificity */
@@ -974,12 +993,23 @@ def apply_global_theme(theme_name: str, show_tooltip: bool = True):
         try:
             js_code = f"""
                 (function() {{
-                    console.log('[JoplinSync] Applying theme via Python injection: {theme_name}');
+                    console.log('[JoplinSync-Python] Applying theme via Python injection: {theme_name}');
+                    
+                    // Apply immediately
+                    document.documentElement.classList.add('theme-{theme_name}');
+                    document.body.classList.add('card', 'theme-{theme_name}');
+                    document.documentElement.setAttribute('data-theme', '{theme_name}');
+                    document.body.setAttribute('data-theme', '{theme_name}');
+                    
+                    // Also call the applyTheme function if available
                     if (typeof applyTheme === 'function') {{
                         applyTheme('{theme_name}');
-                    }} else {{
-                        console.error('[JoplinSync] applyTheme function not found');
                     }}
+                    
+                    // Force visual refresh
+                    document.body.style.display = 'none';
+                    document.body.offsetHeight; // Trigger reflow
+                    document.body.style.display = '';
                 }})();
             """
             mw.reviewer.web.eval(js_code)
@@ -987,11 +1017,15 @@ def apply_global_theme(theme_name: str, show_tooltip: bool = True):
         except Exception as e:
             print(f"[JoplinSync] Error applying theme via JS: {e}")
     
-    # Refresh reviewer if active
+    # CRITICAL: Force complete reviewer refresh to apply to BOTH question and answer
     if mw.state == "review":
         try:
-            mw.reviewer.refresh()
-            print(f"[JoplinSync] Reviewer refreshed")
+            # Store current card
+            if hasattr(mw.reviewer, 'card') and mw.reviewer.card:
+                card = mw.reviewer.card
+                # Force a complete re-render
+                mw.reviewer._showQuestion()
+                print(f"[JoplinSync] Forced question refresh")
         except Exception as e:
             print(f"[JoplinSync] Error refreshing reviewer: {e}")
     
@@ -1051,12 +1085,67 @@ def inject_theme_assets(html: str, card: Any, context: Any) -> str:
 <script>
 // IMMEDIATE theme application before DOMContentLoaded
 (function() {{
+    'use strict';
+    console.log('[JoplinSync-Immediate] Applying theme: {theme}');
+    
+    // Apply to both HTML and body IMMEDIATELY
     document.documentElement.classList.add('theme-{theme}');
     document.documentElement.setAttribute('data-theme', '{theme}');
-    if (document.body) {{
-        document.body.classList.add('card', 'theme-{theme}');
-        document.body.setAttribute('data-theme', '{theme}');
+    
+    // Function to apply when body is available
+    function applyToBody() {{
+        if (document.body) {{
+            document.body.classList.add('card', 'theme-{theme}');
+            document.body.setAttribute('data-theme', '{theme}');
+            console.log('[JoplinSync-Immediate] ✓ Body classes applied:', document.body.className);
+        }} else {{
+            // Body not ready yet, try again
+            setTimeout(applyToBody, 10);
+        }}
     }}
+    
+    applyToBody();
+    
+    // CRITICAL: Re-apply on EVERY card transition (question → answer)
+    document.addEventListener('DOMContentLoaded', function() {{
+        console.log('[JoplinSync-DOMReady] Re-applying theme on DOMContentLoaded');
+        applyToBody();
+    }});
+    
+    // Listen for Anki's card show event (fires on both question and answer)
+    if (typeof window !== 'undefined') {{
+        window.addEventListener('load', function() {{
+            console.log('[JoplinSync-Load] Re-applying theme on window load');
+            applyToBody();
+        }});
+    }}
+    
+    // MutationObserver to catch dynamic class changes by Anki
+    const observer = new MutationObserver(function(mutations) {{
+        mutations.forEach(function(mutation) {{
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {{
+                const body = document.body;
+                if (body && !body.classList.contains('theme-{theme}')) {{
+                    console.log('[JoplinSync-Observer] Theme class removed by Anki, re-applying!');
+                    body.classList.add('card', 'theme-{theme}');
+                }}
+            }}
+        }});
+    }});
+    
+    // Start observing when body exists
+    function startObserver() {{
+        if (document.body) {{
+            observer.observe(document.body, {{
+                attributes: true,
+                attributeFilter: ['class']
+            }});
+            console.log('[JoplinSync-Observer] Started monitoring body classes');
+        }} else {{
+            setTimeout(startObserver, 10);
+        }}
+    }}
+    startObserver();
 }})();
 </script>
 '''
