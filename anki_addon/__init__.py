@@ -299,12 +299,18 @@ THEME_SCRIPT = """
         }
     }
     
-    // --- Notify Python backend of theme change (if available) ---
+    // --- Notify Python backend of theme change (modern bridge method) ---
     function notifyPython(theme) {
         try {
-            if (typeof pycmd !== 'undefined') {
+            // Modern Anki 2.1.50+ bridge method
+            if (typeof bridgeCommand !== 'undefined') {
+                bridgeCommand('joplinsync_theme:' + theme);
+                console.log('[JoplinSync] Notified Python via bridge:', theme);
+            }
+            // Fallback to pycmd for older versions
+            else if (typeof pycmd !== 'undefined') {
                 pycmd('joplinsync_theme:' + theme);
-                console.log('[JoplinSync] Notified Python backend:', theme);
+                console.log('[JoplinSync] Notified Python via pycmd:', theme);
             }
         } catch(e) {
             console.warn('[JoplinSync] Could not notify Python:', e);
@@ -502,18 +508,22 @@ def apply_global_theme(theme_name: str, show_tooltip: bool = True):
 # INJECTION HOOK WITH ENHANCED METADATA
 # ==============================================================================
 def inject_theme_assets(html: str, card: Any, context: Any) -> str:
-    """Injects CSS, JS, and meta tag into the card's HTML with persistence metadata."""
+    """Injects CSS, JS, and meta tag into the card's HTML with cache-busting."""
     theme = get_theme()
     
-    # Create comprehensive injection payload
+    # Cache-busting timestamp to force refresh
+    import time
+    cache_buster = int(time.time() * 1000)  # milliseconds timestamp
+    
+    # Create comprehensive injection payload with cache busting
     injection_payload = f'''
 <meta name="anki-theme" content="{theme}">
-<meta name="anki-theme-version" content="1.0">
-<meta name="anki-theme-timestamp" content="{mw.col.sched.dayCutoff if mw.col else 0}">
-<style id="joplin-theme-css">
+<meta name="anki-theme-version" content="1.0.{cache_buster}">
+<meta name="anki-theme-timestamp" content="{cache_buster}">
+<style id="joplin-theme-css-{cache_buster}">
 {THEME_CSS}
 </style>
-<script id="joplin-theme-script">
+<script id="joplin-theme-script-{cache_buster}">
 {THEME_SCRIPT}
 </script>
 '''
@@ -722,35 +732,5 @@ def init_addon():
 
 # Register initialization with multiple hooks for reliability
 gui_hooks.main_window_did_init.append(init_addon)
-
-# ==============================================================================
-# ADDON CONFIG TEMPLATE
-# ==============================================================================
-# This should be saved as config.json in the addon directory
-"""
-{
-    "theme": "light-full-moon",
-    "auto_persist": true,
-    "sync_across_devices": true
-}
-"""
-
-# ==============================================================================
-# ADDON METADATA
-# ==============================================================================
-# This should be saved as manifest.json in the addon directory
-"""
-{
-    "name": "JoplinSync Suite - Advanced Themes",
-    "package": "joplin_sync_suite",
-    "ankiweb_id": "",
-    "author": "Your Name",
-    "version": "1.0.0",
-    "homepage": "",
-    "conflicts": [],
-    "min_point_version": 231000,
-    "max_point_version": 0
-}
-"""
 
 print("[JoplinSync] ✓ Theme addon loaded with enhanced persistence")
