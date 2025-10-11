@@ -1,4 +1,4 @@
-// anki-client.js (DEFINITIVE CRASH-PROOF VERSION)
+// anki-client.js (ENHANCED DECK HANDLING VERSION)
 
 const axios = require('axios');
 const fs = require('fs').promises;
@@ -43,6 +43,7 @@ class AnkiClient {
   constructor(ankiURL = "http://127.0.0.1:8765", log = console.log) {
     this.baseUrl = ankiURL;
     this.log = log;
+    this.deckCache = new Set(); // Cache to avoid repeated deck creation calls
   }
 
   async doRequest(payload) {
@@ -75,16 +76,46 @@ class AnkiClient {
     return this.doRequest({ action: "storeMediaFile", version: 6, params: { filename: fileName, data: data } });
   }
 
+  /**
+   * Enhanced deck creation with validation
+   */
   async ensureDeckExists(deckName) {
+    // Normalize deck name (trim whitespace)
+    const normalizedDeckName = deckName.trim();
+    
+    // Check cache first
+    if (this.deckCache.has(normalizedDeckName)) {
+      this.log(levelDebug, `Deck "${normalizedDeckName}" already verified in cache`);
+      return normalizedDeckName;
+    }
+
     try {
-      await this.doRequest({ action: "createDeck", version: 6, params: { deck: deckName } });
+      // Create the deck (this is idempotent - won't error if deck exists)
+      await this.doRequest({ 
+        action: "createDeck", 
+        version: 6, 
+        params: { deck: normalizedDeckName } 
+      });
+      
+      this.log(levelDebug, `✅ Deck ensured: "${normalizedDeckName}"`);
+      
+      // Add to cache
+      this.deckCache.add(normalizedDeckName);
+      
+      return normalizedDeckName;
     } catch (error) {
-      if (!error.message.includes('already exists')) this.log(levelApplication, `⚠️ Warning creating deck "${deckName}": ${error.message}`);
+      this.log(levelApplication, `⚠️ Error ensuring deck "${normalizedDeckName}": ${error.message}`);
+      throw error;
     }
   }
 
+  /**
+   * Verify that a note actually exists in the specified deck
+   */
   async findNote(jtaID, deckName) {
-    const query = `"Joplin to Anki ID:${jtaID}" deck:"${deckName}"`;
+    const normalizedDeckName = deckName.trim();
+    const query = `"Joplin to Anki ID:${jtaID}" deck:"${normalizedDeckName}"`;
+    this.log(levelDebug, `Searching for note with query: ${query}`);
     return this.doRequest({ action: "findNotes", version: 6, params: { query } });
   }
 
@@ -103,70 +134,97 @@ class AnkiClient {
   }
   
   async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}, deckName = "Default") {
-    // Ensure the deck exists before creating the note
-    await this.ensureDeckExists(deckName);
+    // CRITICAL: Ensure deck exists and get normalized name
+    const verifiedDeckName = await this.ensureDeckExists(deckName);
+    
+    this.log(levelApplication, `Creating note in deck: ${verifiedDeckName}`);
     
     const cardType = this.detectCardType(question, answer, additionalFields);
     
-    // --- DEFINITIVE CRASH FIX ---
     const model = models[cardType];
     if (!model) {
         throw new Error(`CRITICAL: Could not find a model for the detected card type "${cardType}".`);
     }
     const modelName = model.name;
-    // --- END FIX ---
 
     const fields = buildAnkiFieldsObject(question, answer, jtaID, cardType, additionalFields);
     const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
-    const noteData = { deckName, modelName, fields, tags: noteTags };
+    
+    // CRITICAL: Use the verified deck name in the note data
+    const noteData = { 
+      deckName: verifiedDeckName,  // Use verified name
+      modelName, 
+      fields, 
+      tags: noteTags 
+    };
+    
+    this.log(levelDebug, `Note payload: ${JSON.stringify({ deckName: verifiedDeckName, modelName, tags: noteTags })}`);
     
     const result = await this.doRequest({ action: "addNote", version: 6, params: { note: noteData } });
-    this.log(levelApplication, `✅ Created ${cardType} card: "${title}" (Anki Note ID: ${result})`);
+    this.log(levelApplication, `✅ Created ${cardType} card: "${title}" in deck "${verifiedDeckName}" (Anki Note ID: ${result})`);
+    
+    // Verify the note was created in the correct deck
+    await this.verifyNoteInDeck(jtaID, verifiedDeckName);
+    
     return result;
   }
   
-  // anki-client.js -> Replace from here to the end of the file
-  
-    async updateNote(noteId, fieldsToUpdate) {
-      this.log(levelVerbose, `Updating fields for Anki Note ID: ${noteId}`);
-      
-      // Create the final payload for AnkiConnect
-      const notePayload = {
-          id: noteId,
-          fields: fieldsToUpdate
-      };
-      
-      // IMPORTANT: We never want to change the unique ID, so we delete it from the fields payload
-      // before sending it to Anki. This prevents the ID from being accidentally erased.
-      delete notePayload.fields['Joplin to Anki ID'];
-    
-      await this.doRequest({ 
-          action: "updateNoteFields", 
-          version: 6, 
-          params: { 
-              note: notePayload
-          } 
-      });
-    
-      this.log(levelApplication, `✅ Updated card (Anki Note ID: ${noteId})`);
-    }
-  
-    // This function is preserved and remains unchanged
-    async updateNoteTags(noteId, title, notebook, tags = []) {
-      const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
-      try {
-        await this.doRequest({ action: "updateNoteTags", version: 6, params: { note: noteId, tags: noteTags.join(" ") } });
-      } catch (error) {
-        this.log(levelApplication, `⚠️ Could not update tags for note ${noteId}: ${error.message}`);
+  /**
+   * Verify that a note exists in the expected deck
+   */
+  async verifyNoteInDeck(jtaID, expectedDeckName) {
+    try {
+      const noteIds = await this.findNote(jtaID, expectedDeckName);
+      if (noteIds && noteIds.length > 0) {
+        this.log(levelDebug, `✅ Verified note ${jtaID} exists in deck "${expectedDeckName}"`);
+        return true;
+      } else {
+        this.log(levelApplication, `⚠️ WARNING: Note ${jtaID} not found in expected deck "${expectedDeckName}"`);
+        return false;
       }
+    } catch (error) {
+      this.log(levelApplication, `⚠️ Could not verify note location: ${error.message}`);
+      return false;
     }
   }
   
-  const models = {
-    basic: { name: "Joplin to Anki Basic Enhanced", fields: [ "Header", "Question", "Answer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
-    cloze: { name: "Joplin to Anki Cloze Enhanced", fields: [ "Header", "Text", "Extra", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ], isCloze: true },
-    mcq: { name: "Joplin to Anki MCQ Enhanced", fields: [ "Header", "Question", "OptionA", "OptionB", "OptionC", "OptionD", "CorrectAnswer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
-    imageOcclusion: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
-  };
+  async updateNote(noteId, fieldsToUpdate) {
+    this.log(levelVerbose, `Updating fields for Anki Note ID: ${noteId}`);
+    
+    const notePayload = {
+        id: noteId,
+        fields: fieldsToUpdate
+    };
+    
+    // Never update the unique ID field
+    delete notePayload.fields['Joplin to Anki ID'];
   
-  module.exports = AnkiClient;
+    await this.doRequest({ 
+        action: "updateNoteFields", 
+        version: 6, 
+        params: { 
+            note: notePayload
+        } 
+    });
+  
+    this.log(levelApplication, `✅ Updated card (Anki Note ID: ${noteId})`);
+  }
+
+  async updateNoteTags(noteId, title, notebook, tags = []) {
+    const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
+    try {
+      await this.doRequest({ action: "updateNoteTags", version: 6, params: { note: noteId, tags: noteTags.join(" ") } });
+    } catch (error) {
+      this.log(levelApplication, `⚠️ Could not update tags for note ${noteId}: ${error.message}`);
+    }
+  }
+}
+
+const models = {
+  basic: { name: "Joplin to Anki Basic Enhanced", fields: [ "Header", "Question", "Answer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
+  cloze: { name: "Joplin to Anki Cloze Enhanced", fields: [ "Header", "Text", "Extra", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ], isCloze: true },
+  mcq: { name: "Joplin to Anki MCQ Enhanced", fields: [ "Header", "Question", "OptionA", "OptionB", "OptionC", "OptionD", "CorrectAnswer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
+  imageOcclusion: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
+};
+
+module.exports = AnkiClient;
