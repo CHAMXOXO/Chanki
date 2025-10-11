@@ -235,11 +235,12 @@ const newClient = (url, token, log) => {
         ]);
 
         // Extract tags properly
-        const tags = Array.isArray(tagsResponse) ? 
-          tagsResponse.map(tag => tag.title || tag) : 
-          (Array.isArray(tagsResponse?.items) ? tagsResponse.items.map(tag => tag.title || tag) : []);
-
-        // Find the correct notebook from folders
+          // Extract tags properly
+          const tags = Array.isArray(tagsResponse) ? 
+            tagsResponse.map(tag => tag.title || tag) : 
+            (Array.isArray(tagsResponse?.items) ? tagsResponse.items.map(tag => tag.title || tag) : []);
+          
+          log(levelApplication, `Retrieved tags for note ${noteId}: ${JSON.stringify(tags)}`);        // Find the correct notebook from folders
         const foldersArray = Array.isArray(allFolders) ? allFolders : 
           (Array.isArray(allFolders?.items) ? allFolders.items : []);
         

@@ -29,13 +29,14 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
 // Function to determine deck structure based on tags and notebook structure
 const determineDeckStructure = (tags, notebook, parentNotebook, log) => {
   // Priority 1: Check for deck and subdeck tags
+  log(levelApplication, `Checking tags for deck: ${JSON.stringify(tags)}`);
   const deckTag = tags.find(tag => tag.startsWith('deck::'));
   const subdeckTag = tags.find(tag => tag.startsWith('subdeck::'));
   
   if (deckTag) {
     const mainDeck = deckTag.replace('deck::', '').trim();
     const subDeck = subdeckTag ? subdeckTag.replace('subdeck::', '').trim() : null;
-    log(levelDebug, `Using tag-based deck structure: ${mainDeck}${subDeck ? '::' + subDeck : ''}`);
+    log(levelApplication, `Found deck tag! Using tag-based deck structure: ${mainDeck}${subDeck ? '::' + subDeck : ''}`);
     return subDeck ? `${mainDeck}::${subDeck}` : mainDeck;
   }
 

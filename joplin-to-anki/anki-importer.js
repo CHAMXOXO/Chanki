@@ -79,7 +79,10 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
 
 // anki-importer.js -> replace the importer and batchImporter functions
 
-const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
+const importer = async (client, questionObj, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
+  // Extract question content and deck name from question object
+  const question = typeof questionObj === 'object' ? questionObj.content : questionObj;
+  const deckName = (typeof questionObj === 'object' ? questionObj.deckName : null) || additionalFields.deckName || "Default";
   try {
     const normalizedTags = normalizeTags(tags);
     const enhancedFields = buildEnhancedFields(additionalFields);
@@ -89,7 +92,9 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
     // Get the deck name from the item or fall back to "Default"
-    const deckName = additionalFields.deckName || "Default";
+    // Get deck name from the appropriate source
+    const deckName = question?.deckName || additionalFields?.deckName || "Default";
+    log(levelApplication, `Creating note in deck: ${deckName}`);
     await client.ensureDeckExists(deckName);
     
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
@@ -156,6 +161,7 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
 
 const batchImporter = async (client, items, batchSize = 10, log) => {
   const results = { created: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
+  log(levelApplication, `Starting batch import with items: ${JSON.stringify(items.map(i => ({ deckName: i.deckName })))}`);
   const INTER_ITEM_DELAY_MS = 250; // A small delay to pace requests and prevent overwhelming AnkiConnect.
 
   log(levelApplication, `Starting batch import of ${items.length} items...`);

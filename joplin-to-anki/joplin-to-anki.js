@@ -97,11 +97,20 @@ const run = async (
       log(levelApplication, `📊 Collected ${allItems.length} items for batch processing`);
 
       if (allItems.length > 0) {
-        const processedItems = allItems.map(item => ({
-            ...item,
-            question: stripDetails(markdownProcessing ? marked(item.question) : item.question),
-            answer: stripDetails(markdownProcessing ? marked(item.answer) : item.answer),
-        }));
+        const processedItems = allItems.map(item => {
+            log(levelApplication, `Processing item with deckName: ${item.deckName}`);
+            // Ensure we preserve the deck name in the processed item
+            const processedItem = {
+                ...item,
+                question: stripDetails(markdownProcessing ? marked(item.question) : item.question),
+                answer: stripDetails(markdownProcessing ? marked(item.answer) : item.answer),
+                additionalFields: {
+                    ...item.additionalFields,
+                    deckName: item.deckName // Make sure deckName is in additionalFields
+                }
+            };
+            return processedItem;
+        });
 
         const results = await batchImporter(aClient, processedItems, batchSize, log);
         sync.summary.itemsCreated += results.created;
