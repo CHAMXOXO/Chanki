@@ -1,14 +1,12 @@
-// joplin-exporter.js (FINAL STABLE ID VERSION)
+// joplin-exporter.js (FULL NOTEBOOK HIERARCHY VERSION - COMPLETE)
 
 const cheerio = require("cheerio");
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
-// --- CHANGE 1: The ID is now generated from stable data (noteId + index) ---
 const generateUniqueID = (noteId, index = 0) => {
   const crypto = require('crypto');
-  // Using the Joplin Note ID and the block's index ensures the ID is permanent.
   const hash = crypto.createHash('md5').update(`${noteId}${index}`).digest('hex');
-  return `joplin_${hash.substring(0, 12)}`; // A clearer prefix
+  return `joplin_${hash.substring(0, 12)}`;
 };
 
 const getCleanContent = ($, element, log, fieldName = "field") => {
@@ -26,37 +24,84 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
     return content;
 };
 
-// Function to determine deck structure based on tags and notebook structure
-const determineDeckStructure = (tags, notebook, parentNotebook, log) => {
-  // Priority 1: Check for deck and subdeck tags
-  log(levelApplication, `Checking tags for deck: ${JSON.stringify(tags)}`);
+/**
+ * Build the full notebook hierarchy path
+ * Walks up the entire tree to create: ["Root", "Parent", "Child", "GrandChild"]
+ */
+const buildNotebookHierarchy = (notebook, allFolders, log) => {
+  if (!notebook || !notebook.id) {
+    log(levelDebug, 'No notebook provided for hierarchy building');
+    return [];
+  }
+
+  const hierarchy = [];
+  let currentNotebook = notebook;
+  const visited = new Set(); // Prevent infinite loops
+
+  // Walk up the tree until we reach the root
+  while (currentNotebook && currentNotebook.id) {
+    if (visited.has(currentNotebook.id)) {
+      log(levelApplication, `⚠️ Circular reference detected in notebook hierarchy for ${currentNotebook.title}`);
+      break;
+    }
+    visited.add(currentNotebook.id);
+
+    // Add to front of array (we're going backwards from child to root)
+    hierarchy.unshift(currentNotebook.title);
+    
+    // Find parent notebook
+    if (currentNotebook.parent_id) {
+      currentNotebook = allFolders.find(f => f.id === currentNotebook.parent_id);
+      if (!currentNotebook) {
+        log(levelDebug, `Parent notebook not found in folders list`);
+        break;
+      }
+    } else {
+      // Reached root (no more parents)
+      break;
+    }
+  }
+
+  log(levelDebug, `Built notebook hierarchy: ${hierarchy.join(' > ')}`);
+  return hierarchy;
+};
+
+/**
+ * Determine deck structure with full nested subdeck support
+ * Priority 1: Tags (deck:: and subdeck::)
+ * Priority 2: Full notebook hierarchy (unlimited depth)
+ * Priority 3: Default deck
+ */
+const determineDeckStructure = (tags, notebook, allFolders, log) => {
+  // Priority 1: Check for deck tags
+  log(levelDebug, `Checking tags for deck: ${JSON.stringify(tags)}`);
   const deckTag = tags.find(tag => tag.startsWith('deck::'));
   const subdeckTag = tags.find(tag => tag.startsWith('subdeck::'));
   
   if (deckTag) {
     const mainDeck = deckTag.replace('deck::', '').trim();
     const subDeck = subdeckTag ? subdeckTag.replace('subdeck::', '').trim() : null;
-    log(levelApplication, `Found deck tag! Using tag-based deck structure: ${mainDeck}${subDeck ? '::' + subDeck : ''}`);
-    return subDeck ? `${mainDeck}::${subDeck}` : mainDeck;
+    const tagBasedDeck = subDeck ? `${mainDeck}::${subDeck}` : mainDeck;
+    log(levelApplication, `Found deck tag! Using tag-based deck structure: ${tagBasedDeck}`);
+    return tagBasedDeck;
   }
 
-  // Priority 2: Use notebook structure
-  if (notebook && notebook.title) {
-    if (parentNotebook && parentNotebook.title) {
-      log(levelDebug, `Using notebook structure: ${parentNotebook.title}::${notebook.title}`);
-      return `${parentNotebook.title}::${notebook.title}`;
+  // Priority 2: Use full notebook hierarchy (THIS IS THE KEY CHANGE)
+  if (notebook && notebook.title && allFolders) {
+    const hierarchy = buildNotebookHierarchy(notebook, allFolders, log);
+    
+    if (hierarchy.length > 0) {
+      // Join all levels with Anki's :: separator
+      const hierarchyDeck = hierarchy.join('::');
+      log(levelApplication, `Using full notebook hierarchy as deck: ${hierarchyDeck}`);
+      return hierarchyDeck;
     }
-    log(levelDebug, `Using single notebook as deck: ${notebook.title}`);
-    return notebook.title;
   }
 
-  // Priority 3: Fallback to default
+  // Priority 3: Fallback
   log(levelDebug, 'No deck structure found, using Default deck');
   return 'Default';
 };
-
-// --- CHANGE 2: The function now accepts the note's stable ID ---
-// joplin-exporter.js -> Replace ONLY the extractQuiz function with this one
 
 const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   const $ = cheerio.load(body);
@@ -84,45 +129,31 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
       }
     }
 
-    // --- START OF THE CORRECTED LOGIC FOR ANSWER EXTRACTION ---
     if (answerEl.length > 0) {
-      // 1. Always start by cloning the main answer element to avoid modifying the original.
       const answerClone = answerEl.clone();
-
-      // 2. CRITICAL FIX: Proactively remove the answer image tag from the cloned content.
-      //    This is done *before* extracting any text/HTML to prevent duplication.
-      //    We target the specific attribute used for extraction to be precise.
       answerClone.find('img[data-jta-image-type="answer"]').remove();
-
-      // 3. Remove all other non-answer metadata sections.
       answerClone.find('summary, .explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
 
-      // 4. After cleaning, check if a specific '.answer-text' or '.correct-answer' element remains.
       const specificAnswerContent = answerClone.find('.answer-text, .correct-answer');
-      let finalContentSource = answerClone; // Default to the cleaned main answer block
+      let finalContentSource = answerClone;
 
       if (specificAnswerContent.length > 0) {
-        // If a specific container exists, use its content as the source.
         finalContentSource = specificAnswerContent;
       }
       
-      // 5. Extract the final, cleaned HTML or text.
       const remainingHtml = finalContentSource.html() ? finalContentSource.html().trim() : '';
       const remainingText = finalContentSource.text() ? finalContentSource.text().trim() : '';
 
-      // Prefer HTML, but fall back to text if the HTML is empty or just contains breaks.
       if (remainingHtml && remainingHtml.replace(/<br\s*\/?>/gi, '').trim().length > 0) {
         answer = remainingHtml;
       } else {
         answer = remainingText;
       }
     }
-    // --- END OF THE CORRECTED LOGIC ---
 
     const cardType = detectCardTypeFromContent(question, answer, additionalFields, log);
     let cleanedQuestion = question.trim();
 
-    // --- RESTORED AND REFINED MCQ CLEANING LOGIC ---
     if (cardType === 'mcq' && questionEl.length > 0) {
         const questionClone = questionEl.clone();
         questionClone.contents().filter(function() {
@@ -139,24 +170,12 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
         cleanedQuestion = intermediateHtml.replace(/(<br\s*\/?>\s*)+$/, '');
         log(levelDebug, `MCQ question cleaned successfully.`);
     }
-    // --- END OF REFINED LOGIC ---
 
     const hasQuestionOrAnswerText = cleanedQuestion.length > 0 || (answer && answer.trim().length > 0);
     const hasImagePaths = (additionalFields.questionImagePath && additionalFields.questionImagePath.trim().length > 0) ||
                           (additionalFields.answerImagePath && additionalFields.answerImagePath.trim().length > 0);
 
     if (hasQuestionOrAnswerText || hasImagePaths) {
-      // Try to extract deck-related tags from the current item's context
-      const itemTags = tags || [];
-      const deckTag = itemTags.find(tag => tag.startsWith('deck::'));
-      const subdeckTag = itemTags.find(tag => tag.startsWith('subdeck::'));
-      
-      // Include deck-related information in additionalFields
-      additionalFields.deckTags = {
-        mainDeck: deckTag ? deckTag.replace('deck::', '').trim() : null,
-        subDeck: subdeckTag ? subdeckTag.replace('subdeck::', '').trim() : null
-      };
-
       output.push({
         question: cleanedQuestion,
         answer: answer ? answer.trim() : '',
@@ -174,8 +193,6 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   });
   return output;
 };
-
-// ... (The rest of the file remains the same until the exporter generator function)
 
 const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   const fields = {
@@ -290,7 +307,10 @@ const addResources = (jtaItems, resources, log) => {
 async function* exporter(client, datetime, log) {
   const date = new Date(datetime);
   try {
+    // CRITICAL: Fetch all folders at the start for hierarchy building
     const folders = await client.getAllFolders();
+    log(levelDebug, `Loaded ${folders.length} folders for hierarchy building`);
+    
     const notes = await client.getAllNotes("id,updated_time,title,parent_id", date);
     log(levelApplication, `Found ${notes.length} notes updated since ${date.toISOString()}`);
 
@@ -301,25 +321,15 @@ async function* exporter(client, datetime, log) {
         if (!noteDetails || !noteDetails.note) continue;
 
         const { note: fullNote, notebook, tags, resources } = noteDetails;
-        
-        // Get parent notebook if it exists
-        let parentNotebook = null;
-        if (notebook && notebook.parent_id) {
-          try {
-            parentNotebook = await client.getFolder(notebook.parent_id);
-            log(levelDebug, `Found parent notebook: ${parentNotebook.title}`);
-          } catch (error) {
-            log(levelDebug, `Could not fetch parent notebook: ${error.message}`);
-          }
-        }
 
         const jtaItems = extractQuiz(fullNote.body, fullNote.title, notebook, tags, log, note.id);
         if (jtaItems.length === 0) continue;
 
         const itemsWithResources = addResources(jtaItems, resources, log);
+        
         for (const item of itemsWithResources) {
-          // Determine deck structure for each item
-          item.deckName = determineDeckStructure(tags, notebook, parentNotebook, log);
+          // CRITICAL: Pass ALL folders to determineDeckStructure for hierarchy building
+          item.deckName = determineDeckStructure(tags, notebook, folders, log);
           item.folders = folders;
           yield { type: "item", data: item };
 
