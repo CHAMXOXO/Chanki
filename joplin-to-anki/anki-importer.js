@@ -1,4 +1,4 @@
-// anki-importer.js (FINAL, CLEAN, SINGLE-FUNCTION VERSION)
+// anki-importer.js (DECK NAME FIX VERSION)
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const MCQ_MIN_OPTIONS = 2;
@@ -14,8 +14,7 @@ const buildEnhancedFields = (additionalFields = {}) => {
     optionA: additionalFields.optionA || "", optionB: additionalFields.optionB || "", optionC: additionalFields.optionC || "",
     optionD: additionalFields.optionD || "", correctAnswer: additionalFields.correctAnswer || "",
     questionImagePath: additionalFields.questionImagePath || "", answerImagePath: additionalFields.answerImagePath || "",
-    altText: additionalFields.altText || "",
-    deckName: additionalFields.deckName || "Default", // Added deckName to enhanced fields
+    altText: additionalFields.altText || ""
   };
 };
 
@@ -75,14 +74,7 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   return "basic";
 };
 
-// anki-importer.js -> replace the importer function
-
-// anki-importer.js -> replace the importer and batchImporter functions
-
-const importer = async (client, questionObj, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
-  // Extract question content and deck name from question object
-  const question = typeof questionObj === 'object' ? questionObj.content : questionObj;
-  const deckName = (typeof questionObj === 'object' ? questionObj.deckName : null) || additionalFields.deckName || "Default";
+const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
     const enhancedFields = buildEnhancedFields(additionalFields);
@@ -91,17 +83,17 @@ const importer = async (client, questionObj, answer, jtaID, title, notebook, tag
     const validationErrors = validateImportData(question, answer, jtaID, title, inferredType);
     if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
-    // Get the deck name from the item or fall back to "Default"
-    // Get deck name from the appropriate source
-    const deckName = question?.deckName || additionalFields?.deckName || "Default";
-    log(levelApplication, `Creating note in deck: ${deckName}`);
+    // CRITICAL FIX: Get deck name from additionalFields (this is where it's passed from the exporter)
+    const deckName = additionalFields.deckName || "Default";
+    log(levelApplication, `Processing item with deckName: ${deckName}`);
+    
     await client.ensureDeckExists(deckName);
     
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
     const foundNoteIds = await client.findNote(jtaID, deckName);
 
     if (foundNoteIds && foundNoteIds.length > 0) {
-      // --- UPDATE LOGIC (This part is mostly the same) ---
+      // --- UPDATE LOGIC ---
       const existingNoteId = foundNoteIds[0];
       const noteInfo = await client.getNoteInfo([existingNoteId]);
       const ankiNote = noteInfo && noteInfo[0];
@@ -126,18 +118,27 @@ const importer = async (client, questionObj, answer, jtaID, title, notebook, tag
       return { action: "updated", noteId: existingNoteId };
 
     } else {
-      // --- CREATE LOGIC (This is where the new self-healing logic is) ---
+      // --- CREATE LOGIC WITH SELF-HEALING ---
       log(levelVerbose, `No existing note found for JTA ID ${jtaID}. Attempting to create a new one.`);
       try {
-        const createdNoteId = await client.createNote(question, answer, jtaID, title, notebook, normalizedTags, folders, additionalFields);
+        // CRITICAL FIX: Pass deckName as the last parameter to createNote
+        const createdNoteId = await client.createNote(
+          question, 
+          answer, 
+          jtaID, 
+          title, 
+          notebook, 
+          normalizedTags, 
+          folders, 
+          additionalFields,
+          deckName  // ← THIS WAS MISSING!
+        );
         return { action: "created", noteId: createdNoteId };
       } catch (error) {
-        // SELF-HEALING BLOCK: This is the key to the fix.
-        // If creation fails because it's a duplicate, it means our initial `findNote` failed due to a connection error.
+        // SELF-HEALING BLOCK: Handle duplicate errors
         if (error.message.includes("duplicate")) {
           log(levelApplication, `⚠️ Creation failed due to a duplicate. Recovering by treating as an update for JTA ID: ${jtaID}`);
           
-          // Retry finding the note. If it fails now, something is seriously wrong, and we should let it fail.
           const recoveredNoteIds = await client.findNote(jtaID, deckName);
           if (recoveredNoteIds && recoveredNoteIds.length > 0) {
             const recoveredNoteId = recoveredNoteIds[0];
@@ -146,11 +147,9 @@ const importer = async (client, questionObj, answer, jtaID, title, notebook, tag
             await client.updateNoteTags(recoveredNoteId, title, notebook, normalizedTags);
             return { action: "updated", noteId: recoveredNoteId };
           } else {
-            // This would be a very rare and critical error.
             throw new Error(`Recovery failed. Could not find note ${jtaID} even after a duplicate error.`);
           }
         }
-        // If it's a different error (not a duplicate), we re-throw it.
         throw error;
       }
     }
@@ -162,24 +161,41 @@ const importer = async (client, questionObj, answer, jtaID, title, notebook, tag
 const batchImporter = async (client, items, batchSize = 10, log) => {
   const results = { created: 0, updated: 0, skipped: 0, failed: 0, errors: [] };
   log(levelApplication, `Starting batch import with items: ${JSON.stringify(items.map(i => ({ deckName: i.deckName })))}`);
-  const INTER_ITEM_DELAY_MS = 250; // A small delay to pace requests and prevent overwhelming AnkiConnect.
+  const INTER_ITEM_DELAY_MS = 250;
 
   log(levelApplication, `Starting batch import of ${items.length} items...`);
 
-  // Anki health check is now done here, right before the heavy lifting starts.
-  // Note: Your main script already does a health check at the start, which is good. This is an extra safeguard.
+  // Pre-flight health check
   try {
     log(levelVerbose, "Performing pre-flight health check of AnkiConnect...");
     await client.health();
     log(levelVerbose, "AnkiConnect is responsive. Starting sync.");
   } catch (err) {
     log(levelApplication, `❌ CRITICAL: AnkiConnect is not responding. Aborting sync. Please ensure Anki is running with the AnkiConnect add-on enabled.`);
-    return; // Abort the entire function
+    return;
   }
 
   for (const [index, item] of items.entries()) {
     try {
-      const res = await importer(client, item.question, item.answer, item.jtaID, item.title, item.notebook, item.tags, item.folders, item.additionalFields || {}, log);
+      log(levelApplication, `Processing item with deckName: ${item.deckName}`);
+      
+      // CRITICAL FIX: Pass item.deckName in additionalFields
+      const res = await importer(
+        client, 
+        item.question, 
+        item.answer, 
+        item.jtaID, 
+        item.title, 
+        item.notebook, 
+        item.tags, 
+        item.folders, 
+        {
+          ...item.additionalFields,
+          deckName: item.deckName  // ← Ensure deckName is in additionalFields
+        }, 
+        log
+      );
+      
       if (res.action === "created") {
         results.created++;
       } else if (res.action === "updated") {
@@ -193,7 +209,6 @@ const batchImporter = async (client, items, batchSize = 10, log) => {
       log(levelApplication, `Batch item failed: ${item.jtaID} - ${err.message}`);
     }
 
-    // Add a small delay after each item to avoid overwhelming AnkiConnect
     if (index < items.length - 1) {
       await new Promise(resolve => setTimeout(resolve, INTER_ITEM_DELAY_MS));
     }
@@ -201,11 +216,10 @@ const batchImporter = async (client, items, batchSize = 10, log) => {
 
   log(levelApplication, `Batch import completed - Created: ${results.created}, Updated: ${results.updated}, Skipped: ${results.skipped}, Failed: ${results.failed}`);
   if (results.failed > 0) {
-    // Improved formatting for multiple errors
     const errorDetails = results.errors.map(e => `\n   - Item ID: ${e.item}\n     Error: ${e.error}`).join('');
     log(levelApplication, `Errors occurred for the following items:${errorDetails}`);
   }
   return results;
 };
 
-module.exports = { importer, batchImporter };;
+module.exports = { importer, batchImporter };

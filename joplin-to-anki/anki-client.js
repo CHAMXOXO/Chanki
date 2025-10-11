@@ -134,6 +134,14 @@ class AnkiClient {
   }
   
   async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}, deckName = "Default") {
+    // CRITICAL: Log what deck name we received
+    this.log(levelApplication, `📥 createNote called with deckName: "${deckName}"`);
+    
+    // Check if deckName is actually set and not just the default
+    if (!deckName || deckName === "Default") {
+      this.log(levelApplication, `⚠️ WARNING: deckName is "${deckName}" - this suggests the deck name wasn't passed correctly from the exporter!`);
+    }
+    
     // CRITICAL: Ensure deck exists and get normalized name
     const verifiedDeckName = await this.ensureDeckExists(deckName);
     
