@@ -23,16 +23,33 @@ THEMES = [
 ]
 
 # ==============================================================================
-# ADVANCED THEME CSS
+# ADVANCED THEME CSS - MAXIMUM SPECIFICITY TO OVERRIDE ANKI
 # ==============================================================================
 THEME_CSS = """
-/* Base Reset and Container Setup */
-body.card {
+/* ==================================================================
+   CRITICAL: Maximum specificity to override Anki's native styles
+   ================================================================== */
+
+/* Base Reset with NUCLEAR specificity */
+html body.card,
+body.card,
+.card,
+#qa {
     margin: 0 !important;
     padding: 20px !important;
     min-height: 100vh !important;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     text-align: center !important;
+    box-sizing: border-box !important;
+}
+
+/* Override Anki's default card styling */
+.card, 
+body.card,
+html body.card {
+    background-size: cover !important;
+    background-attachment: fixed !important;
+    background-position: center !important;
 }
 
 /* =================================================================== */
@@ -66,22 +83,42 @@ body.card {
     display: inline-block !important;
 }
 
-.cloze .emoji {
-    display: inline-block;
+.cloze .emoji,
+.card .cloze .emoji,
+body.card .cloze .emoji {
+    display: inline-block !important;
     animation: rotate-emoji 3s infinite linear !important;
 }
 
-.card-container, .cloze-container, .mcq-container, .image-container {
+/* Maximum specificity for containers */
+.card .card-container, 
+body.card .card-container,
+.card .cloze-container, 
+body.card .cloze-container,
+.card .mcq-container, 
+body.card .mcq-container,
+.card .image-container,
+body.card .image-container,
+.card-container, 
+.cloze-container, 
+.mcq-container, 
+.image-container {
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
     border-radius: 16px !important;
     padding: 25px !important;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15) !important;
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
-    margin-bottom: 20px !important;
+    margin: 20px auto !important;
+    max-width: 90% !important;
+    display: block !important;
 }
 
-.show-answer-button {
+/* Action buttons with maximum specificity */
+.card .show-answer-button,
+body.card .show-answer-button,
+.show-answer-button,
+button.show-answer-button {
     padding: 12px 25px !important;
     border: none !important;
     border-radius: 10px !important;
@@ -90,85 +127,503 @@ body.card {
     cursor: pointer !important;
     transition: all 0.3s ease !important;
     animation: pulse-button 2.5s infinite !important;
+    display: inline-block !important;
 }
 
+.card .show-answer-button:hover,
+body.card .show-answer-button:hover,
 .show-answer-button:hover {
     transform: scale(1.1) !important;
     box-shadow: 0 0 15px, 0 0 25px !important;
 }
 
-.mcq-option {
+/* MCQ Options with maximum specificity */
+.card .mcq-option,
+body.card .mcq-option,
+.mcq-option,
+div.mcq-option {
     padding: 15px !important;
     margin: 8px 0 !important;
     border-radius: 10px !important;
     border: 1px solid transparent !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    cursor: pointer;
+    cursor: pointer !important;
+    display: block !important;
 }
 
+.card .mcq-option:hover,
+body.card .mcq-option:hover,
 .mcq-option:hover {
     transform: translateY(-3px) !important;
     box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
 }
 
-.cloze {
+/* Cloze with maximum specificity */
+.card .cloze,
+body.card .cloze,
+.cloze,
+span.cloze {
     font-weight: bold !important;
     animation-name: pulsating-glow !important;
     animation-duration: 2s !important;
     animation-iteration-count: infinite !important;
+    display: inline !important;
 }
 
 /* =================================================================== */
 /* =================== 🌕 FAMILY: LIGHT THEMES ======================= */
 /* =================================================================== */
 
-/* 1.1: light-full-moon */
-body.theme-light-full-moon { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important; }
-.theme-light-full-moon .card-container, .theme-light-full-moon .cloze-container, .theme-light-full-moon .mcq-container, .theme-light-full-moon .image-container { background: rgba(255, 255, 255, 0.7) !important; color: #3a3a3a !important; }
-.theme-light-full-moon .show-answer-button { background-color: #4a5568 !important; color: #f7fafc !important; }
-.theme-light-full-moon .show-answer-button:hover { box-shadow: 0 0 15px #4a5568 !important; }
-.theme-light-full-moon .cloze { color: #2c5282 !important; }
-.theme-light-full-moon .mcq-option:nth-of-type(1) { background: #e2e8f0 !important; color: #2d3748 !important; }
-.theme-light-full-moon .mcq-option:nth-of-type(2) { background: #d2f0ea !important; color: #234e52 !important; }
-.theme-light-full-moon .mcq-option:nth-of-type(3) { background: #e1e3f8 !important; color: #303162 !important; }
+/* 1.1: light-full-moon - MAXIMUM SPECIFICITY */
+html body.theme-light-full-moon,
+body.theme-light-full-moon,
+.theme-light-full-moon,
+body.card.theme-light-full-moon { 
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important; 
+}
 
-/* 1.2: light-waning-gibbous */
-body.theme-light-waning-gibbous { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; }
-.theme-light-waning-gibbous .card-container, .theme-light-waning-gibbous .cloze-container, .theme-light-waning-gibbous .mcq-container, .theme-light-waning-gibbous .image-container { background: rgba(255, 255, 255, 0.75) !important; color: #5c4033 !important; }
-.theme-light-waning-gibbous .show-answer-button { background-color: #dd6b20 !important; color: #fffaf0 !important; }
-.theme-light-waning-gibbous .show-answer-button:hover { box-shadow: 0 0 15px #dd6b20 !important; }
-.theme-light-waning-gibbous .cloze { color: #c05621 !important; }
-.theme-light-waning-gibbous .mcq-option:nth-of-type(1) { background: #fed7d7 !important; color: #742a2a !important; }
-.theme-light-waning-gibbous .mcq-option:nth-of-type(2) { background: #feebc8 !important; color: #744210 !important; }
-.theme-light-waning-gibbous .mcq-option:nth-of-type(3) { background: #fefcbf !important; color: #744210 !important; }
+html body.theme-light-full-moon .card-container,
+body.theme-light-full-moon .card-container,
+.theme-light-full-moon .card-container,
+html body.theme-light-full-moon .cloze-container,
+body.theme-light-full-moon .cloze-container,
+.theme-light-full-moon .cloze-container,
+html body.theme-light-full-moon .mcq-container,
+body.theme-light-full-moon .mcq-container,
+.theme-light-full-moon .mcq-container,
+html body.theme-light-full-moon .image-container,
+body.theme-light-full-moon .image-container,
+.theme-light-full-moon .image-container { 
+    background: rgba(255, 255, 255, 0.7) !important; 
+    color: #3a3a3a !important; 
+}
+
+html body.theme-light-full-moon .show-answer-button,
+body.theme-light-full-moon .show-answer-button,
+.theme-light-full-moon .show-answer-button { 
+    background-color: #4a5568 !important; 
+    color: #f7fafc !important; 
+}
+
+html body.theme-light-full-moon .show-answer-button:hover,
+body.theme-light-full-moon .show-answer-button:hover,
+.theme-light-full-moon .show-answer-button:hover { 
+    box-shadow: 0 0 15px #4a5568 !important; 
+}
+
+html body.theme-light-full-moon .cloze,
+body.theme-light-full-moon .cloze,
+.theme-light-full-moon .cloze { 
+    color: #2c5282 !important; 
+}
+
+html body.theme-light-full-moon .mcq-option:nth-of-type(1),
+body.theme-light-full-moon .mcq-option:nth-of-type(1),
+.theme-light-full-moon .mcq-option:nth-of-type(1) { 
+    background: #e2e8f0 !important; 
+    color: #2d3748 !important; 
+}
+
+html body.theme-light-full-moon .mcq-option:nth-of-type(2),
+body.theme-light-full-moon .mcq-option:nth-of-type(2),
+.theme-light-full-moon .mcq-option:nth-of-type(2) { 
+    background: #d2f0ea !important; 
+    color: #234e52 !important; 
+}
+
+html body.theme-light-full-moon .mcq-option:nth-of-type(3),
+body.theme-light-full-moon .mcq-option:nth-of-type(3),
+.theme-light-full-moon .mcq-option:nth-of-type(3) { 
+    background: #e1e3f8 !important; 
+    color: #303162 !important; 
+}
+
+/* 1.2: light-waning-gibbous - MAXIMUM SPECIFICITY */
+html body.theme-light-waning-gibbous,
+body.theme-light-waning-gibbous,
+.theme-light-waning-gibbous,
+body.card.theme-light-waning-gibbous { 
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; 
+}
+
+html body.theme-light-waning-gibbous .card-container,
+body.theme-light-waning-gibbous .card-container,
+.theme-light-waning-gibbous .card-container,
+html body.theme-light-waning-gibbous .cloze-container,
+body.theme-light-waning-gibbous .cloze-container,
+.theme-light-waning-gibbous .cloze-container,
+html body.theme-light-waning-gibbous .mcq-container,
+body.theme-light-waning-gibbous .mcq-container,
+.theme-light-waning-gibbous .mcq-container,
+html body.theme-light-waning-gibbous .image-container,
+body.theme-light-waning-gibbous .image-container,
+.theme-light-waning-gibbous .image-container { 
+    background: rgba(255, 255, 255, 0.75) !important; 
+    color: #5c4033 !important; 
+}
+
+html body.theme-light-waning-gibbous .show-answer-button,
+body.theme-light-waning-gibbous .show-answer-button,
+.theme-light-waning-gibbous .show-answer-button { 
+    background-color: #dd6b20 !important; 
+    color: #fffaf0 !important; 
+}
+
+html body.theme-light-waning-gibbous .show-answer-button:hover,
+body.theme-light-waning-gibbous .show-answer-button:hover,
+.theme-light-waning-gibbous .show-answer-button:hover { 
+    box-shadow: 0 0 15px #dd6b20 !important; 
+}
+
+html body.theme-light-waning-gibbous .cloze,
+body.theme-light-waning-gibbous .cloze,
+.theme-light-waning-gibbous .cloze { 
+    color: #c05621 !important; 
+}
+
+html body.theme-light-waning-gibbous .mcq-option:nth-of-type(1),
+body.theme-light-waning-gibbous .mcq-option:nth-of-type(1),
+.theme-light-waning-gibbous .mcq-option:nth-of-type(1) { 
+    background: #fed7d7 !important; 
+    color: #742a2a !important; 
+}
+
+html body.theme-light-waning-gibbous .mcq-option:nth-of-type(2),
+body.theme-light-waning-gibbous .mcq-option:nth-of-type(2),
+.theme-light-waning-gibbous .mcq-option:nth-of-type(2) { 
+    background: #feebc8 !important; 
+    color: #744210 !important; 
+}
+
+html body.theme-light-waning-gibbous .mcq-option:nth-of-type(3),
+body.theme-light-waning-gibbous .mcq-option:nth-of-type(3),
+.theme-light-waning-gibbous .mcq-option:nth-of-type(3) { 
+    background: #fefcbf !important; 
+    color: #744210 !important; 
+}
 
 /* =================================================================== */
 /* =================== 🪐 FAMILY: DARK THEMES ======================== */
 /* =================================================================== */
 
-/* 5.1: dark-saturn */
-body.theme-dark-saturn { background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%) !important; }
-.theme-dark-saturn .card-container, .theme-dark-saturn .cloze-container, .theme-dark-saturn .mcq-container, .theme-dark-saturn .image-container { background: rgba(30, 30, 40, 0.75) !important; color: #e0e0e0 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-.theme-dark-saturn .show-answer-button { background-color: #9f7aea !important; color: #1a202c !important; }
-.theme-dark-saturn .show-answer-button:hover { box-shadow: 0 0 15px #9f7aea !important; }
-.theme-dark-saturn .cloze { color: #d6bcfa !important; }
-.theme-dark-saturn .mcq-option:nth-of-type(1) { background: #2d3748 !important; color: #e2e8f0 !important; }
-.theme-dark-saturn .mcq-option:nth-of-type(2) { background: #4a5568 !important; color: #e2e8f0 !important; }
-.theme-dark-saturn .mcq-option:nth-of-type(3) { background: #1a202c !important; color: #e2e8f0 !important; }
+/* 5.1: dark-saturn - MAXIMUM SPECIFICITY */
+html body.theme-dark-saturn,
+body.theme-dark-saturn,
+.theme-dark-saturn,
+body.card.theme-dark-saturn { 
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%) !important; 
+}
 
+html body.theme-dark-saturn .card-container,
+body.theme-dark-saturn .card-container,
+.theme-dark-saturn .card-container,
+html body.theme-dark-saturn .cloze-container,
+body.theme-dark-saturn .cloze-container,
+.theme-dark-saturn .cloze-container,
+html body.theme-dark-saturn .mcq-container,
+body.theme-dark-saturn .mcq-container,
+.theme-dark-saturn .mcq-container,
+html body.theme-dark-saturn .image-container,
+body.theme-dark-saturn .image-container,
+.theme-dark-saturn .image-container { 
+    background: rgba(30, 30, 40, 0.75) !important; 
+    color: #e0e0e0 !important; 
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+}
+
+html body.theme-dark-saturn .show-answer-button,
+body.theme-dark-saturn .show-answer-button,
+.theme-dark-saturn .show-answer-button { 
+    background-color: #9f7aea !important; 
+    color: #1a202c !important; 
+}
+
+html body.theme-dark-saturn .show-answer-button:hover,
+body.theme-dark-saturn .show-answer-button:hover,
+.theme-dark-saturn .show-answer-button:hover { 
+    box-shadow: 0 0 15px #9f7aea !important; 
+}
+
+html body.theme-dark-saturn .cloze,
+body.theme-dark-saturn .cloze,
+.theme-dark-saturn .cloze { 
+    color: #d6bcfa !important; 
+}
+
+html body.theme-dark-saturn .mcq-option:nth-of-type(1),
+body.theme-dark-saturn .mcq-option:nth-of-type(1),
+.theme-dark-saturn .mcq-option:nth-of-type(1) { 
+    background: #2d3748 !important; 
+    color: #e2e8f0 !important; 
+}
+
+html body.theme-dark-saturn .mcq-option:nth-of-type(2),
+body.theme-dark-saturn .mcq-option:nth-of-type(2),
+.theme-dark-saturn .mcq-option:nth-of-type(2) { 
+    background: #4a5568 !important; 
+    color: #e2e8f0 !important; 
+}
+
+html body.theme-dark-saturn .mcq-option:nth-of-type(3),
+body.theme-dark-saturn .mcq-option:nth-of-type(3),
+.theme-dark-saturn .mcq-option:nth-of-type(3) { 
+    background: #1a202c !important; 
+    color: #e2e8f0 !important; 
+}
+
+/* Continue same pattern for remaining dark themes... */
 /* 5.2: dark-mars-rover */
-body.theme-dark-mars-rover { background: linear-gradient(135deg, #200122 0%, #6f0000 100%) !important; }
-.theme-dark-mars-rover .card-container, .theme-dark-mars-rover .cloze-container, .theme-dark-mars-rover .mcq-container, .theme-dark-mars-rover .image-container { background: rgba(40, 20, 30, 0.8) !important; color: #f7fafc !important; border: 1px solid rgba(255, 100, 100, 0.15) !important; }
-.theme-dark-mars-rover .show-answer-button { background-color: #e53e3e !important; color: #fff5f5 !important; }
-.theme-dark-mars-rover .show-answer-button:hover { box-shadow: 0 0 15px #e53e3e !important; }
-.theme-dark-mars-rover .cloze { color: #fed7d7 !important; }
-.theme-dark-mars-rover .mcq-option:nth-of-type(1) { background: #4a1d1d !important; color: #fed7d7 !important; }
-.theme-dark-mars-rover .mcq-option:nth-of-type(2) { background: #692c2c !important; color: #fed7d7 !important; }
-.theme-dark-mars-rover .mcq-option:nth-of-type(3) { background: #230122 !important; color: #f7fafc !important; }
+html body.theme-dark-mars-rover,
+body.theme-dark-mars-rover,
+body.card.theme-dark-mars-rover { 
+    background: linear-gradient(135deg, #200122 0%, #6f0000 100%) !important; 
+}
 
-/* 5.3: dark-neptune-deep */
-body.theme-dark-neptune-deep { background: linear-gradient(135deg, #051937 0%, #004d7a 50%, #008793 100%) !important; }
-.theme-dark-neptune-deep .card-container, .theme-dark-neptune-deep .cloze-container, .theme-dark-neptune-deep .mcq-container, .theme-dark-neptune-deep .image-container { background: rgba(10, 30, 50, 0.8) !important; color: #cbeef3 !important; border: 1px solid rgba(100, 200, 255, 0.2) !important; }
+html body.theme-dark-mars-rover .card-container,
+body.theme-dark-mars-rover .card-container,
+html body.theme-dark-mars-rover .cloze-container,
+body.theme-dark-mars-rover .cloze-container,
+html body.theme-dark-mars-rover .mcq-container,
+body.theme-dark-mars-rover .mcq-container,
+html body.theme-dark-mars-rover .image-container,
+body.theme-dark-mars-rover .image-container { 
+    background: rgba(40, 20, 30, 0.8) !important; 
+    color: #f7fafc !important; 
+    border: 1px solid rgba(255, 100, 100, 0.15) !important; 
+}
+
+html body.theme-dark-mars-rover .show-answer-button,
+body.theme-dark-mars-rover .show-answer-button { 
+    background-color: #e53e3e !important; 
+    color: #fff5f5 !important; 
+}
+
+html body.theme-dark-mars-rover .show-answer-button:hover,
+body.theme-dark-mars-rover .show-answer-button:hover { 
+    box-shadow: 0 0 15px #e53e3e !important; 
+}
+
+html body.theme-dark-mars-rover .cloze,
+body.theme-dark-mars-rover .cloze { 
+    color: #fed7d7 !important; 
+}
+
+html body.theme-dark-mars-rover .mcq-option:nth-of-type(1),
+body.theme-dark-mars-rover .mcq-option:nth-of-type(1) { 
+    background: #4a1d1d !important; 
+    color: #fed7d7 !important; 
+}
+
+html body.theme-dark-mars-rover .mcq-option:nth-of-type(2),
+body.theme-dark-mars-rover .mcq-option:nth-of-type(2) { 
+    background: #692c2c !important; 
+    color: #fed7d7 !important; 
+}
+
+html body.theme-dark-mars-rover .mcq-option:nth-of-type(3),
+body.theme-dark-mars-rover .mcq-option:nth-of-type(3) { 
+    background: #230122 !important; 
+    color: #f7fafc !important; 
+}
+
+/* 5.3-5.5: Remaining dark themes follow same pattern */
+/* 5.3: dark-neptune-deep - FULL SPECIFICITY */
+html body.theme-dark-neptune-deep,
+body.theme-dark-neptune-deep,
+body.card.theme-dark-neptune-deep { 
+    background: linear-gradient(135deg, #051937 0%, #004d7a 50%, #008793 100%) !important; 
+}
+
+html body.theme-dark-neptune-deep .card-container,
+body.theme-dark-neptune-deep .card-container,
+html body.theme-dark-neptune-deep .cloze-container,
+body.theme-dark-neptune-deep .cloze-container,
+html body.theme-dark-neptune-deep .mcq-container,
+body.theme-dark-neptune-deep .mcq-container,
+html body.theme-dark-neptune-deep .image-container,
+body.theme-dark-neptune-deep .image-container { 
+    background: rgba(10, 30, 50, 0.8) !important; 
+    color: #cbeef3 !important; 
+    border: 1px solid rgba(100, 200, 255, 0.2) !important; 
+}
+
+html body.theme-dark-neptune-deep .show-answer-button,
+body.theme-dark-neptune-deep .show-answer-button { 
+    background-color: #38b2ac !important; 
+    color: #051937 !important; 
+}
+
+html body.theme-dark-neptune-deep .show-answer-button:hover,
+body.theme-dark-neptune-deep .show-answer-button:hover { 
+    box-shadow: 0 0 15px #38b2ac !important; 
+}
+
+html body.theme-dark-neptune-deep .cloze,
+body.theme-dark-neptune-deep .cloze { 
+    color: #81e6d9 !important; 
+}
+
+html body.theme-dark-neptune-deep .mcq-option:nth-of-type(1),
+body.theme-dark-neptune-deep .mcq-option:nth-of-type(1) { 
+    background: #003a5c !important; 
+    color: #b2f5ea !important; 
+}
+
+html body.theme-dark-neptune-deep .mcq-option:nth-of-type(2),
+body.theme-dark-neptune-deep .mcq-option:nth-of-type(2) { 
+    background: #00607a !important; 
+    color: #b2f5ea !important; 
+}
+
+html body.theme-dark-neptune-deep .mcq-option:nth-of-type(3),
+body.theme-dark-neptune-deep .mcq-option:nth-of-type(3) { 
+    background: #022c47 !important; 
+    color: #b2f5ea !important; 
+}
+
+/* 5.4: dark-black-hole - FULL SPECIFICITY */
+html body.theme-dark-black-hole,
+body.theme-dark-black-hole,
+body.card.theme-dark-black-hole { 
+    background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%) !important; 
+}
+
+html body.theme-dark-black-hole .card-container,
+body.theme-dark-black-hole .card-container,
+html body.theme-dark-black-hole .cloze-container,
+body.theme-dark-black-hole .cloze-container,
+html body.theme-dark-black-hole .mcq-container,
+body.theme-dark-black-hole .mcq-container,
+html body.theme-dark-black-hole .image-container,
+body.theme-dark-black-hole .image-container { 
+    background: rgba(15, 15, 15, 0.8) !important; 
+    color: #a0aec0 !important; 
+    border: 1px solid rgba(255, 255, 255, 0.05) !important; 
+}
+
+html body.theme-dark-black-hole .show-answer-button,
+body.theme-dark-black-hole .show-answer-button { 
+    background-color: #718096 !important; 
+    color: #000000 !important; 
+}
+
+html body.theme-dark-black-hole .show-answer-button:hover,
+body.theme-dark-black-hole .show-answer-button:hover { 
+    box-shadow: 0 0 15px #718096 !important; 
+}
+
+html body.theme-dark-black-hole .cloze,
+body.theme-dark-black-hole .cloze { 
+    color: #e2e8f0 !important; 
+}
+
+html body.theme-dark-black-hole .mcq-option:nth-of-type(1),
+body.theme-dark-black-hole .mcq-option:nth-of-type(1) { 
+    background: #2d3748 !important; 
+    color: #cbd5e0 !important; 
+}
+
+html body.theme-dark-black-hole .mcq-option:nth-of-type(2),
+body.theme-dark-black-hole .mcq-option:nth-of-type(2) { 
+    background: #1a202c !important; 
+    color: #cbd5e0 !important; 
+}
+
+html body.theme-dark-black-hole .mcq-option:nth-of-type(3),
+body.theme-dark-black-hole .mcq-option:nth-of-type(3) { 
+    background: #111827 !important; 
+    color: #cbd5e0 !important; 
+}
+
+/* 5.5: dark-starless-sky - FULL SPECIFICITY */
+html body.theme-dark-starless-sky,
+body.theme-dark-starless-sky,
+body.card.theme-dark-starless-sky { 
+    background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%) !important; 
+}
+
+html body.theme-dark-starless-sky .card-container,
+body.theme-dark-starless-sky .card-container,
+html body.theme-dark-starless-sky .cloze-container,
+body.theme-dark-starless-sky .cloze-container,
+html body.theme-dark-starless-sky .mcq-container,
+body.theme-dark-starless-sky .mcq-container,
+html body.theme-dark-starless-sky .image-container,
+body.theme-dark-starless-sky .image-container { 
+    background: rgba(20, 20, 20, 0.85) !important; 
+    color: #edf2f7 !important; 
+    border: 1px solid rgba(255, 255, 255, 0.1) !important; 
+}
+
+html body.theme-dark-starless-sky .show-answer-button,
+body.theme-dark-starless-sky .show-answer-button { 
+    background-color: #edf2f7 !important; 
+    color: #1a202c !important; 
+}
+
+html body.theme-dark-starless-sky .show-answer-button:hover,
+body.theme-dark-starless-sky .show-answer-button:hover { 
+    box-shadow: 0 0 15px #edf2f7 !important; 
+}
+
+html body.theme-dark-starless-sky .cloze,
+body.theme-dark-starless-sky .cloze { 
+    color: #a0aec0 !important; 
+}
+
+html body.theme-dark-starless-sky .mcq-option:nth-of-type(1),
+body.theme-dark-starless-sky .mcq-option:nth-of-type(1) { 
+    background: #4a5568 !important; 
+    color: #f7fafc !important; 
+}
+
+html body.theme-dark-starless-sky .mcq-option:nth-of-type(2),
+body.theme-dark-starless-sky .mcq-option:nth-of-type(2) { 
+    background: #2d3748 !important; 
+    color: #f7fafc !important; 
+}
+
+html body.theme-dark-starless-sky .mcq-option:nth-of-type(3),
+body.theme-dark-starless-sky .mcq-option:nth-of-type(3) { 
+    background: #171923 !important; 
+    color: #f7fafc !important; 
+}
+
+/* =================================================================== */
+/* =================== NUCLEAR OVERRIDE SECTION ====================== */
+/* =================================================================== */
+
+/* IMPORTANT: Force override of Anki's nightMode class */
+html body.nightMode[class*="theme-"],
+body.nightMode[class*="theme-"],
+html body.nightMode.card[class*="theme-"] {
+    background: inherit !important;
+}
+
+/* Override ALL Anki default backgrounds */
+html body[class*="theme-"],
+body[class*="theme-"],
+.card[class*="theme-"],
+#qa[class*="theme-"] {
+    background-color: transparent !important;
+}
+
+/* Force text color inheritance */
+html body[class*="theme-"] *,
+body[class*="theme-"] *,
+.card[class*="theme-"] * {
+    color: inherit;
+}
+
+/* Remove Anki's default card styling completely */
+html body[class*="theme-"].card::before,
+body[class*="theme-"].card::before,
+html body[class*="theme-"].card::after,
+body[class*="theme-"].card::after {
+    content: none !important;
+    display: none !important;
+}
+"""
 .theme-dark-neptune-deep .show-answer-button { background-color: #38b2ac !important; color: #051937 !important; }
 .theme-dark-neptune-deep .show-answer-button:hover { box-shadow: 0 0 15px #38b2ac !important; }
 .theme-dark-neptune-deep .cloze { color: #81e6d9 !important; }
@@ -218,14 +673,14 @@ THEME_SCRIPT = """
     let currentTheme = null;
     let initCount = 0;
     
-    // --- Enhanced Theme Application ---
+    // --- Enhanced Theme Application with FORCE mode ---
     function applyTheme(theme, source) {
         if (!theme || !ALL_THEMES.includes(theme)) {
             theme = 'light-full-moon';
         }
         
-        // Prevent redundant applications
-        if (currentTheme === theme && initCount > 0) {
+        // Prevent redundant applications (but allow force refresh)
+        if (currentTheme === theme && initCount > 0 && source !== 'force') {
             console.log('[JoplinSync] Theme already applied:', theme);
             return;
         }
@@ -233,29 +688,70 @@ THEME_SCRIPT = """
         console.log('[JoplinSync] Applying theme:', theme, 'from:', source);
         
         const body = document.body;
+        const html = document.documentElement;
         
-        // Remove all theme classes efficiently
-        const classesToRemove = Array.from(body.classList).filter(c => c.startsWith('theme-'));
+        // NUCLEAR OPTION: Remove ALL theme and card-related classes
+        const classesToRemove = Array.from(body.classList).filter(c => 
+            c.startsWith('theme-') || c === 'nightMode' || c === 'night_mode'
+        );
         classesToRemove.forEach(c => body.classList.remove(c));
         
-        // Add the new theme class
+        // Also clean html element
+        const htmlClassesToRemove = Array.from(html.classList).filter(c => 
+            c.startsWith('theme-') || c === 'nightMode' || c === 'night_mode'
+        );
+        htmlClassesToRemove.forEach(c => html.classList.remove(c));
+        
+        // Add the new theme class to BOTH body and html
         body.classList.add('theme-' + theme);
+        html.classList.add('theme-' + theme);
+        body.classList.add('card');
         
-        // Ensure card class is present
-        if (!body.classList.contains('card')) {
-            body.classList.add('card');
-        }
+        // FORCE attribute-based styling as backup
+        body.setAttribute('data-theme', theme);
+        html.setAttribute('data-theme', theme);
         
-        // Force style recalculation
+        // Force immediate style recalculation
         void body.offsetHeight;
+        void html.offsetHeight;
+        
+        // Inject inline style as ultimate fallback
+        injectInlineThemeStyle(theme);
         
         currentTheme = theme;
-        console.log('[JoplinSync] Theme applied successfully. Classes:', body.className);
+        console.log('[JoplinSync] ✓ Theme applied. Body classes:', body.className);
+        console.log('[JoplinSync] ✓ HTML classes:', html.className);
         
         // Persist to localStorage
         saveThemeToLocal(theme);
         
         return true;
+    }
+    
+    // --- Inline style injection as ultimate fallback ---
+    function injectInlineThemeStyle(theme) {
+        // Remove old inline theme style if exists
+        const oldStyle = document.getElementById('inline-theme-override');
+        if (oldStyle) oldStyle.remove();
+        
+        // Create new inline style with MAXIMUM specificity
+        const style = document.createElement('style');
+        style.id = 'inline-theme-override';
+        style.textContent = `
+            /* Inline fallback for ${theme} */
+            html, body, .card, #qa {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto !important;
+            }
+            html[data-theme="${theme}"] body,
+            body[data-theme="${theme}"],
+            body.theme-${theme},
+            html.theme-${theme} body {
+                background-attachment: fixed !important;
+                background-size: cover !important;
+            }
+        `;
+        document.head.appendChild(style);
+        console.log('[JoplinSync] Inline style injected for:', theme);
     }
     
     // --- Multi-source Theme Loading with Priority ---
@@ -508,12 +1004,38 @@ def apply_global_theme(theme_name: str, show_tooltip: bool = True):
 # INJECTION HOOK WITH ENHANCED METADATA
 # ==============================================================================
 def inject_theme_assets(html: str, card: Any, context: Any) -> str:
-    """Injects CSS, JS, and meta tag into the card's HTML with cache-busting."""
+    """Injects CSS, JS, and meta tag into the card's HTML with cache-busting AND direct class injection."""
     theme = get_theme()
     
     # Cache-busting timestamp to force refresh
     import time
     cache_buster = int(time.time() * 1000)  # milliseconds timestamp
+    
+    # CRITICAL: Inject theme class DIRECTLY into body tag
+    # This ensures it's present before any JavaScript runs
+    theme_class = f'theme-{theme}'
+    
+    # Try to add class to existing body tag
+    if '<body' in html:
+        # Find body tag and add our classes
+        import re
+        def add_classes_to_body(match):
+            body_tag = match.group(0)
+            if 'class=' in body_tag:
+                # Add to existing class attribute
+                body_tag = re.sub(
+                    r'class=["\']([^"\']*)["\']',
+                    f'class="\\1 card {theme_class}"',
+                    body_tag
+                )
+            else:
+                # Add new class attribute
+                body_tag = body_tag.replace('<body', f'<body class="card {theme_class}"')
+            # Also add data attribute
+            body_tag = body_tag.replace('<body', f'<body data-theme="{theme}"')
+            return body_tag
+        
+        html = re.sub(r'<body[^>]*>', add_classes_to_body, html, count=1)
     
     # Create comprehensive injection payload with cache busting
     injection_payload = f'''
@@ -525,6 +1047,17 @@ def inject_theme_assets(html: str, card: Any, context: Any) -> str:
 </style>
 <script id="joplin-theme-script-{cache_buster}">
 {THEME_SCRIPT}
+</script>
+<script>
+// IMMEDIATE theme application before DOMContentLoaded
+(function() {{
+    document.documentElement.classList.add('theme-{theme}');
+    document.documentElement.setAttribute('data-theme', '{theme}');
+    if (document.body) {{
+        document.body.classList.add('card', 'theme-{theme}');
+        document.body.setAttribute('data-theme', '{theme}');
+    }}
+}})();
 </script>
 '''
     
