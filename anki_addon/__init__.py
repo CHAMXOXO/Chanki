@@ -643,33 +643,6 @@ body[class*="theme-"].card::after {
     display: none !important;
 }
 """
-.theme-dark-neptune-deep .show-answer-button { background-color: #38b2ac !important; color: #051937 !important; }
-.theme-dark-neptune-deep .show-answer-button:hover { box-shadow: 0 0 15px #38b2ac !important; }
-.theme-dark-neptune-deep .cloze { color: #81e6d9 !important; }
-.theme-dark-neptune-deep .mcq-option:nth-of-type(1) { background: #003a5c !important; color: #b2f5ea !important; }
-.theme-dark-neptune-deep .mcq-option:nth-of-type(2) { background: #00607a !important; color: #b2f5ea !important; }
-.theme-dark-neptune-deep .mcq-option:nth-of-type(3) { background: #022c47 !important; color: #b2f5ea !important; }
-
-/* 5.4: dark-black-hole */
-body.theme-dark-black-hole { background: radial-gradient(circle at center, #0a0a0a 0%, #000000 100%) !important; }
-.theme-dark-black-hole .card-container, .theme-dark-black-hole .cloze-container, .theme-dark-black-hole .mcq-container, .theme-dark-black-hole .image-container { background: rgba(15, 15, 15, 0.8) !important; color: #a0aec0 !important; border: 1px solid rgba(255, 255, 255, 0.05) !important; }
-.theme-dark-black-hole .show-answer-button { background-color: #718096 !important; color: #000000 !important; }
-.theme-dark-black-hole .show-answer-button:hover { box-shadow: 0 0 15px #718096 !important; }
-.theme-dark-black-hole .cloze { color: #e2e8f0 !important; }
-.theme-dark-black-hole .mcq-option:nth-of-type(1) { background: #2d3748 !important; color: #cbd5e0 !important; }
-.theme-dark-black-hole .mcq-option:nth-of-type(2) { background: #1a202c !important; color: #cbd5e0 !important; }
-.theme-dark-black-hole .mcq-option:nth-of-type(3) { background: #111827 !important; color: #cbd5e0 !important; }
-
-/* 5.5: dark-starless-sky */
-body.theme-dark-starless-sky { background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%) !important; }
-.theme-dark-starless-sky .card-container, .theme-dark-starless-sky .cloze-container, .theme-dark-starless-sky .mcq-container, .theme-dark-starless-sky .image-container { background: rgba(20, 20, 20, 0.85) !important; color: #edf2f7 !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; }
-.theme-dark-starless-sky .show-answer-button { background-color: #edf2f7 !important; color: #1a202c !important; }
-.theme-dark-starless-sky .show-answer-button:hover { box-shadow: 0 0 15px #edf2f7 !important; }
-.theme-dark-starless-sky .cloze { color: #a0aec0 !important; }
-.theme-dark-starless-sky .mcq-option:nth-of-type(1) { background: #4a5568 !important; color: #f7fafc !important; }
-.theme-dark-starless-sky .mcq-option:nth-of-type(2) { background: #2d3748 !important; color: #f7fafc !important; }
-.theme-dark-starless-sky .mcq-option:nth-of-type(3) { background: #171923 !important; color: #f7fafc !important; }
-"""
 
 # ==============================================================================
 # ENHANCED THEME JAVASCRIPT WITH PERSISTENCE
