@@ -15,6 +15,7 @@ const buildEnhancedFields = (additionalFields = {}) => {
     optionD: additionalFields.optionD || "", correctAnswer: additionalFields.correctAnswer || "",
     questionImagePath: additionalFields.questionImagePath || "", answerImagePath: additionalFields.answerImagePath || "",
     altText: additionalFields.altText || "",
+    deckName: additionalFields.deckName || "Default", // Added deckName to enhanced fields
   };
 };
 
@@ -87,7 +88,8 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
     const validationErrors = validateImportData(question, answer, jtaID, title, inferredType);
     if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
-    const deckName = "default";
+    // Get the deck name from the item or fall back to "Default"
+    const deckName = additionalFields.deckName || "Default";
     await client.ensureDeckExists(deckName);
     
     const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);

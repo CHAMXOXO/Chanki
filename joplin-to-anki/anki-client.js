@@ -102,8 +102,10 @@ class AnkiClient {
     return "basic";
   }
   
-  async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}) {
-    const deckName = "default"; // Simplified for debugging, can be changed back
+  async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}, deckName = "Default") {
+    // Ensure the deck exists before creating the note
+    await this.ensureDeckExists(deckName);
+    
     const cardType = this.detectCardType(question, answer, additionalFields);
     
     // --- DEFINITIVE CRASH FIX ---

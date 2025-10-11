@@ -26,6 +26,34 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
     return content;
 };
 
+// Function to determine deck structure based on tags and notebook structure
+const determineDeckStructure = (tags, notebook, parentNotebook, log) => {
+  // Priority 1: Check for deck and subdeck tags
+  const deckTag = tags.find(tag => tag.startsWith('deck::'));
+  const subdeckTag = tags.find(tag => tag.startsWith('subdeck::'));
+  
+  if (deckTag) {
+    const mainDeck = deckTag.replace('deck::', '').trim();
+    const subDeck = subdeckTag ? subdeckTag.replace('subdeck::', '').trim() : null;
+    log(levelDebug, `Using tag-based deck structure: ${mainDeck}${subDeck ? '::' + subDeck : ''}`);
+    return subDeck ? `${mainDeck}::${subDeck}` : mainDeck;
+  }
+
+  // Priority 2: Use notebook structure
+  if (notebook && notebook.title) {
+    if (parentNotebook && parentNotebook.title) {
+      log(levelDebug, `Using notebook structure: ${parentNotebook.title}::${notebook.title}`);
+      return `${parentNotebook.title}::${notebook.title}`;
+    }
+    log(levelDebug, `Using single notebook as deck: ${notebook.title}`);
+    return notebook.title;
+  }
+
+  // Priority 3: Fallback to default
+  log(levelDebug, 'No deck structure found, using Default deck');
+  return 'Default';
+};
+
 // --- CHANGE 2: The function now accepts the note's stable ID ---
 // joplin-exporter.js -> Replace ONLY the extractQuiz function with this one
 
@@ -117,6 +145,17 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
                           (additionalFields.answerImagePath && additionalFields.answerImagePath.trim().length > 0);
 
     if (hasQuestionOrAnswerText || hasImagePaths) {
+      // Try to extract deck-related tags from the current item's context
+      const itemTags = tags || [];
+      const deckTag = itemTags.find(tag => tag.startsWith('deck::'));
+      const subdeckTag = itemTags.find(tag => tag.startsWith('subdeck::'));
+      
+      // Include deck-related information in additionalFields
+      additionalFields.deckTags = {
+        mainDeck: deckTag ? deckTag.replace('deck::', '').trim() : null,
+        subDeck: subdeckTag ? subdeckTag.replace('subdeck::', '').trim() : null
+      };
+
       output.push({
         question: cleanedQuestion,
         answer: answer ? answer.trim() : '',
@@ -262,12 +301,24 @@ async function* exporter(client, datetime, log) {
 
         const { note: fullNote, notebook, tags, resources } = noteDetails;
         
-        // --- CHANGE 4: The stable note.id is now passed to extractQuiz ---
+        // Get parent notebook if it exists
+        let parentNotebook = null;
+        if (notebook && notebook.parent_id) {
+          try {
+            parentNotebook = await client.getFolder(notebook.parent_id);
+            log(levelDebug, `Found parent notebook: ${parentNotebook.title}`);
+          } catch (error) {
+            log(levelDebug, `Could not fetch parent notebook: ${error.message}`);
+          }
+        }
+
         const jtaItems = extractQuiz(fullNote.body, fullNote.title, notebook, tags, log, note.id);
         if (jtaItems.length === 0) continue;
 
         const itemsWithResources = addResources(jtaItems, resources, log);
         for (const item of itemsWithResources) {
+          // Determine deck structure for each item
+          item.deckName = determineDeckStructure(tags, notebook, parentNotebook, log);
           item.folders = folders;
           yield { type: "item", data: item };
 
