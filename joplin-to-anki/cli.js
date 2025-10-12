@@ -32,45 +32,55 @@ program
     levelApplication
   );
   
-async function loadPremiumPlugin() {
-  try {
-    // Try to load premium plugin if it's installed
-    require('joplin-to-anki-premium');
-    return true;
-  } catch (error) {
-    // Premium not installed - that's okay
-    return false;
-  }
-}
-
-program
-  .command("run")
-  .description("export from Joplin to Anki")
-  .requiredOption(
-    "-t, --joplintoken <token>",
-    "token for Joplin Web Clipper API",
-    configStore.get("joplinToken")
-  )
   
-  .action(async () => {
-    const premiumLoaded = await loadPremiumPlugin();
-    
-    if (!premiumLoaded) {
-      console.log('📚 Running FREE version - Basic features only');
-      console.log('💎 Want premium? Visit: https://yoursite.com/premium\n');
+  // ============================================================================
+  // PREMIUM PLUGIN LOADER
+  // ============================================================================
+  async function loadPremiumPlugin() {
+    try {
+      // Try to load premium plugin if it's installed
+      require('joplin-to-anki-premium');
+      return true;
+    } catch (error) {
+      // Premium not installed - that's okay
+      return false;
     }
+  }
   
-  .action(async () => {
-    const now = new Date().toISOString();
-    await jta.run(
-      program.loglevel,
-      program.joplinurl,
-      program.joplintoken,
-      program.date,
-      program.ankiurl
-    );
-    configStore.set("exportFromDate", now);
-  });
+  program
+    .command("run")
+    .description("export from Joplin to Anki")
+    .requiredOption(
+      "-t, --joplintoken <token>",
+      "token for Joplin Web Clipper API",
+      configStore.get("joplinToken")
+    )
+    
+    .action(async () => {
+      // Try to load premium plugin
+      const premiumLoaded = await loadPremiumPlugin();
+      
+      // Show tier info (only if verbose)
+      if (program.loglevel >= levelVerbose) {
+        if (premiumLoaded) {
+          console.log('💎 Premium features active\n');
+        } else {
+          console.log('📚 Free version - Basic features only');
+          console.log('💎 Want premium? Visit: https://yoursite.com/premium\n');
+        }
+      }
+      
+      // Run the sync
+      const now = new Date().toISOString();
+      await jta.run(
+        program.loglevel,
+        program.joplinurl,
+        program.joplintoken,
+        program.date,
+        program.ankiurl
+      );
+      configStore.set("exportFromDate", now);
+    });
 
 const config = program.command("config").description("Get/set configs for JTA");
 

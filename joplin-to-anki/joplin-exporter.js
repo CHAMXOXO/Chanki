@@ -40,6 +40,7 @@ const determineDeckStructure = (tags, notebook, allFolders, log) => {
   }
   
   // Simple fallback
+  const simpleDeck = 'Default';
   log(levelDebug, `Free tier: Using simple deck "${simpleDeck}"`);
   return 'Default';
 };
