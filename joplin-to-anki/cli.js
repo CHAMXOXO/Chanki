@@ -31,6 +31,17 @@ program
     "Enable verbose logs",
     levelApplication
   );
+  
+async function loadPremiumPlugin() {
+  try {
+    // Try to load premium plugin if it's installed
+    require('joplin-to-anki-premium');
+    return true;
+  } catch (error) {
+    // Premium not installed - that's okay
+    return false;
+  }
+}
 
 program
   .command("run")
@@ -40,6 +51,15 @@ program
     "token for Joplin Web Clipper API",
     configStore.get("joplinToken")
   )
+  
+  .action(async () => {
+    const premiumLoaded = await loadPremiumPlugin();
+    
+    if (!premiumLoaded) {
+      console.log('📚 Running FREE version - Basic features only');
+      console.log('💎 Want premium? Visit: https://yoursite.com/premium\n');
+    }
+  
   .action(async () => {
     const now = new Date().toISOString();
     await jta.run(

@@ -76,3 +76,32 @@ You should now see the question/answer within Anki, in the deck `Joplin to Anki`
 - Anki note browser should be closed during import; if open, **updates to note fields will not be synced from Joplin to Anki as expected**
 - Syncing images into Anki is slow
 - For markdown to render in the `joplin-to-anki` template `Answer` field _within Joplin_ a newline is needed after the `</summary>` tag
+
+## Features
+
+### Free Version (Open Source)
+✅ One-way sync from Joplin to Anki  
+✅ 4 custom note types (Basic, Cloze, MCQ, Image (Not Occlusion))  
+✅ Automatic resource handling  
+✅ Unique card IDs (prevents duplicates allows updates directly to Anki)  
+✅ Simple deck assignment (Default)  
+
+### Premium Version
+💎 **Advanced deck organization:**
+- Full notebook hierarchy (unlimited nesting)
+- Tag-based deck assignment (`deck::` and `subdeck::`)
+- Flexible deck control
+
+💎 **Coming soon:**
+- Two-way sync
+- Custom field mapping
+- Priority support
+
+[🔗 Upgrade to Premium ($20)](https://yoursite.com/premium)
+
+---
+
+## Attribution
+
+This project is built upon the original work by Bart (MIT License).  
+Premium features and enhancements by Cindy.

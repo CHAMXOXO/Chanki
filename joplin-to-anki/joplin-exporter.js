@@ -1,4 +1,4 @@
-// joplin-exporter.js (FULL NOTEBOOK HIERARCHY VERSION - COMPLETE)
+// joplin-exporter.js 
 
 const cheerio = require("cheerio");
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
@@ -24,88 +24,29 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
     return content;
 };
 
-/**
- * Build the full notebook hierarchy path
- * Walks up the entire tree to create: ["Root", "Parent", "Child", "GrandChild"]
- */
-const buildNotebookHierarchy = (notebook, allFolders, log) => {
-  if (!notebook || !notebook.id) {
-    log(levelDebug, 'No notebook provided for hierarchy building');
-    return [];
-  }
+let premiumDeckHandler = null;
 
-  const hierarchy = [];
-  let currentNotebook = notebook;
-  const visited = new Set(); // Prevent infinite loops
-
-  // Walk up the tree until we reach the root
-  while (currentNotebook && currentNotebook.id) {
-    if (visited.has(currentNotebook.id)) {
-      log(levelApplication, `⚠️ Circular reference detected in notebook hierarchy for ${currentNotebook.title}`);
-      break;
-    }
-    visited.add(currentNotebook.id);
-
-    // Add to front of array (we're going backwards from child to root)
-    hierarchy.unshift(currentNotebook.title);
-    
-    // Find parent notebook
-    if (currentNotebook.parent_id) {
-      currentNotebook = allFolders.find(f => f.id === currentNotebook.parent_id);
-      if (!currentNotebook) {
-        log(levelDebug, `Parent notebook not found in folders list`);
-        break;
-      }
-    } else {
-      // Reached root (no more parents)
-      break;
-    }
-  }
-
-  log(levelDebug, `Built notebook hierarchy: ${hierarchy.join(' > ')}`);
-  return hierarchy;
+// Export this function so premium plugin can register itself
+const registerPremiumDeckHandler = (handler) => {
+  premiumDeckHandler = handler;
+  console.log('✅ Premium deck features loaded');
 };
 
-/**
- * Determine deck structure with full nested subdeck support
- * Priority 1: Tags (deck:: and subdeck::)
- * Priority 2: Full notebook hierarchy (unlimited depth)
- * Priority 3: Default deck
- */
+// MODIFY determineDeckStructure:
 const determineDeckStructure = (tags, notebook, allFolders, log) => {
-  // Priority 1: Check for deck tags
-  log(levelDebug, `Checking tags for deck: ${JSON.stringify(tags)}`);
-  const deckTag = tags.find(tag => tag.startsWith('deck::'));
-  const subdeckTag = tags.find(tag => tag.startsWith('subdeck::'));
+  // If premium plugin is loaded, use it
+  if (premiumDeckHandler) {
+    return premiumDeckHandler(tags, notebook, allFolders, log);
+  }
   
-  if (deckTag) {
-    const mainDeck = deckTag.replace('deck::', '').trim();
-    const subDeck = subdeckTag ? subdeckTag.replace('subdeck::', '').trim() : null;
-    const tagBasedDeck = subDeck ? `${mainDeck}::${subDeck}` : mainDeck;
-    log(levelApplication, `Found deck tag! Using tag-based deck structure: ${tagBasedDeck}`);
-    return tagBasedDeck;
-  }
-
-  // Priority 2: Use full notebook hierarchy (THIS IS THE KEY CHANGE)
-  if (notebook && notebook.title && allFolders) {
-    const hierarchy = buildNotebookHierarchy(notebook, allFolders, log);
-    
-    if (hierarchy.length > 0) {
-      // Join all levels with Anki's :: separator
-      const hierarchyDeck = hierarchy.join('::');
-      log(levelApplication, `Using full notebook hierarchy as deck: ${hierarchyDeck}`);
-      return hierarchyDeck;
-    }
-  }
-
-  // Priority 3: Fallback
-  log(levelDebug, 'No deck structure found, using Default deck');
+  // Simple fallback
+  log(levelDebug, `Free tier: Using simple deck "${simpleDeck}"`);
   return 'Default';
 };
 
 const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   const $ = cheerio.load(body);
-  let output = [];
+  let output = [];  
 
   $(".jta").each((i, el) => {
     let jtaID = $(el).attr("data-id");
@@ -358,4 +299,5 @@ module.exports = {
   typeItem: "item",
   typeResource: "resource",
   typeError: "error",
+  registerPremiumDeckHandler
 };
