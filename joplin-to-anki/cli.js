@@ -38,11 +38,23 @@ program
   // ============================================================================
   async function loadPremiumPlugin() {
     try {
-      // Try to load premium plugin if it's installed
-      require('joplin-to-anki-premium');
-      return true;
+      // Try multiple locations for the premium plugin
+      let premium;
+      try {
+        // Try local path first
+        premium = require('/home/cindy/Chanki-Premium/joplin-to-anki-premium');
+      } catch (e) {
+        // Fall back to module name
+        premium = require('joplin-to-anki-premium');
+      }
+      
+      if (premium) {
+        console.log('🔍 Found premium plugin');
+        return true;
+      }
+      return false;
     } catch (error) {
-      // Premium not installed - that's okay
+      console.log('📚 Premium plugin not found:', error.message);
       return false;
     }
   }

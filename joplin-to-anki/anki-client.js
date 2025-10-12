@@ -48,14 +48,29 @@ class AnkiClient {
 
   async doRequest(payload) {
     const maxRetries = 5;
+    const baseTimeout = 5000; // Start with a 5-second timeout
+    
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const response = await axios.post(this.baseUrl, payload, { timeout: 45000 });
+        // Increase timeout with each retry
+        const timeout = baseTimeout * attempt;
+        
+        const response = await axios.post(this.baseUrl, payload, { 
+          timeout,
+          headers: { 'Content-Type': 'application/json' },
+          // Add keep-alive to prevent connection drops
+          httpAgent: new (require('http').Agent)({ keepAlive: true }),
+        });
+        
         if (response.data.error) throw new Error(response.data.error);
         return response.data.result;
       } catch (error) {
-        if (attempt === maxRetries) throw new Error(`Failed after ${maxRetries} attempts for action "${payload.action}": ${error.message}`);
-        const backoffDelay = Math.min(2000 * Math.pow(2, attempt - 1), 20000);
+        if (attempt === maxRetries) {
+          throw new Error(`Failed after ${maxRetries} attempts for action "${payload.action}": ${error.message}`);
+        }
+        
+        // Use a shorter initial backoff but still increase it with each retry
+        const backoffDelay = Math.min(1000 * Math.pow(1.5, attempt - 1), 10000);
         this.log(levelApplication, `⚠️ Anki request attempt ${attempt} failed for action "${payload.action}": ${error.message}. Retrying in ${backoffDelay}ms...`);
         await new Promise(resolve => setTimeout(resolve, backoffDelay));
       }
