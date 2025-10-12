@@ -192,6 +192,31 @@ contentObserver.observe(document.body, { attributes: true, attributeFilter: ['cl
 # This is the COMPLETE CSS for all 20 themes. No more placeholders.
 # The Nord family has been completely redesigned with blue/cool palettes.
 THEME_CSS = '''
+/* --- Core Animations and Variables --- */
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color), 0 0 15px var(--glow-color); }
+    50% { box-shadow: 0 0 10px var(--glow-color), 0 0 20px var(--glow-color), 0 0 30px var(--glow-color); }
+    100% { box-shadow: 0 0 5px var(--glow-color), 0 0 10px var(--glow-color), 0 0 15px var(--glow-color); }
+}
+
+@keyframes buttonPulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+
+@keyframes rotateClozeIcon {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(60deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes neonTextPulse {
+    0% { text-shadow: 0 0 7px var(--neon-color), 0 0 10px var(--neon-color), 0 0 21px var(--neon-color); }
+    50% { text-shadow: 0 0 14px var(--neon-color), 0 0 20px var(--neon-color), 0 0 42px var(--neon-color); }
+    100% { text-shadow: 0 0 7px var(--neon-color), 0 0 10px var(--neon-color), 0 0 21px var(--neon-color); }
+}
+
 /* --- Theme Controls UI --- */
 .theme-controls{position:absolute;top:10px;right:10px;display:flex;gap:5px;background:rgba(0,0,0,0.1);padding:5px;border-radius:30px;z-index:1000}
 .theme-family-btn{background:none;border:none;cursor:pointer;font-size:1.4em;padding:6px;border-radius:50%;transition:all .2s ease;line-height:1;display:flex;align-items:center;justify-content:center}
@@ -477,13 +502,41 @@ body.theme-twilight-dusk{background:linear-gradient(135deg,#2B1055 0%,#7597DE 10
 /* ==================== 🪐 FAMILY: DARK THEMES ======================= */
 /* =================================================================== */
 /* 5.1: dark-saturn (Original Dark) */
-body.theme-dark-saturn{background:linear-gradient(-225deg,#201c27 0%,#000000 100%)}
-.theme-dark-saturn .card-container,.theme-dark-saturn .cloze-container,.theme-dark-saturn .mcq-container,.theme-dark-saturn .image-container{background:rgba(17,24,39,0.7);backdrop-filter:blur(16px);color:#F3F4F6;border:1px solid #4B5563}
-.theme-dark-saturn .meta-header,.theme-dark-saturn .header,.theme-dark-saturn .cloze-header,.theme-dark-saturn .mcq-header,.theme-dark-saturn .image-header{background:linear-gradient(135deg,#F43F5E 0%,#A21CAF 100%)}
-.theme-dark-saturn .theme-family-btn{color:#F3F4F6}
-.theme-dark-saturn .card-type,.theme-dark-saturn .cloze-title,.theme-dark-saturn .mcq-title,.theme-dark-saturn .image-title,.theme-dark-saturn .header-text{color:#FFF1F2!important}
-.theme-dark-saturn .question-text,.theme-dark-saturn .question-section{color:#F9A8D4!important}
-.theme-dark-saturn .answer-text,.theme-dark-saturn .cloze-content{color:#F0ABFC!important}
+body.theme-dark-saturn{
+    background:linear-gradient(-225deg,#201c27 0%,#000000 100%);
+    --neon-primary: #F43F5E;
+    --neon-secondary: #A21CAF;
+    --glow-color: rgba(244, 63, 94, 0.5);
+}
+.theme-dark-saturn .card-container,.theme-dark-saturn .cloze-container,.theme-dark-saturn .mcq-container,.theme-dark-saturn .image-container{
+    background:rgba(17,24,39,0.85);
+    backdrop-filter:blur(16px);
+    color:#F3F4F6;
+    border:1px solid rgba(75, 85, 99, 0.4);
+    box-shadow: 0 0 20px rgba(244, 63, 94, 0.2);
+}
+.theme-dark-saturn .meta-header,.theme-dark-saturn .header,.theme-dark-saturn .cloze-header,.theme-dark-saturn .mcq-header,.theme-dark-saturn .image-header{
+    background:linear-gradient(135deg,var(--neon-primary) 0%,var(--neon-secondary) 100%);
+    border-bottom: 1px solid rgba(244, 63, 94, 0.3);
+}
+.theme-dark-saturn .theme-family-btn{
+    color:#F3F4F6;
+    text-shadow: 0 0 10px var(--neon-primary);
+}
+.theme-dark-saturn .card-type,.theme-dark-saturn .cloze-title,.theme-dark-saturn .mcq-title,.theme-dark-saturn .image-title,.theme-dark-saturn .header-text{
+    color:#FFF1F2!important;
+    text-shadow: 0 0 10px var(--neon-primary);
+    animation: neonTextPulse 2s infinite;
+    --neon-color: var(--neon-primary);
+}
+.theme-dark-saturn .question-text,.theme-dark-saturn .question-section{
+    color:#F9A8D4!important;
+    text-shadow: 0 0 15px rgba(244, 63, 94, 0.5);
+}
+.theme-dark-saturn .answer-text,.theme-dark-saturn .cloze-content{
+    color:#F0ABFC!important;
+    text-shadow: 0 0 15px rgba(162, 28, 175, 0.5);
+}
 .theme-dark-saturn .cloze{background:linear-gradient(135deg,#EC4899,#D946EF)!important;color:#FDF2F8}
 .theme-dark-saturn .explanation-block,.theme-dark-saturn .explanation-section,.theme-dark-saturn .explanation-info{background:rgba(240,171,252,0.1);border-left:5px solid #E879F9}
 .theme-dark-saturn .correlation-block,.theme-dark-saturn .correlation-section,.theme-dark-saturn .correlation-info{background:rgba(249,168,212,0.1);border-left:5px solid #F472B6}
@@ -759,6 +812,11 @@ basic_model = Model(
         transform: scale(1.1);
     }
 }
+@keyframes rotateClozeIcon {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(60deg); }
+    100% { transform: rotate(0deg); }
+}
 .card-type {
     font-size: 1.4em;
     font-weight: 600;
@@ -787,10 +845,52 @@ basic_model = Model(
     font-style: italic !important;
 }
 .explanation-section,
-.correlation-section {
+.correlation-section,
+.extra-info,
+.comments-block {
     margin-top: 25px;
     padding: 20px;
     border-radius: 15px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+.explanation-section::before,
+.correlation-section::before,
+.extra-info::before,
+.comments-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        var(--section-glow-1, rgba(255,255,255,0.05)), 
+        var(--section-glow-2, rgba(255,255,255,0.1)));
+    opacity: 0.1;
+    z-index: -1;
+}
+
+.explanation-section {
+    --section-glow-1: #38b2ac;
+    --section-glow-2: #4fd1c5;
+}
+
+.correlation-section {
+    --section-glow-1: #8b5cf6;
+    --section-glow-2: #a78bfa;
+}
+
+.extra-info {
+    --section-glow-1: #f97316;
+    --section-glow-2: #fb923c;
+}
+
+.comments-block {
+    --section-glow-1: #06b6d4;
+    --section-glow-2: #22d3ee;
 }
 .section-title {
     font-weight: 600;
@@ -1073,7 +1173,8 @@ cloze_model = Model(
 }
 .cloze-icon {
     font-size: 2.5em;
-    animation: rotate-subtle 3s ease-in-out infinite alternate;
+    animation: rotateClozeIcon 4s ease-in-out infinite;
+    display: inline-block;
 }
 .cloze-title {
     font-size: 1.5em;
@@ -1090,9 +1191,11 @@ cloze_model = Model(
 .cloze {
     padding: 8px 16px;
     border-radius: 25px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     display: inline-block;
     margin: 0 4px;
+    position: relative;
+    animation: glowPulse 2s infinite;
+    --glow-color: rgba(255, 255, 255, 0.3);
 }
 .custom-extra,
 .custom-explanation,
@@ -1452,12 +1555,53 @@ mcq_model = Model(
     display: flex;
     align-items: center;
     gap: 14px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
     cursor: pointer;
     transition: all 0.3s ease;
     word-wrap: break-word;
     font-size: 1.15em;
     border-left: 6px solid;
+    position: relative;
+    overflow: hidden;
+}
+
+.option::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, var(--option-glow-1, rgba(255,255,255,0.1)), var(--option-glow-2, rgba(255,255,255,0.2)));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.option:hover::before {
+    opacity: 0.2;
+}
+
+.option-a {
+    --option-glow-1: #f472b6;
+    --option-glow-2: #ec4899;
+    border-color: #f472b6;
+}
+
+.option-b {
+    --option-glow-1: #34d399;
+    --option-glow-2: #10b981;
+    border-color: #34d399;
+}
+
+.option-c {
+    --option-glow-1: #60a5fa;
+    --option-glow-2: #3b82f6;
+    border-color: #60a5fa;
+}
+
+.option-d {
+    --option-glow-1: #a78bfa;
+    --option-glow-2: #8b5cf6;
+    border-color: #a78bfa;
 }
 .option:hover {
     transform: translateY(-3px);
@@ -1791,7 +1935,7 @@ image_model = Model(
     gap: 20px;
 }
 .image-icon {
-    font-size: 2.5em;
+    font-size: 0.5em;
     animation: pulse 2s infinite;
 }
 @keyframes pulse {
