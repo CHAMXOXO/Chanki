@@ -270,7 +270,6 @@ body.theme-light-full-moon{
     color:#F5F3FF!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(217,70,239,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-light-full-moon .explanation-block,.theme-light-full-moon .explanation-section,.theme-light-full-moon .explanation-info{
     background:rgba(56,178,172,0.1)!important;
@@ -329,7 +328,6 @@ body.theme-light-waning-gibbous{
     color:#fdf6e3!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(42,161,152,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-light-waning-gibbous .explanation-block,.theme-light-waning-gibbous .explanation-section,.theme-light-waning-gibbous .explanation-info{
     background:rgba(133,153,0,0.1)!important;
@@ -388,7 +386,6 @@ body.theme-light-last-quarter{
     color:#fff!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(0,137,123,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-light-last-quarter .explanation-block,.theme-light-last-quarter .explanation-section,.theme-light-last-quarter .explanation-info{
     background:rgba(76,175,80,0.1)!important;
@@ -447,7 +444,6 @@ body.theme-light-waning-crescent{
     color:#fff!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(123,31,162,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-light-waning-crescent .explanation-block,.theme-light-waning-crescent .explanation-section,.theme-light-waning-crescent .explanation-info{
     background:rgba(236,64,122,0.1)!important;
@@ -506,7 +502,6 @@ body.theme-light-new-moon{
     color:#fff!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(0,123,255,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-light-new-moon .explanation-block,.theme-light-new-moon .explanation-section,.theme-light-new-moon .explanation-info{
     background:rgba(108,117,125,0.1)!important;
@@ -568,7 +563,6 @@ body.theme-nord-bright-sun{
     color:#1A202C!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(6,182,212,0.5)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-nord-bright-sun .explanation-block,.theme-nord-bright-sun .explanation-section,.theme-nord-bright-sun .explanation-info{
     background:rgba(49,151,149,0.2)!important;
@@ -627,7 +621,6 @@ body.theme-nord-overcast-day{
     color:#F8FAFC!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(71,85,105,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-nord-overcast-day .explanation-block,.theme-nord-overcast-day .explanation-section,.theme-nord-overcast-day .explanation-info{
     background:rgba(226,232,240,0.4)!important;
@@ -685,8 +678,7 @@ body.theme-nord-stormy-sky{
     background:linear-gradient(135deg,#1E40AF,#3B82F6)!important;
     color:#EFF6FF!important;
     font-weight: bold!important;
-    box-shadow: 0 0 15px rgba(30,64,175,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
+    box-shadow: 0 0 15px rgba(30,64,175,0.4)!important;;
 }
 .theme-nord-stormy-sky .explanation-block,.theme-nord-stormy-sky .explanation-section,.theme-nord-stormy-sky .explanation-info{
     background:rgba(147,197,253,0.1)!important;
@@ -745,7 +737,6 @@ body.theme-nord-aurora{
     color:#F0FDFA!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(5,150,105,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-nord-aurora .explanation-block,.theme-nord-aurora .explanation-section,.theme-nord-aurora .explanation-info{
     background:rgba(20,184,166,0.1)!important;
@@ -804,7 +795,6 @@ body.theme-nord-polar-night{
     color:#2E3440!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(129,161,193,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-nord-polar-night .explanation-block,.theme-nord-polar-night .explanation-section,.theme-nord-polar-night .explanation-info{
     background:rgba(67,76,94,0.6)!important;
@@ -866,7 +856,6 @@ body.theme-balanced-star{
     color:#4B5563!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(161,140,209,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-balanced-star .explanation-block,.theme-balanced-star .explanation-section,.theme-balanced-star .explanation-info{
     background:rgba(196,181,253,0.1)!important;
@@ -925,7 +914,6 @@ body.theme-balanced-nebula{
     color:#FFE4E6!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(157,23,77,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-balanced-nebula .explanation-block,.theme-balanced-nebula .explanation-section,.theme-balanced-nebula .explanation-info{
     background:rgba(165,180,252,0.1)!important;
@@ -984,7 +972,6 @@ body.theme-balanced-supernova{
     color:#FFEDD5!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(217,119,6,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-balanced-supernova .explanation-block,.theme-balanced-supernova .explanation-section,.theme-balanced-supernova .explanation-info{
     background:rgba(252,211,77,0.1)!important;
@@ -1043,7 +1030,6 @@ body.theme-balanced-galaxy{
     color:#EEF2FF!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(79,70,229,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-balanced-galaxy .explanation-block,.theme-balanced-galaxy .explanation-section,.theme-balanced-galaxy .explanation-info{
     background:rgba(165,243,252,0.1)!important;
@@ -1102,7 +1088,6 @@ body.theme-balanced-comet{
     color:#F0FDF4!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(8,145,178,0.4)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-balanced-comet .explanation-block,.theme-balanced-comet .explanation-section,.theme-balanced-comet .explanation-info{
     background:rgba(167,243,208,0.1)!important;
@@ -1232,7 +1217,6 @@ body.theme-dark-saturn{
     color:#FDF2F8!important;
     font-weight: bold!important;
     box-shadow: 0 0 15px rgba(236,72,153,0.5)!important;
-    animation: rotateClozeIcon 3s ease-in-out infinite!important;
 }
 .theme-dark-saturn .explanation-block,.theme-dark-saturn .explanation-section,.theme-dark-saturn .explanation-info{
     background:rgba(240,171,252,0.1)!important;
@@ -2485,7 +2469,7 @@ image_model = Model(
         </div>
         {{/Header}}
         <div class="image-header">
-            {{^Header}}''' + THEME_UI_HTML + '''{{/Header}}}
+            {{^Header}}''' + THEME_UI_HTML + '''{{/Header}}
             <div class="image-icon">🖼️</div><div class="image-title">Image Question</div>
         </div>
     </div>
