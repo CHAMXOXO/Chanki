@@ -1935,7 +1935,7 @@ image_model = Model(
     gap: 20px;
 }
 .image-icon {
-    font-size: 0.5em;
+    font-size: 2em;
     animation: pulse 2s infinite;
 }
 @keyframes pulse {
