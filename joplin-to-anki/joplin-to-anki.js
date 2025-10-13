@@ -97,20 +97,33 @@ const run = async (
       log(levelApplication, `📊 Collected ${allItems.length} items for batch processing`);
 
       if (allItems.length > 0) {
-        const processedItems = allItems.map(item => {
-            log(levelApplication, `Processing item with deckName: ${item.deckName}`);
-            // Ensure we preserve the deck name in the processed item
-            const processedItem = {
+    const processedItems = allItems.map(item => {
+        // Check if this is a dynamically mapped custom note.
+        if (item.additionalFields && item.additionalFields.customNoteType) {
+            log(levelVerbose, `Passing through custom note "${item.additionalFields.customNoteType}" without markdown conversion.`);
+            // For custom notes, the fields are already structured.
+            // We just need to ensure the deckName is correctly placed and pass it on.
+            return {
                 ...item,
-                question: stripDetails(markdownProcessing ? marked(item.question) : item.question),
-                answer: stripDetails(markdownProcessing ? marked(item.answer) : item.answer),
+                additionalFields: {
+                    ...item.additionalFields,
+                    deckName: item.deckName
+                }
+            };
+        } else {
+            // This is a standard note, so apply the original markdown processing.
+            log(levelVerbose, `Applying markdown conversion to standard note: "${item.title}"`);
+            return {
+                ...item,
+                question: stripDetails(markdownProcessing ? marked(item.question || '') : item.question),
+                answer: stripDetails(markdownProcessing ? marked(item.answer || '') : item.answer),
                 additionalFields: {
                     ...item.additionalFields,
                     deckName: item.deckName // Make sure deckName is in additionalFields
                 }
             };
-            return processedItem;
-        });
+        }
+    });
 
         const results = await batchImporter(aClient, processedItems, batchSize, log);
         sync.summary.itemsCreated += results.created;

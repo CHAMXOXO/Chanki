@@ -74,10 +74,12 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
   return "basic";
 };
 
+// THIS IS THE NEW, CORRECTED STRUCTURE
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
     
+    // PATH A: If it's a custom note, handle it here and the function will be done.
     if (additionalFields.customNoteType && additionalFields.customFields) {
       log(levelApplication, `🎨 Processing custom note type: ${additionalFields.customNoteType}`);
       
@@ -115,82 +117,84 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
         
         return { action: "created", noteId: createdNoteId };
       }
-    }
-    
-    const enhancedFields = buildEnhancedFields(additionalFields);
-    const inferredType = inferCardType(question, answer, enhancedFields);
+    } 
+    // PATH B: Otherwise, it must be a standard note. Handle it with the original logic.
+    else {
+      const enhancedFields = buildEnhancedFields(additionalFields);
+      const inferredType = inferCardType(question, answer, enhancedFields);
 
-    const validationErrors = validateImportData(question, answer, jtaID, title, inferredType);
-    if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
+      const validationErrors = validateImportData(question, answer, jtaID, title, inferredType);
+      if (validationErrors.length > 0) throw new Error(`Validation failed: ${validationErrors.join("; ")}`);
 
-    // CRITICAL FIX: Get deck name from additionalFields (this is where it's passed from the exporter)
-    const deckName = additionalFields.deckName || "Default";
-    log(levelApplication, `Processing item with deckName: ${deckName}`);
-    
-    await client.ensureDeckExists(deckName);
-    
-    const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
-    const foundNoteIds = await client.findNote(jtaID, deckName);
+      // CRITICAL FIX: Get deck name from additionalFields (this is where it's passed from the exporter)
+      const deckName = additionalFields.deckName || "Default";
+      log(levelApplication, `Processing item with deckName: ${deckName}`);
+      
+      await client.ensureDeckExists(deckName);
+      
+      const joplinFields = buildAnkiFieldsObject(question, answer, jtaID, inferredType, enhancedFields);
+      const foundNoteIds = await client.findNote(jtaID, deckName);
 
-    if (foundNoteIds && foundNoteIds.length > 0) {
-      // --- UPDATE LOGIC ---
-      const existingNoteId = foundNoteIds[0];
-      const noteInfo = await client.getNoteInfo([existingNoteId]);
-      const ankiNote = noteInfo && noteInfo[0];
-      if (!ankiNote) throw new Error(`Could not retrieve info for note ${existingNoteId}`);
+      if (foundNoteIds && foundNoteIds.length > 0) {
+        // --- UPDATE LOGIC ---
+        const existingNoteId = foundNoteIds[0];
+        const noteInfo = await client.getNoteInfo([existingNoteId]);
+        const ankiNote = noteInfo && noteInfo[0];
+        if (!ankiNote) throw new Error(`Could not retrieve info for note ${existingNoteId}`);
 
-      let isIdentical = true;
-      for (const key in joplinFields) {
-        if (joplinFields[key] !== (ankiNote.fields[key] ? ankiNote.fields[key].value : '')) {
-          isIdentical = false;
-          break;
-        }
-      }
-
-      if (isIdentical) {
-        log(levelVerbose, `Note ${existingNoteId} is unchanged. Skipping.`);
-        return { action: "skipped", noteId: existingNoteId };
-      }
-
-      log(levelVerbose, `Updating existing note ${existingNoteId}.`);
-      await client.updateNote(existingNoteId, joplinFields);
-      await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
-      return { action: "updated", noteId: existingNoteId };
-
-    } else {
-      // --- LOGIC WITH SELF-HEALING ---
-      log(levelVerbose, `No existing note found for JTA ID ${jtaID}. Attempting to create a new one.`);
-      try {
-        // CRITICAL FIX: Pass deckName as the last parameter to createNote
-        const createdNoteId = await client.createNote(
-          question, 
-          answer, 
-          jtaID, 
-          title, 
-          notebook, 
-          normalizedTags, 
-          folders, 
-          additionalFields,
-          deckName 
-        );
-        return { action: "created", noteId: createdNoteId };
-      } catch (error) {
-        // SELF-HEALING BLOCK: Handle duplicate errors
-        if (error.message.includes("duplicate")) {
-          log(levelApplication, `⚠️ Creation failed due to a duplicate. Recovering by treating as an update for JTA ID: ${jtaID}`);
-          
-          const recoveredNoteIds = await client.findNote(jtaID, deckName);
-          if (recoveredNoteIds && recoveredNoteIds.length > 0) {
-            const recoveredNoteId = recoveredNoteIds[0];
-            log(levelVerbose, `Successfully recovered note ID ${recoveredNoteId}. Proceeding with update.`);
-            await client.updateNote(recoveredNoteId, joplinFields);
-            await client.updateNoteTags(recoveredNoteId, title, notebook, normalizedTags);
-            return { action: "updated", noteId: recoveredNoteId };
-          } else {
-            throw new Error(`Recovery failed. Could not find note ${jtaID} even after a duplicate error.`);
+        let isIdentical = true;
+        for (const key in joplinFields) {
+          if (joplinFields[key] !== (ankiNote.fields[key] ? ankiNote.fields[key].value : '')) {
+            isIdentical = false;
+            break;
           }
         }
-        throw error;
+
+        if (isIdentical) {
+          log(levelVerbose, `Note ${existingNoteId} is unchanged. Skipping.`);
+          return { action: "skipped", noteId: existingNoteId };
+        }
+
+        log(levelVerbose, `Updating existing note ${existingNoteId}.`);
+        await client.updateNote(existingNoteId, joplinFields);
+        await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
+        return { action: "updated", noteId: existingNoteId };
+
+      } else {
+        // --- CREATE LOGIC WITH SELF-HEALING ---
+        log(levelVerbose, `No existing note found for JTA ID ${jtaID}. Attempting to create a new one.`);
+        try {
+          // CRITICAL FIX: Pass deckName as the last parameter to createNote
+          const createdNoteId = await client.createNote(
+            question, 
+            answer, 
+            jtaID, 
+            title, 
+            notebook, 
+            normalizedTags, 
+            folders, 
+            additionalFields,
+            deckName 
+          );
+          return { action: "created", noteId: createdNoteId };
+        } catch (error) {
+          // SELF-HEALING BLOCK: Handle duplicate errors
+          if (error.message.includes("duplicate")) {
+            log(levelApplication, `⚠️ Creation failed due to a duplicate. Recovering by treating as an update for JTA ID: ${jtaID}`);
+            
+            const recoveredNoteIds = await client.findNote(jtaID, deckName);
+            if (recoveredNoteIds && recoveredNoteIds.length > 0) {
+              const recoveredNoteId = recoveredNoteIds[0];
+              log(levelVerbose, `Successfully recovered note ID ${recoveredNoteId}. Proceeding with update.`);
+              await client.updateNote(recoveredNoteId, joplinFields);
+              await client.updateNoteTags(recoveredNoteId, title, notebook, normalizedTags);
+              return { action: "updated", noteId: recoveredNoteId };
+            } else {
+              throw new Error(`Recovery failed. Could not find note ${jtaID} even after a duplicate error.`);
+            }
+          }
+          throw error;
+        }
       }
     }
   } catch (error) {

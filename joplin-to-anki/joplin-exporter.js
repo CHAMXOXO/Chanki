@@ -85,10 +85,12 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
           title,
           notebook,
           tags,
-          type: 'custom',
-          customNoteType: mapped.modelName,
-          customFields: mapped.fields,
-          source: 'jta-class-dynamic'
+          type: 'custom', 
+          source: 'jta-class-dynamic',
+          additionalFields: {
+            customNoteType: mapped.modelName,
+            customFields: mapped.fields
+          }
         });
         
         log(levelApplication, '   ✅ Added to sync queue');
