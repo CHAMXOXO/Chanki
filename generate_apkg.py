@@ -1268,7 +1268,7 @@ body.theme-dark-black-hole{background:#000}
 .theme-dark-black-hole .card-type,.theme-dark-black-hole .cloze-title,.theme-dark-black-hole .mcq-title,.theme-dark-black-hole .image-title,.theme-dark-black-hole .header-text{color:#FAFAFA!important}
 .theme-dark-black-hole .question-text,.theme-dark-black-hole .question-section{color:#A3A3A3!important}
 .theme-dark-black-hole .answer-text,.theme-dark-black-hole .cloze-content{color:#E5E5E5!important}
-.theme-dark-black-hole .cloze{background:#737373!important;color:#171717}
+.theme-dark-black-hole .cloze{background:lineargradient(135deg,#737373,#700070)!important;color:#171717}
 .theme-dark-black-hole .explanation-block,.theme-dark-black-hole .explanation-section,.theme-dark-black-hole .explanation-info{background:#171717;border-left:5px solid #525252}
 .theme-dark-black-hole .correlation-block,.theme-dark-black-hole .correlation-section,.theme-dark-black-hole .correlation-info{background:#171717;border-left:5px solid #A3A3A3}
 .theme-dark-black-hole .extra-info,.theme-dark-black-hole .comments-block{background:#171717;border-left:5px solid #737373}
@@ -2436,14 +2436,17 @@ mcq_model = Model(
 '''
 )
 
-# Image model (v14)
+# Image model 
+# Image model (v15 - WITH IMAGE OCCLUSION SUPPORT)
 image_model = Model(
     1607392322,
     'Joplin to Anki Image Enhanced',
     fields=[
         {'name': 'Header'},
-        {'name': 'QuestionImagePath'},
-        {'name': 'AnswerImagePath'},
+        {'name': 'QuestionImagePath'},        # TEXT field - Your sync populates this
+        {'name': 'AnswerImagePath'},          # TEXT field - Your sync populates this
+        {'name': 'QuestionImageOcclusion'},   # IMAGE field - Users paste here (optional)
+        {'name': 'AnswerImageOcclusion'},     # IMAGE field - Users paste here (optional)
         {'name': 'Question'},
         {'name': 'Answer'},
         {'name': 'Origin'},
@@ -2475,7 +2478,16 @@ image_model = Model(
     </div>
     <div class="image-content">
         {{#Question}}<div class="question-overlay custom-image-question">{{Question}}</div>{{/Question}}
+        
+        <!-- PRIORITY: Show occlusion image if exists, otherwise show synced path -->
+        {{#QuestionImageOcclusion}}
+        {{/QuestionImageOcclusion}}
+        
+        {{^QuestionImageOcclusion}}
+        {{#QuestionImagePath}}
         <img src="{{QuestionImagePath}}" class="main-image">
+        {{/QuestionImagePath}}
+        {{/QuestionImageOcclusion}}
     </div>
     {{#Footer}}<div class="meta-footer"><span class="footer-icon">📖</span><span class="footer-text">{{Footer}}</span></div>{{/Footer}}
 </div>
@@ -2500,7 +2512,17 @@ image_model = Model(
         {{#Insertion}}<div class="anatomy-section insertion-section"><div class="anatomy-title">🔗 Insertion</div><div class="anatomy-text custom-insertion">{{Insertion}}</div></div>{{/Insertion}}
         {{#Innervation}}<div class="anatomy-section innervation-section"><div class="anatomy-title">⚡ Innervation</div><div class="anatomy-text custom-innervation">{{Innervation}}</div></div>{{/Innervation}}
         {{#Action}}<div class="anatomy-section action-section"><div class="anatomy-title">💪 Action</div><div class="anatomy-text custom-action">{{Action}}</div></div>{{/Action}}
+        
+        <!-- PRIORITY: Show occlusion image if exists, otherwise show synced path -->
+        {{#AnswerImageOcclusion}}
+        <img src="{{AnswerImageOcclusion}}" class="main-image">
+        {{/AnswerImageOcclusion}}
+        
+        {{^AnswerImageOcclusion}}
+        {{#AnswerImagePath}}
         <img src="{{AnswerImagePath}}" class="main-image">
+        {{/AnswerImagePath}}
+        {{/AnswerImageOcclusion}}
     </div>
     {{#Clinical Correlation}}<div class="correlation-section hidden" id="correlation"><div class="section-title">🔗 Clinical Correlation</div><div class="correlation-text custom-correlation">{{Clinical Correlation}}</div></div>{{/Clinical Correlation}}
     {{#Comments}}<div class="comments-block hidden" id="comments"><div class="comments-title">📝 Comments</div><div class="comments-text custom-comments">{{Comments}}</div></div>{{/Comments}}
@@ -2551,7 +2573,7 @@ image_model = Model(
         },
     ],
     css=THEME_CSS + '''
-/* === FINAL LAYOUT CSS (v14) - MODIFIED FOR SCREEN-RELATIVE SIZING === */
+/* === FINAL LAYOUT CSS (v15) - MODIFIED FOR SCREEN-RELATIVE SIZING === */
 .card {
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     margin: 0;
@@ -2857,10 +2879,44 @@ def create_test_notes():
     deck.add_note(Note(model=mcq_model, fields=['', 'What is the capital of Japan?', 'Beijing', 'Seoul', 'Tokyo', 'Bangkok', 'C', '', '', 'Geography 101', '', 'joplin_mcq_v14_noheader']))
 
     # === IMAGE NOTES ===
-    # Image with Header (tests small button & question text visibility)
-    deck.add_note(Note(model=image_model, fields=['Anatomy - Upper Limb', '_media/question_deltoid.jpg', '_media/answer_deltoid.jpg', 'Identify the highlighted muscle.', 'Deltoid Muscle', 'Lateral third of clavicle, acromion, and spine of scapula', 'Deltoid tuberosity of humerus', 'Axillary nerve (C5, C6)', 'Abduction, flexion, and extension of the shoulder', 'Axillary nerve damage can paralyze the deltoid.', 'Key for arm abduction beyond 15 degrees.', 'Shoulder Joint', 'Gray\'s Anatomy', 'joplin_image_v14_header']))
-    # Image without Header (tests large button & question text visibility)
-    deck.add_note(Note(model=image_model, fields=['', '_media/question_heart.jpg', '_media/answer_heart.jpg', 'Identify the chamber indicated by the arrow.', 'Left Ventricle', '', '', '', 'Pumps oxygenated blood to the rest of the body via the aorta.', '', '', 'Thoracic Cavity', '', 'joplin_image_v14_noheader']))
+        # Image with Header (tests small button & question text visibility)
+    deck.add_note(Note(model=image_model, 
+        fields=[ 'Anatomy - Upper Limb',
+            '_media/question_deltoid.jpg',
+            '_media/answer_deltoid.jpg',
+            '', # Field 4: QuestionImageOcclusion (Placeholder)
+            '', # Field 5: AnswerImageOcclusion (Placeholder)
+            'Identify the highlighted muscle.',
+            'Deltoid Muscle',
+            'Lateral third of clavicle, acromion, and spine of scapula',
+            'Deltoid tuberosity of humerus',
+            'Axillary nerve (C5, C6)',
+            'Abduction, flexion, and extension of the shoulder',
+            'Axillary nerve damage can paralyze the deltoid.',
+            'Key for arm abduction beyond 15 degrees.',
+            'Shoulder Joint',
+            'Gray\'s Anatomy', # Field 15: Sources (Previously missing)
+            'joplin_image_v14_header' # Field 16: Joplin to Anki ID (Previously missing)
+        ]))
+        # Image without Header (tests large button & question text visibility)
+    deck.add_note(Note(model=image_model, fields=[
+            '',
+            '_media/question_heart.jpg',
+            '_media/answer_heart.jpg',
+            '', # Field 4: QuestionImageOcclusion (Placeholder)
+            '', # Field 5: AnswerImageOcclusion (Placeholder)
+            'Identify the chamber indicated by the arrow.',
+            'Left Ventricle',
+            '',
+            '',
+            '',
+            'Pumps oxygenated blood to the rest of the body via the aorta.',
+            '',
+            '',
+            'Thoracic Cavity',
+            '', # Field 15: Sources (Previously missing)
+            'joplin_image_v14_noheader' # Field 16: Joplin to Anki ID (Previously missing)
+        ]))
 
     print("8 test notes added to the deck for all types and header variations.")
     return deck
@@ -2873,7 +2929,7 @@ if __name__ == '__main__':
         os.makedirs(output_directory)
     filename = os.path.join(output_directory, f"joplin_anki_ENHANCED_FINAL_{timestamp}.apkg")
 
-    # For Image notes to work, create a 'media' folder and add placeholder images.
+     # For Image notes to work, create a 'media' folder and add placeholder images.
     media_directory = "media"
     if not os.path.exists(media_directory):
         os.makedirs(media_directory)

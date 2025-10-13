@@ -45,6 +45,11 @@ const determineDeckStructure = (tags, notebook, allFolders, log) => {
   return 'Default';
 };
 
+const registerDynamicMapper = (mapper) => {
+  premiumDynamicMapper = mapper;
+  console.log('✅ Dynamic field mapper loaded');
+};
+
 const extractQuiz = (body, title, notebook, tags, log, noteId) => {
   const $ = cheerio.load(body);
   let output = [];  
@@ -54,6 +59,37 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
     if (!jtaID || jtaID.trim().length === 0) {
       jtaID = generateUniqueID(noteId, i);
       log(levelDebug, `Auto-generated stable JTA ID: ${jtaID} for element index ${i} in note ${noteId}`);
+    }
+
+    // CHECK: Does user want custom note type?
+    const customNoteType = $(el).attr("data-note-type");
+    
+    if (customNoteType && premiumDynamicMapper) {
+      // PREMIUM: Use dynamic mapper
+      try {
+        const mapped = premiumDynamicMapper.extractFields(
+          $.html(el), 
+          jtaID, 
+          customNoteType
+        );
+        
+        if (mapped) {
+          output.push({
+            jtaID: jtaID.trim(),
+            title,
+            notebook,
+            tags,
+            type: 'custom',
+            customNoteType: mapped.modelName,
+            customFields: mapped.fields,
+            source: 'jta-class-dynamic'
+          });
+          return; // Skip default extraction for this element
+        }
+      } catch (error) {
+        log(levelApplication, `⚠️ Dynamic mapping failed for ${customNoteType}: ${error.message}`);
+        // Fall through to default extraction
+      }
     }
 
     const additionalFields = extractAdditionalFieldsFromElement($, el, log);
@@ -300,5 +336,6 @@ module.exports = {
   typeItem: "item",
   typeResource: "resource",
   typeError: "error",
-  registerPremiumDeckHandler
+  registerPremiumDeckHandler,
+  registerDynamicMapper
 };
