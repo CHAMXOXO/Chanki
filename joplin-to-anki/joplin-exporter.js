@@ -25,6 +25,7 @@ const getCleanContent = ($, element, log, fieldName = "field") => {
 };
 
 let premiumDeckHandler = null;
+let premiumDynamicMapper = null;
 
 // Export this function so premium plugin can register itself
 const registerPremiumDeckHandler = (handler) => {
@@ -61,36 +62,35 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
       log(levelDebug, `Auto-generated stable JTA ID: ${jtaID} for element index ${i} in note ${noteId}`);
     }
 
-    // CHECK: Does user want custom note type?
     const customNoteType = $(el).attr("data-note-type");
+  
+  if (customNoteType && premiumDynamicMapper) {
+    log(levelApplication, `🔍 Found custom note type: "${customNoteType}"`);
     
-    if (customNoteType && premiumDynamicMapper) {
-      // PREMIUM: Use dynamic mapper
-      try {
-        const mapped = premiumDynamicMapper.extractFields(
-          $.html(el), 
-          jtaID, 
-          customNoteType
-        );
+    try {
+      const mapped = premiumDynamicMapper.extractFields(
+        $.html(el), 
+        jtaID, 
+        customNoteType
+      );
+      
+      if (mapped) {
+        log(levelApplication, '✅ DYNAMIC MAPPING SUCCESSFUL!');
+        log(levelApplication, `   Model: ${mapped.modelName}`);
+        log(levelApplication, `   Fields extracted: ${Object.keys(mapped.fields).length}`);
+        log(levelApplication, `   Fields: ${JSON.stringify(mapped.fields, null, 2)}`);
         
-        if (mapped) {
-          output.push({
-            jtaID: jtaID.trim(),
-            title,
-            notebook,
-            tags,
-            type: 'custom',
-            customNoteType: mapped.modelName,
-            customFields: mapped.fields,
-            source: 'jta-class-dynamic'
-          });
-          return; // Skip default extraction for this element
-        }
-      } catch (error) {
-        log(levelApplication, `⚠️ Dynamic mapping failed for ${customNoteType}: ${error.message}`);
-        // Fall through to default extraction
+        // Phase 1: Just log, don't actually create card yet
+        log(levelApplication, '   [Phase 1: Not creating card, just logging]');
+        
+        // Skip to next element (don't do default processing)
+        return;
       }
+    } catch (error) {
+      log(levelApplication, `⚠️ Dynamic mapping error: ${error.message}`);
+      log(levelApplication, '   Falling back to default extraction');
     }
+  }
 
     const additionalFields = extractAdditionalFieldsFromElement($, el, log);
     const questionEl = $(".question", el);
