@@ -2481,6 +2481,7 @@ image_model = Model(
         
         <!-- PRIORITY: Show occlusion image if exists, otherwise show synced path -->
         {{#QuestionImageOcclusion}}
+        <div class="occlusion-wrapper">{{QuestionImageOcclusion}}</div>
         {{/QuestionImageOcclusion}}
         
         {{^QuestionImageOcclusion}}
@@ -2515,7 +2516,7 @@ image_model = Model(
         
         <!-- PRIORITY: Show occlusion image if exists, otherwise show synced path -->
         {{#AnswerImageOcclusion}}
-        <img src="{{AnswerImageOcclusion}}" class="main-image">
+        <div class="occlusion-wrapper">{{AnswerImageOcclusion}}</div>
         {{/AnswerImageOcclusion}}
         
         {{^AnswerImageOcclusion}}
@@ -2849,6 +2850,19 @@ image_model = Model(
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Fix for image wrapper */
+.occlusion-wrapper {
+    text-align: center;
+}
+.occlusion-wrapper img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    border-radius: 15px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 '''
 )
