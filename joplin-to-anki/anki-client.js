@@ -219,7 +219,6 @@ class AnkiClient {
         fields: fieldsToUpdate
     };
     
-    // Never update the unique ID field
     delete notePayload.fields['Joplin to Anki ID'];
   
     await this.doRequest({ 
@@ -240,6 +239,62 @@ class AnkiClient {
     } catch (error) {
       this.log(levelApplication, `⚠️ Could not update tags for note ${noteId}: ${error.message}`);
     }
+  }
+
+  /**
+   * Create a note with custom fields (dynamic mapping)
+   */
+  async createCustomNote(modelName, fields, deckName, tags = [], title = '', notebook = {}) {
+    this.log(levelApplication, `📥 Creating custom note with model: "${modelName}"`);
+    
+    const verifiedDeckName = await this.ensureDeckExists(deckName);
+    
+    const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
+    
+    const noteData = {
+      deckName: verifiedDeckName,
+      modelName,
+      fields,
+      tags: noteTags
+    };
+    
+    this.log(levelDebug, `Custom note payload: ${JSON.stringify(noteData, null, 2)}`);
+    
+    const result = await this.doRequest({ action: "addNote", version: 6, params: { note: noteData } });
+    this.log(levelApplication, `✅ Created custom card in deck "${verifiedDeckName}" (Anki Note ID: ${result})`);
+    
+    return result;
+  }
+
+  /**
+   * Update a custom note's fields
+   */
+  async updateCustomNote(noteId, fields) {
+    this.log(levelVerbose, `Updating custom note fields for Anki Note ID: ${noteId}`);
+    
+    const notePayload = {
+      id: noteId,
+      fields: fields
+    };
+    
+    await this.doRequest({
+      action: "updateNoteFields",
+      version: 6,
+      params: { note: notePayload }
+    });
+    
+    this.log(levelApplication, `✅ Updated custom card (Anki Note ID: ${noteId})`);
+  }
+
+  /**
+   * Find note by searching for a specific field value
+   */
+  async findNoteByField(fieldName, fieldValue, deckName) {
+    const normalizedDeckName = deckName.trim();
+    // Search for the field value in the specified deck
+    const query = `"${fieldName}:${fieldValue}" deck:"${normalizedDeckName}"`;
+    this.log(levelDebug, `Searching for custom note with query: ${query}`);
+    return this.doRequest({ action: "findNotes", version: 6, params: { query } });
   }
 }
 

@@ -1,4 +1,4 @@
-// anki-importer.js (DECK NAME FIX VERSION)
+// anki-importer.js 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const MCQ_MIN_OPTIONS = 2;
@@ -77,6 +77,49 @@ const inferCardType = (question, answer, enhancedFields = {}) => {
 const importer = async (client, question, answer, jtaID, title, notebook, tags, folders = [], additionalFields = {}, log) => {
   try {
     const normalizedTags = normalizeTags(tags);
+    
+    // ============================================================================
+    // PREMIUM: Handle Custom Note Types (Dynamic Mapping)
+    // ============================================================================
+    if (additionalFields.customNoteType && additionalFields.customFields) {
+      log(levelApplication, `🎨 Processing custom note type: ${additionalFields.customNoteType}`);
+      
+      const deckName = additionalFields.deckName || "Default";
+      await client.ensureDeckExists(deckName);
+      
+      const jtaIDField = Object.keys(additionalFields.customFields).find(
+        key => additionalFields.customFields[key] === jtaID
+      );
+      
+      // Check if note already exists
+      const foundNoteIds = await client.findNoteByField(jtaIDField, jtaID, deckName);
+      
+      if (foundNoteIds && foundNoteIds.length > 0) {
+        // UPDATE existing custom note
+        const existingNoteId = foundNoteIds[0];
+        log(levelVerbose, `Updating existing custom note ${existingNoteId}`);
+        
+        await client.updateCustomNote(existingNoteId, additionalFields.customFields);
+        await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
+        
+        return { action: "updated", noteId: existingNoteId };
+      } else {
+        // CREATE new custom note
+        log(levelVerbose, `Creating new custom note`);
+        
+        const createdNoteId = await client.createCustomNote(
+          additionalFields.customNoteType,
+          additionalFields.customFields,
+          deckName,
+          normalizedTags,
+          title,
+          notebook
+        );
+        
+        return { action: "created", noteId: createdNoteId };
+      }
+    }
+    
     const enhancedFields = buildEnhancedFields(additionalFields);
     const inferredType = inferCardType(question, answer, enhancedFields);
 
@@ -113,12 +156,12 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
       }
 
       log(levelVerbose, `Updating existing note ${existingNoteId}.`);
-      await client.updateNote(existingNoteId, joplinFields); 
+      await client.updateNote(existingNoteId, joplinFields);
       await client.updateNoteTags(existingNoteId, title, notebook, normalizedTags);
       return { action: "updated", noteId: existingNoteId };
 
     } else {
-      // --- CREATE LOGIC WITH SELF-HEALING ---
+      // --- LOGIC WITH SELF-HEALING ---
       log(levelVerbose, `No existing note found for JTA ID ${jtaID}. Attempting to create a new one.`);
       try {
         // CRITICAL FIX: Pass deckName as the last parameter to createNote
@@ -131,7 +174,7 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
           normalizedTags, 
           folders, 
           additionalFields,
-          deckName  // ← THIS WAS MISSING!
+          deckName 
         );
         return { action: "created", noteId: createdNoteId };
       } catch (error) {
@@ -191,7 +234,7 @@ const batchImporter = async (client, items, batchSize = 10, log) => {
         item.folders, 
         {
           ...item.additionalFields,
-          deckName: item.deckName  // ← Ensure deckName is in additionalFields
+          deckName: item.deckName
         }, 
         log
       );
