@@ -78,9 +78,6 @@ const importer = async (client, question, answer, jtaID, title, notebook, tags, 
   try {
     const normalizedTags = normalizeTags(tags);
     
-    // ============================================================================
-    // PREMIUM: Handle Custom Note Types (Dynamic Mapping)
-    // ============================================================================
     if (additionalFields.customNoteType && additionalFields.customFields) {
       log(levelApplication, `🎨 Processing custom note type: ${additionalFields.customNoteType}`);
       

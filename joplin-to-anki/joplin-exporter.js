@@ -80,12 +80,23 @@ const extractQuiz = (body, title, notebook, tags, log, noteId) => {
         log(levelApplication, `   Fields extracted: ${Object.keys(mapped.fields).length}`);
         log(levelApplication, `   Fields: ${JSON.stringify(mapped.fields, null, 2)}`);
         
-        // Phase 1: Just log, don't actually create card yet
-        log(levelApplication, '   [Phase 1: Not creating card, just logging]');
+        output.push({
+          jtaID: jtaID.trim(),
+          title,
+          notebook,
+          tags,
+          type: 'custom',
+          customNoteType: mapped.modelName,
+          customFields: mapped.fields,
+          source: 'jta-class-dynamic'
+        });
         
-        // Skip to next element (don't do default processing)
+        log(levelApplication, '   ✅ Added to sync queue');
+        
+        // Skip default extraction
         return;
       }
+      
     } catch (error) {
       log(levelApplication, `⚠️ Dynamic mapping error: ${error.message}`);
       log(levelApplication, '   Falling back to default extraction');
