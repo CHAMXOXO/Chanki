@@ -1,5 +1,8 @@
-const { JoplinExporter } = require("./joplin-exporter");
+// joplin-client.js - DIAGNOSTIC VERSION
+
 const axios = require("axios");
+const fs = require('fs').promises;
+const path = require('path');
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const healthyPingResponse = "JoplinClipperServer";
@@ -15,17 +18,15 @@ const newClient = (url, token, log) => {
   // Create axios instance with enhanced configuration for socket hangup prevention
   const axiosInstance = axios.create({
     baseURL: url,
-    timeout: 30000, // 30 second timeout
+    timeout: 30000,
     maxRedirects: 3,
     headers: {
       'User-Agent': 'JoplinAnkiSync/2.0',
       'Connection': 'keep-alive',
       'Keep-Alive': 'timeout=30'
     },
-    // Enhanced retry configuration
     maxContentLength: Infinity,
     maxBodyLength: Infinity,
-    // Socket configuration to prevent hangups
     httpAgent: new (require('http').Agent)({
       keepAlive: true,
       keepAliveMsecs: 30000,
@@ -44,18 +45,13 @@ const newClient = (url, token, log) => {
     })
   });
 
-  // Enhanced retry mechanism with exponential backoff
   const makeRequestWithRetry = async (config, maxRetries = 5) => {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         log(levelDebug, `Request attempt ${attempt}/${maxRetries}: ${config.method} ${config.url}`);
-        
         const response = await axiosInstance(config);
-        
-        // Log successful request
         log(levelDebug, `Request successful on attempt ${attempt}`);
         return response.data;
-        
       } catch (error) {
         const isLastAttempt = attempt === maxRetries;
         
@@ -138,11 +134,10 @@ const newClient = (url, token, log) => {
       return response;
     },
 
-    // Enhanced method to get all notes with pagination
     async getAllNotes(fields = "id,updated_time,title,parent_id", fromDate = null) {
       let allNotes = [];
       let page = 1;
-      const limit = 50; // Smaller chunks to prevent timeouts
+      const limit = 50;
       let hasMore = true;
 
       while (hasMore) {
@@ -162,27 +157,23 @@ const newClient = (url, token, log) => {
 
           const notes = response.items || response;
           
-          // --- THIS IS THE CORRECTED LINE ---
           if (!Array.isArray(notes) || notes.length === 0) {
             hasMore = false;
             break;
           }
 
-          // Filter by date if provided
           const filteredNotes = fromDate ? 
             notes.filter(note => new Date(note.updated_time) >= fromDate) : 
             notes;
 
           allNotes = allNotes.concat(filteredNotes);
           
-          // Check if we got fewer notes than requested (end of pages)
           if (notes.length < limit) {
             hasMore = false;
           } else {
             page++;
           }
 
-          // Add small delay between requests to prevent overwhelming the server
           await new Promise(resolve => setTimeout(resolve, 100));
           
         } catch (error) {
@@ -195,12 +186,11 @@ const newClient = (url, token, log) => {
       return allNotes;
     },
 
-    // FIXED: Enhanced method to get note details with proper tag and notebook extraction
+    // DIAGNOSTIC: Enhanced getNoteDetails with detailed resource logging
     async getNoteDetails(noteId) {
       try {
         log(levelDebug, `Fetching details for note ${noteId}`);
         
-        // Get note details and folders in parallel
         const [fullNote, allFolders] = await Promise.all([
           this.request(
             this.urlGen("notes", noteId),
@@ -216,7 +206,6 @@ const newClient = (url, token, log) => {
           )
         ]);
 
-        // Get tags and resources separately to avoid timeout issues
         const [tagsResponse, resourcesResponse] = await Promise.all([
           this.request(
             this.urlGen("notes", noteId, "tags"),
@@ -236,23 +225,36 @@ const newClient = (url, token, log) => {
           })
         ]);
 
-        // Extract tags properly
-          const tags = Array.isArray(tagsResponse) ? 
-            tagsResponse.map(tag => tag.title || tag) : 
-            (Array.isArray(tagsResponse?.items) ? tagsResponse.items.map(tag => tag.title || tag) : []);
+        const tags = Array.isArray(tagsResponse) ? 
+          tagsResponse.map(tag => tag.title || tag) : 
+          (Array.isArray(tagsResponse?.items) ? tagsResponse.items.map(tag => tag.title || tag) : []);
           
-          log(levelApplication, `Retrieved tags for note ${noteId}: ${JSON.stringify(tags)}`);        // Find the correct notebook from folders
+        log(levelApplication, `Retrieved tags for note ${noteId}: ${JSON.stringify(tags)}`);
+
         const foldersArray = Array.isArray(allFolders) ? allFolders : 
           (Array.isArray(allFolders?.items) ? allFolders.items : []);
         
         const notebook = foldersArray.find(folder => folder.id === fullNote.parent_id) || 
           { title: "Unknown", id: fullNote.parent_id };
 
-        // Extract resources properly
+        // === DIAGNOSTIC: Detailed resource inspection ===
         const resources = Array.isArray(resourcesResponse) ? resourcesResponse : 
           (Array.isArray(resourcesResponse?.items) ? resourcesResponse.items : []);
 
-        // DEBUG: Log what we extracted
+        log(levelApplication, `[DIAGNOSTIC] Raw resourcesResponse structure: ${JSON.stringify(resourcesResponse, null, 2)}`);
+        
+        log(levelApplication, `[DIAGNOSTIC] Resources array length: ${resources.length}`);
+        
+        resources.forEach((resource, idx) => {
+          log(levelApplication, `[DIAGNOSTIC] Resource ${idx}:`);
+          log(levelApplication, `  Full object: ${JSON.stringify(resource, null, 2)}`);
+          log(levelApplication, `  Has file_extension? ${resource.hasOwnProperty('file_extension')}`);
+          log(levelApplication, `  Has mime_type? ${resource.hasOwnProperty('mime_type')}`);
+          log(levelApplication, `  Has filename? ${resource.hasOwnProperty('filename')}`);
+          log(levelApplication, `  Has title? ${resource.hasOwnProperty('title')}`);
+          log(levelApplication, `  All keys: ${Object.keys(resource).join(', ')}`);
+        });
+
         log(levelDebug, `Note details extracted:
           - Note ID: ${noteId}
           - Title: ${fullNote.title}
@@ -265,7 +267,7 @@ const newClient = (url, token, log) => {
           notebook: notebook,
           tags: tags,
           resources: resources,
-          folders: foldersArray // Pass all folders for hierarchy building
+          folders: foldersArray
         };
       } catch (error) {
         log(levelApplication, `Error fetching note details for ${noteId}: ${error.message}`);
@@ -273,7 +275,6 @@ const newClient = (url, token, log) => {
       }
     },
 
-    // Get all folders for hierarchy mapping
     async getAllFolders() {
       try {
         const response = await this.request(
@@ -292,20 +293,20 @@ const newClient = (url, token, log) => {
     },
 
     async updateNoteBody(noteId, newBody) {
-          try {
-            this.log(levelVerbose, `Updating note body for ID: ${noteId}`);
-            const response = await this.request(
-              this.urlGen("notes", noteId),
-              "PUT",
-              { body: newBody }, // The body must be in a JSON object
-              "id,updated_time" // We ask for the updated time back
-            );
-            return response;
-          } catch (error) {
-            this.log(levelApplication, `❌ Error updating note body for ${noteId}: ${error.message}`);
-            throw error;
-          }
-        },
+      try {
+        this.log(levelVerbose, `Updating note body for ID: ${noteId}`);
+        const response = await this.request(
+          this.urlGen("notes", noteId),
+          "PUT",
+          { body: newBody },
+          "id,updated_time"
+        );
+        return response;
+      } catch (error) {
+        this.log(levelApplication, `Error updating note body for ${noteId}: ${error.message}`);
+        throw error;
+      }
+    },
 
     async health() {
       try {
@@ -323,8 +324,6 @@ const newClient = (url, token, log) => {
       }
     },
   };
-
-  client.exporter = new JoplinExporter(client, log);
 
   return client;
 };

@@ -1,8 +1,8 @@
-// anki-importer.js - CORRECTED with Media Upload Logic & RESOURCE COUNTING
+// anki-importer.js - FIXED with Enhanced Debugging
 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
-// Helper to decode HTML entities (Unchanged)
+// Helper to decode HTML entities
 const decodeHtmlEntities = (text) => {
   if (!text || typeof text !== 'string') return text;
   const entityMap = {
@@ -19,13 +19,31 @@ const decodeHtmlEntities = (text) => {
 };
 
 const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
-  // ============================================================================
-  // THE FIX: Added resource counters to the summary object
-  // ============================================================================
   const summary = { 
-    created: 0, updated: 0, skipped: 0, failed: 0, 
-    resourcesUploaded: 0, resourcesFailed: 0 
+    created: 0, 
+    updated: 0, 
+    skipped: 0, 
+    failed: 0, 
+    resourcesUploaded: 0, 
+    resourcesFailed: 0 
   };
+  
+  log(levelApplication, `📦 Starting batch import of ${items.length} items...`);
+  
+  // CRITICAL DEBUG: Check what we received
+  let totalResourcesInItems = 0;
+  items.forEach(item => {
+    const resourceCount = item.resourcesToUpload?.length || 0;
+    totalResourcesInItems += resourceCount;
+    if (resourceCount > 0) {
+      log(levelApplication, `[DEBUG] Item ${item.jtaID} has ${resourceCount} resources to upload`);
+    }
+  });
+  log(levelApplication, `[DEBUG] Total resources across all items: ${totalResourcesInItems}`);
+  
+  if (!jClient) {
+    log(levelApplication, `⚠️ WARNING: jClient not provided - cannot download resources!`);
+  }
   
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
@@ -33,74 +51,141 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     
     const promises = batch.map(async (item) => {
       try {
-        // Media Upload Pipeline
+        // ====================================================================
+        // PHASE 1: MEDIA UPLOAD PIPELINE (BEFORE NOTE PROCESSING)
+        // ====================================================================
         if (item.resourcesToUpload && item.resourcesToUpload.length > 0) {
-            log(levelDebug, `[MEDIA] JTA ID ${item.jtaID} has ${item.resourcesToUpload.length} resources to process.`);
+            log(levelApplication, `[MEDIA] 🎬 Starting upload of ${item.resourcesToUpload.length} resources for JTA ID ${item.jtaID}...`);
+            
             for (const resource of item.resourcesToUpload) {
                 try {
-                    log(levelApplication, `[MEDIA] Downloading resource ${resource.fileName} from Joplin...`);
+                    // Validate we have jClient
+                    if (!jClient) {
+                        throw new Error('Joplin client not provided to batchImporter - cannot download resources');
+                    }
+
+                    log(levelApplication, `[MEDIA] ⬇️ Downloading ${resource.fileName} (ID: ${resource.id}) from Joplin...`);
+                    
+                    // Download from Joplin
                     const fileData = await jClient.request(
                         jClient.urlGen("resources", resource.id, "file"), 
-                        "GET", undefined, undefined, false, "binary"
+                        "GET", 
+                        undefined, 
+                        undefined, 
+                        false, 
+                        "binary"
                     );
                     
-                    log(levelApplication, `[MEDIA] Uploading resource ${resource.fileName} to Anki...`);
+                    if (!fileData) {
+                        throw new Error(`No data returned for resource ${resource.id}`);
+                    }
+                    
+                    log(levelApplication, `[MEDIA] ⬆️ Uploading ${resource.fileName} to Anki (${fileData.length} bytes)...`);
+                    
+                    // Upload to Anki
                     await aClient.storeMedia(resource.fileName, fileData);
                     
-                    // ========================================================
-                    // THE FIX: Increment success counter
-                    // ========================================================
                     summary.resourcesUploaded++;
+                    log(levelApplication, `✅ [MEDIA] Successfully uploaded ${resource.fileName}`);
 
                 } catch (e) {
-                    log(levelApplication, `❌ Failed to upload resource ${resource.fileName} for JTA ID ${item.jtaID}: ${e.message}`);
-                    // ========================================================
-                    // THE FIX: Increment failure counter
-                    // ========================================================
                     summary.resourcesFailed++;
+                    log(levelApplication, `❌ [MEDIA] Failed to upload ${resource.fileName}: ${e.message}`);
+                    log(levelDebug, `[MEDIA] Error stack: ${e.stack}`);
                 }
             }
+        } else {
+            log(levelDebug, `[MEDIA] No resources to upload for JTA ID ${item.jtaID}`);
         }
 
-        // Note processing logic (unchanged)
+        // ====================================================================
+        // PHASE 2: NOTE PROCESSING (CREATE OR UPDATE)
+        // ====================================================================
         await aClient.ensureDeckExists(item.deckName);
         const existingNotes = await aClient.findNote(item.jtaID, item.deckName);
         
+        // Check if this is a custom/dynamic note type
         if (item.additionalFields && item.additionalFields.customNoteType) {
-          // ... (Dynamic note logic is unchanged)
+          // --- CUSTOM NOTE TYPE HANDLING ---
           const modelName = item.additionalFields.customNoteType;
-          const fields = Object.fromEntries(Object.entries(item.additionalFields.customFields).map(([k,v]) => [k, decodeHtmlEntities(v)]));
+          const fields = Object.fromEntries(
+            Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
+          );
+          
           if (existingNotes && existingNotes.length > 0) {
+            log(levelVerbose, `Updating custom note ${item.jtaID} in deck "${item.deckName}"`);
             await aClient.updateCustomNote(existingNotes[0], fields);
             await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
             summary.updated++;
+            log(levelApplication, `✅ Updated custom card: "${item.title}" (Model: ${modelName})`);
           } else {
+            log(levelVerbose, `Creating custom note ${item.jtaID} in deck "${item.deckName}"`);
             await aClient.createCustomNote(modelName, fields, item.deckName, item.tags, item.title, item.notebook);
             summary.created++;
+            log(levelApplication, `✅ Created custom card: "${item.title}" (Model: ${modelName})`);
           }
         } else {
-          // ... (Standard note logic is unchanged)
-          const decodedAdditionalFields = Object.fromEntries(Object.entries(item.additionalFields || {}).map(([k,v]) => [k, decodeHtmlEntities(v)]));
+          // --- STANDARD NOTE TYPE HANDLING ---
+          const decodedAdditionalFields = Object.fromEntries(
+            Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
+          );
+          
           if (existingNotes && existingNotes.length > 0) {
-            await aClient.updateNote(existingNotes[0], decodedAdditionalFields);
+            log(levelVerbose, `Updating standard note ${item.jtaID} in deck "${item.deckName}"`);
+            
+            // Build fields object for update
+            const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
+            const fieldsToUpdate = {};
+            
+            // Only update non-empty fields
+            if (item.question) fieldsToUpdate.Question = decodeHtmlEntities(item.question);
+            if (item.answer) fieldsToUpdate.Answer = decodeHtmlEntities(item.answer);
+            
+            // Add additional fields
+            Object.assign(fieldsToUpdate, decodedAdditionalFields);
+            
+            await aClient.updateNote(existingNotes[0], fieldsToUpdate);
             await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
             summary.updated++;
+            log(levelApplication, `✅ Updated ${cardType} card: "${item.title}"`);
           } else {
+            log(levelVerbose, `Creating standard note ${item.jtaID} in deck "${item.deckName}"`);
             await aClient.createNote(
-              item.question, item.answer, item.jtaID, item.title,
-              item.notebook, item.tags, item.folders, decodedAdditionalFields, item.deckName
+              item.question, 
+              item.answer, 
+              item.jtaID, 
+              item.title,
+              item.notebook, 
+              item.tags, 
+              item.folders, 
+              decodedAdditionalFields, 
+              item.deckName
             );
             summary.created++;
+            
+            const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
+            log(levelApplication, `✅ Created ${cardType} card: "${item.title}"`);
           }
         }
       } catch (e) {
         log(levelApplication, `❌ Failed to process JTA ID ${item.jtaID}: ${e.message}`);
+        log(levelDebug, `Error stack: ${e.stack}`);
         summary.failed++;
       }
     });
     
     await Promise.all(promises);
   }
+  
+  // Final summary
+  log(levelApplication, `
+📊 Batch Import Summary:
+   • Created: ${summary.created}
+   • Updated: ${summary.updated}
+   • Failed: ${summary.failed}
+   • Resources Uploaded: ${summary.resourcesUploaded}
+   • Resource Failures: ${summary.resourcesFailed}
+  `);
   
   return summary;
 };
