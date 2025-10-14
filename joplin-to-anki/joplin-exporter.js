@@ -1,4 +1,4 @@
-// Joplin Exporter - Final Version, confirmed against user's actual premium feature code.
+// Joplin Exporter - Final Version with Corrected Standard Note Extraction
 const cheerio = require('cheerio');
 const crypto = require('crypto');
 const { levelApplication, levelVerbose, levelDebug } = require('./log');
@@ -8,7 +8,7 @@ const typeResource = 'resource';
 const typeError = 'error';
 
 // ============================================================================
-// PREMIUM FEATURE REGISTRATION (Placeholders)
+// PREMIUM FEATURE REGISTRATION (Unchanged)
 // ============================================================================
 let premiumDeckHandler = null;
 let dynamicMapper = null;
@@ -27,6 +27,83 @@ const generateUniqueID = (noteId, index = 0) => {
   return `joplin_${hash.substring(0, 12)}`;
 };
 
+// ============================================================================
+// HELPER FUNCTION TO RESTORE ORIGINAL LOGIC
+// ============================================================================
+/**
+ * This is the restored, powerful function from your original code. 
+ * It extracts all possible fields for all standard note types.
+ */
+const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
+  const fields = {
+    // Initialize all possible fields
+    explanation: '', clinicalCorrelation: '', extra: '', header: '', footer: '', sources: '',
+    comments: '', origin: '', insertion: '', innervation: '', action: '',
+    optionA: '', optionB: '', optionC: '', optionD: '', correctAnswer: '',
+    questionImagePath: '', answerImagePath: '', altText: ''
+  };
+
+  // --- General Field Extraction ---
+  fields.header = $('.header', jtaElement).html()?.trim() || '';
+  fields.footer = $('.footer', jtaElement).html()?.trim() || '';
+  fields.sources = $('.sources', jtaElement).html()?.trim() || '';
+  fields.explanation = $('.explanation', jtaElement).html()?.trim() || '';
+  fields.clinicalCorrelation = $('.correlation', jtaElement).html()?.trim() || '';
+  fields.extra = $('.extra', jtaElement).html()?.trim() || '';
+  fields.comments = $('.comments', jtaElement).html()?.trim() || '';
+  fields.correctAnswer = $('.correct-answer', jtaElement).text()?.trim() || '';
+
+  // --- Image-Specific Field Extraction ---
+  fields.origin = $('.origin', jtaElement).html()?.trim() || '';
+  fields.insertion = $('.insertion', jtaElement).html()?.trim() || '';
+  fields.innervation = $('.innervation', jtaElement).html()?.trim() || '';
+  fields.action = $('.action', jtaElement).html()?.trim() || '';
+  
+  const questionImgEl = $('img[data-jta-image-type="question"]', jtaElement);
+  if (questionImgEl.length > 0) {
+    fields.questionImagePath = questionImgEl.attr('src') || '';
+    fields.altText = questionImgEl.attr('alt') || '';
+  }
+  const answerImgEl = $('img[data-jta-image-type="answer"]', jtaElement);
+  if (answerImgEl.length > 0) {
+    fields.answerImagePath = answerImgEl.attr('src') || '';
+  }
+  
+  // --- MCQ-Specific Field Extraction using REGEX (from your original logic) ---
+  const questionTextContent = ($('.question', jtaElement).text() || "");
+  if (questionTextContent.length > 0) {
+    const optionPatterns = [
+        /(?:A\)|A\.)\s*([\s\S]*?)(?=\s*(?:B\)|B\.|$))/i,
+        /(?:B\)|B\.)\s*([\s\S]*?)(?=\s*(?:C\)|C\.|$))/i,
+        /(?:C\)|C\.)\s*([\s\S]*?)(?=\s*(?:D\)|D\.|$))/i,
+        /(?:D\)|D\.)\s*([\s\S]*?)(?=\s*$)/i
+    ];
+    
+    const optionMatches = optionPatterns.map(pattern => {
+      const match = questionTextContent.match(pattern);
+      return match ? match[1].trim() : '';
+    });
+
+    if (optionMatches.filter(Boolean).length >= 2) {
+      fields.optionA = optionMatches[0] || '';
+      fields.optionB = optionMatches[1] || '';
+      fields.optionC = optionMatches[2] || '';
+      fields.optionD = optionMatches[3] || '';
+    }
+  }
+
+  // Clean up any empty fields
+  for (const key in fields) {
+    if (fields[key] === '' || fields[key] === null) {
+      delete fields[key];
+    }
+  }
+
+  return fields;
+};
+// ============================================================================
+
+
 class JoplinExporter {
   constructor(joplinClient, log) {
     this.joplinClient = joplinClient;
@@ -41,7 +118,6 @@ class JoplinExporter {
     return this.folders;
   }
 
-  // This is no longer needed in the premium path but kept for fallback
   getNotebookPath(notebookId) {
     const folders = this.folders;
     if (!folders) return "Unknown";
@@ -81,21 +157,21 @@ class JoplinExporter {
         const noteType = $(el).attr('data-note-type');
         let item;
   
+        // Premium Dynamic Path (Unchanged)
         if (dynamicMapper && noteType && dynamicMapper.getAvailableNoteTypes().includes(noteType)) {
           const extractedData = dynamicMapper.extractFields($(el).html(), jtaID, noteType);
           if (extractedData) {
-            // --- THIS IS THE CORRECTED STRUCTURE FOR DYNAMIC ITEMS ---
             item = {
               jtaID: jtaID,
               title: details.note.title,
               notebook: details.notebook,
               tags: details.tags,
               folders: this.folders,
-              question: '', // Add empty placeholders to ensure function calls don't fail
-              answer: '',   // These are not used by the custom path but prevent errors
+              question: '', 
+              answer: '',   
               additionalFields: {
-                customNoteType: extractedData.modelName, // Correctly nested
-                customFields: extractedData.fields,     // Correctly nested
+                customNoteType: extractedData.modelName, 
+                customFields: extractedData.fields,     
               },
             };
           } else {
@@ -103,20 +179,21 @@ class JoplinExporter {
             return;
           }
         } else {
-          // Standard extraction logic (this part is already correct)
+          // ==================================================================
+          // CORRECTED STANDARD EXTRACTION LOGIC
+          // ==================================================================
+          this.log(levelDebug, `Using corrected standard extractor for JTA ID: ${jtaID}`);
+          
+          // Call the powerful helper function to get ALL possible standard fields
+          const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
+
           item = {
             jtaID: jtaID,
             title: details.note.title,
             notebook: details.notebook,
             question: $(el).find(".question").html(),
             answer: $(el).find(".answer").html(),
-            additionalFields: {
-              "Explanation": $(el).find(".explanation").html(),
-              "Header": $(el).find(".header").html(),
-              "Footer": $(el).find(".footer").html(),
-              "Sources": $(el).find(".sources").html(),
-              "Clinical Correlation": $(el).find(".correlation").html(),
-            },
+            additionalFields: additionalFields, // Use the complete object here
             tags: details.tags,
             folders: this.folders,
           };
@@ -135,7 +212,7 @@ class JoplinExporter {
     }
 }
 
-// Legacy generator function for one-way sync
+// Legacy generator function for one-way sync (Unchanged)
 async function* exporter(joplinClient, fromDate, log) {
   const notes = await joplinClient.getAllNotes("id,updated_time,title,parent_id,body", fromDate);
   const exporterInstance = new JoplinExporter(joplinClient, log);
@@ -152,6 +229,7 @@ async function* exporter(joplinClient, fromDate, log) {
   }
 }
 
+// Module exports (Unchanged)
 module.exports = {
   JoplinExporter,
   exporter,
