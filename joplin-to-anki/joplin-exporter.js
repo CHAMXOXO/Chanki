@@ -232,6 +232,8 @@ class JoplinExporter {
               customNoteType: extractedData.modelName,
               customFields: extractedData.fields,
             },
+            index: i,                 
+            joplinNoteId: note.id,    
           };
         } else {
           this.log(levelApplication, `⚠️ Skipping JTA block - dynamic mapping failed for "${noteType}"`);
@@ -250,6 +252,8 @@ class JoplinExporter {
           additionalFields: additionalFields,
           tags: details.tags,
           folders: this.folders,
+          index: i,                 
+          joplinNoteId: note.id,    
         };
       }
       
