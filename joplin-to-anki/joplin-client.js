@@ -1,3 +1,4 @@
+const { JoplinExporter } = require("./joplin-exporter");
 const axios = require("axios");
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
@@ -82,7 +83,7 @@ const newClient = (url, token, log) => {
     }
   };
 
-  return {
+  const client = {
     url,
     token,
     log,
@@ -161,6 +162,7 @@ const newClient = (url, token, log) => {
 
           const notes = response.items || response;
           
+          // --- THIS IS THE CORRECTED LINE ---
           if (!Array.isArray(notes) || notes.length === 0) {
             hasMore = false;
             break;
@@ -235,7 +237,6 @@ const newClient = (url, token, log) => {
         ]);
 
         // Extract tags properly
-          // Extract tags properly
           const tags = Array.isArray(tagsResponse) ? 
             tagsResponse.map(tag => tag.title || tag) : 
             (Array.isArray(tagsResponse?.items) ? tagsResponse.items.map(tag => tag.title || tag) : []);
@@ -290,6 +291,22 @@ const newClient = (url, token, log) => {
       }
     },
 
+    async updateNoteBody(noteId, newBody) {
+          try {
+            this.log(levelVerbose, `Updating note body for ID: ${noteId}`);
+            const response = await this.request(
+              this.urlGen("notes", noteId),
+              "PUT",
+              { body: newBody }, // The body must be in a JSON object
+              "id,updated_time" // We ask for the updated time back
+            );
+            return response;
+          } catch (error) {
+            this.log(levelApplication, `❌ Error updating note body for ${noteId}: ${error.message}`);
+            throw error;
+          }
+        },
+
     async health() {
       try {
         const response = await this.ping();
@@ -306,6 +323,10 @@ const newClient = (url, token, log) => {
       }
     },
   };
+
+  client.exporter = new JoplinExporter(client, log);
+
+  return client;
 };
 
 module.exports = {

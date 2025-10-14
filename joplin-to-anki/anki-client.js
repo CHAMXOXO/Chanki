@@ -1,4 +1,4 @@
-// anki-client.js (ENHANCED DECK HANDLING VERSION)
+// anki-client.js 
 
 const axios = require('axios');
 const fs = require('fs').promises;
@@ -52,24 +52,18 @@ class AnkiClient {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        // Increase timeout with each retry
         const timeout = baseTimeout * attempt;
-        
         const response = await axios.post(this.baseUrl, payload, { 
           timeout,
           headers: { 'Content-Type': 'application/json' },
-          // Add keep-alive to prevent connection drops
           httpAgent: new (require('http').Agent)({ keepAlive: true }),
         });
-        
         if (response.data.error) throw new Error(response.data.error);
         return response.data.result;
       } catch (error) {
         if (attempt === maxRetries) {
           throw new Error(`Failed after ${maxRetries} attempts for action "${payload.action}": ${error.message}`);
         }
-        
-        // Use a shorter initial backoff but still increase it with each retry
         const backoffDelay = Math.min(1000 * Math.pow(1.5, attempt - 1), 10000);
         this.log(levelApplication, `⚠️ Anki request attempt ${attempt} failed for action "${payload.action}": ${error.message}. Retrying in ${backoffDelay}ms...`);
         await new Promise(resolve => setTimeout(resolve, backoffDelay));
@@ -91,32 +85,20 @@ class AnkiClient {
     return this.doRequest({ action: "storeMediaFile", version: 6, params: { filename: fileName, data: data } });
   }
 
-  /**
-   * Enhanced deck creation with validation
-   */
   async ensureDeckExists(deckName) {
-    // Normalize deck name (trim whitespace)
     const normalizedDeckName = deckName.trim();
-    
-    // Check cache first
     if (this.deckCache.has(normalizedDeckName)) {
       this.log(levelDebug, `Deck "${normalizedDeckName}" already verified in cache`);
       return normalizedDeckName;
     }
-
     try {
-      // Create the deck (this is idempotent - won't error if deck exists)
       await this.doRequest({ 
         action: "createDeck", 
         version: 6, 
         params: { deck: normalizedDeckName } 
       });
-      
       this.log(levelDebug, `✅ Deck ensured: "${normalizedDeckName}"`);
-      
-      // Add to cache
       this.deckCache.add(normalizedDeckName);
-      
       return normalizedDeckName;
     } catch (error) {
       this.log(levelApplication, `⚠️ Error ensuring deck "${normalizedDeckName}": ${error.message}`);
@@ -124,9 +106,6 @@ class AnkiClient {
     }
   }
 
-  /**
-   * Verify that a note actually exists in the specified deck
-   */
   async findNote(jtaID, deckName) {
     const normalizedDeckName = deckName.trim();
     const query = `"Joplin to Anki ID:${jtaID}" deck:"${normalizedDeckName}"`;
@@ -149,52 +128,33 @@ class AnkiClient {
   }
   
   async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}, deckName = "Default") {
-    // CRITICAL: Log what deck name we received
     this.log(levelApplication, `📥 createNote called with deckName: "${deckName}"`);
-    
-    // Check if deckName is actually set and not just the default
     if (!deckName || deckName === "Default") {
       this.log(levelApplication, `⚠️ WARNING: deckName is "${deckName}" - this suggests the deck name wasn't passed correctly from the exporter!`);
     }
-    
-    // CRITICAL: Ensure deck exists and get normalized name
     const verifiedDeckName = await this.ensureDeckExists(deckName);
-    
     this.log(levelApplication, `Creating note in deck: ${verifiedDeckName}`);
-    
     const cardType = this.detectCardType(question, answer, additionalFields);
-    
     const model = models[cardType];
     if (!model) {
         throw new Error(`CRITICAL: Could not find a model for the detected card type "${cardType}".`);
     }
     const modelName = model.name;
-
     const fields = buildAnkiFieldsObject(question, answer, jtaID, cardType, additionalFields);
     const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
-    
-    // CRITICAL: Use the verified deck name in the note data
     const noteData = { 
-      deckName: verifiedDeckName,  // Use verified name
+      deckName: verifiedDeckName,
       modelName, 
       fields, 
       tags: noteTags 
     };
-    
     this.log(levelDebug, `Note payload: ${JSON.stringify({ deckName: verifiedDeckName, modelName, tags: noteTags })}`);
-    
     const result = await this.doRequest({ action: "addNote", version: 6, params: { note: noteData } });
     this.log(levelApplication, `✅ Created ${cardType} card: "${title}" in deck "${verifiedDeckName}" (Anki Note ID: ${result})`);
-    
-    // Verify the note was created in the correct deck
     await this.verifyNoteInDeck(jtaID, verifiedDeckName);
-    
     return result;
   }
   
-  /**
-   * Verify that a note exists in the expected deck
-   */
   async verifyNoteInDeck(jtaID, expectedDeckName) {
     try {
       const noteIds = await this.findNote(jtaID, expectedDeckName);
@@ -213,14 +173,11 @@ class AnkiClient {
   
   async updateNote(noteId, fieldsToUpdate) {
     this.log(levelVerbose, `Updating fields for Anki Note ID: ${noteId}`);
-    
     const notePayload = {
         id: noteId,
         fields: fieldsToUpdate
     };
-    
     delete notePayload.fields['Joplin to Anki ID'];
-  
     await this.doRequest({ 
         action: "updateNoteFields", 
         version: 6, 
@@ -228,7 +185,6 @@ class AnkiClient {
             note: notePayload
         } 
     });
-  
     this.log(levelApplication, `✅ Updated card (Anki Note ID: ${noteId})`);
   }
 
@@ -241,60 +197,109 @@ class AnkiClient {
     }
   }
 
-  /**
-   * Create a note with custom fields (dynamic mapping)
-   */
   async createCustomNote(modelName, fields, deckName, tags = [], title = '', notebook = {}) {
     this.log(levelApplication, `📥 Creating custom note with model: "${modelName}"`);
-    
     const verifiedDeckName = await this.ensureDeckExists(deckName);
-    
     const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
-    
     const noteData = {
       deckName: verifiedDeckName,
       modelName,
       fields,
       tags: noteTags
     };
-    
     this.log(levelDebug, `Custom note payload: ${JSON.stringify(noteData, null, 2)}`);
-    
     const result = await this.doRequest({ action: "addNote", version: 6, params: { note: noteData } });
     this.log(levelApplication, `✅ Created custom card in deck "${verifiedDeckName}" (Anki Note ID: ${result})`);
-    
     return result;
   }
 
-  /**
-   * Update a custom note's fields
-   */
   async updateCustomNote(noteId, fields) {
     this.log(levelVerbose, `Updating custom note fields for Anki Note ID: ${noteId}`);
-    
     const notePayload = {
       id: noteId,
       fields: fields
     };
-    
     await this.doRequest({
       action: "updateNoteFields",
       version: 6,
       params: { note: notePayload }
     });
-    
     this.log(levelApplication, `✅ Updated custom card (Anki Note ID: ${noteId})`);
   }
 
-  /**
-   * Find note by searching for a specific field value
-   */
   async findNoteByField(fieldName, fieldValue, deckName) {
     const normalizedDeckName = deckName.trim();
-    // Search for the field value in the specified deck
     const query = `"${fieldName}:${fieldValue}" deck:"${normalizedDeckName}"`;
     this.log(levelDebug, `Searching for custom note with query: ${query}`);
     return this.doRequest({ action: "findNotes", version: 6, params: { query } });
+  }
+
+    async getAllJtaNotesInfo() {
+      this.log(levelVerbose, '🔍 Fetching all JTA notes from Anki for state comparison...');
+      const noteIds = await this.doRequest({
+        action: "findNotes",
+        version: 6,
+        params: { query: `"Joplin to Anki ID:*"` }
+      });
+      if (!noteIds || noteIds.length === 0) {
+        this.log(levelApplication, 'ℹ️ No existing JTA notes found in Anki.');
+        return new Map();
+      }
+      this.log(levelDebug, `Found ${noteIds.length} JTA notes in Anki. Fetching their info...`);
+      const notesInfo = await this.getNoteInfo(noteIds);
+      const notesMap = new Map();
+      for (const note of notesInfo) {
+        if (note && note.fields && note.fields['Joplin to Anki ID']) {
+          const jtaID = note.fields['Joplin to Anki ID'].value;
+          if (jtaID) {
+            notesMap.set(jtaID, {
+              ankiNoteId: note.noteId,
+              modelName: note.modelName,
+              ankiModTimeUtc: new Date(note.mod * 1000).toISOString(),
+              fields: note.fields,
+              tags: note.tags,
+            });
+          }
+        }
+      }
+      this.log(levelVerbose, `✅ Successfully processed info for ${notesMap.size} Anki notes.`);
+      return notesMap;
+    }
+
+  /**
+   * Retrieves full note information for a specific list of JTA IDs.
+   * @param {string[]} jtaIds - An array of Joplin to Anki IDs.
+   * @returns {Promise<any[]>} A promise that resolves to an array of note info objects.
+   */
+  async getNotesInfoByJtaIds(jtaIds) {
+      if (!jtaIds || jtaIds.length === 0) {
+          return [];
+      }
+      
+      const allNotes = [];
+      
+      for (const jtaID of jtaIds) {
+          try {
+              const noteIds = await this.doRequest({
+                  action: "findNotes",
+                  version: 6,
+                  params: { query: `"Joplin to Anki ID:${jtaID}"` }
+              });
+              
+              if (noteIds && noteIds.length > 0) {
+                  const notesInfo = await this.doRequest({
+                      action: "notesInfo",
+                      version: 6,
+                      params: { notes: noteIds }
+                  });
+                  allNotes.push(...notesInfo);
+              }
+          } catch (e) {
+              this.log(levelVerbose, `⚠️ Could not fetch note for JTA ID ${jtaID}: ${e.message}`);
+          }
+      }
+      
+      return allNotes;
   }
 }
 
