@@ -89,7 +89,7 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
             summary.updated++;
             log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}"`);
           } else {
-<<<<<<< HEAD
+
             // CREATE NEW STANDARD NOTE
             await aClient.createNote(
               item.question, 
@@ -117,35 +117,6 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
         summary.failed++;
       }
     });
-=======
-            log(levelVerbose, `Creating standard note ${item.jtaID} in deck "${item.deckName}"`);
-                        await aClient.createNote(
-                          item.question, 
-                          item.answer, 
-                          item.jtaID, 
-                          item.title,
-                          item.notebook, 
-                          item.tags, 
-                          item.folders, 
-                          decodedAdditionalFields, 
-                          item.deckName
-                        );
-                        summary.created++;
-                        
-                        // --- CAPTURE THE CREATED ITEM'S COORDINATES ---
-                        summary.createdItems.push({ jtaID: item.jtaID, joplinNoteId: item.joplinNoteId, index: item.index });
-                        
-                        const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
-                        log(levelApplication, `✅ Created ${cardType} card: "${item.title}"`);
-                      }
-                    }
-                  } catch (e) {
-                    log(levelApplication, `❌ Failed to process JTA ID ${item.jtaID}: ${e.message}`);
-                    log(levelDebug, `Error stack: ${e.stack}`);
-                    summary.failed++;
-                  }
-                });
->>>>>>> efe1777b97c4fdba81e22120774892fa27567fd1
     
     await Promise.all(promises);
   }
