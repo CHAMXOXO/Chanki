@@ -1,4 +1,4 @@
-// anki-importer.js - FIXED Logging for Standard Notes
+// anki-importer.js - FIXED Logging and Custom Note Type Routing
 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
@@ -39,7 +39,13 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
         await aClient.ensureDeckExists(item.deckName);
         const existingNotes = await aClient.findNote(item.jtaID, item.deckName);
         
-        const isCustomNote = item.additionalFields && item.additionalFields.customNoteType;
+        // FIXED: Explicit type checking with detailed logging
+        const isCustomNote = item.additionalFields && 
+                             item.additionalFields.customNoteType &&
+                             typeof item.additionalFields.customNoteType === 'string' &&
+                             item.additionalFields.customNoteType.trim().length > 0;
+        
+        log(levelDebug, `[TYPE CHECK] Item ${item.jtaID}: isCustomNote=${isCustomNote}, customNoteType=${item.additionalFields?.customNoteType}`);
         
         if (isCustomNote) {
           // ========================================================================
@@ -47,8 +53,11 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
           // ========================================================================
           const modelName = item.additionalFields.customNoteType;
           const fields = Object.fromEntries(
-            Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
+            Object.entries(item.additionalFields.customFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
+          
+          log(levelApplication, `📥 Processing custom note with model: "${modelName}"`);
+          log(levelDebug, `   Fields: ${JSON.stringify(Object.keys(fields))}`);
           
           if (existingNotes && existingNotes.length > 0) {
             await aClient.updateCustomNote(existingNotes[0], fields);
@@ -67,13 +76,15 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
           }
         } else {
           // ========================================================================
-          // STANDARD NOTE TYPE HANDLING (FIXED LOGGING)
+          // STANDARD NOTE TYPE HANDLING
           // ========================================================================
           const decodedAdditionalFields = Object.fromEntries(
             Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
           
           const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
+          
+          log(levelDebug, `[TYPE CHECK] Standard note detected as type: ${cardType}`);
           
           if (existingNotes && existingNotes.length > 0) {
             // UPDATE EXISTING STANDARD NOTE

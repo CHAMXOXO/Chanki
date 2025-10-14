@@ -208,81 +208,107 @@ class JoplinExporter {
     // ========================================================================
     // CRITICAL FIX: Track the index of each .jta block
     // ========================================================================
-    jtaBlocks.each((i, el) => {
-      const jtaID = $(el).attr("data-id") || generateUniqueID(note.id, i);
-      const noteType = $(el).attr('data-note-type');
-      let item;
-      const isDynamic = dynamicMapper && noteType && dynamicMapper.getAvailableNoteTypes().includes(noteType);
-
-      this.log(levelDebug, `Processing JTA block ${i} (ID: ${jtaID}, Type: ${isDynamic ? noteType : 'standard'})`);
-
-      if (isDynamic) {
-        const extractedData = dynamicMapper.extractFields($(el).html(), jtaID, noteType);
-        if (extractedData) {
-          item = {
-            jtaID,
-            index: i, // ← ADD INDEX
-            title: details.note.title,
-            notebook: details.notebook,
-            tags: details.tags,
-            folders: this.folders,
-            question: '',
-            answer: '',
-            additionalFields: {
-              customNoteType: extractedData.modelName,
-              customFields: extractedData.fields,
-            },
-            index: i,                 
-            joplinNoteId: note.id,    
-          };
-        } else {
-          this.log(levelApplication, `⚠️ Skipping JTA block - dynamic mapping failed for "${noteType}"`);
-          return;
-        }
-      } else {
-        const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
+    // joplin-exporter.js - CRITICAL SECTION (extractQuizItems method) with Debug Logging
+    
+        jtaBlocks.each((i, el) => {
+          const jtaID = $(el).attr("data-id") || generateUniqueID(note.id, i);
+          const noteType = $(el).attr('data-note-type');
+          let item;
+          const isDynamic = dynamicMapper && noteType && dynamicMapper.getAvailableNoteTypes().includes(noteType);
+    
+          this.log(levelDebug, `Processing JTA block ${i} (ID: ${jtaID}, Type: ${noteType}, isDynamic: ${isDynamic})`);
+    
+          if (isDynamic) {
+            // CUSTOM NOTE TYPE PATH
+            this.log(levelApplication, `[EXTRACTION] Custom note detected: data-note-type="${noteType}"`);
+            
+            const extractedData = dynamicMapper.extractFields($(el).html(), jtaID, noteType);
+            if (extractedData) {
+              item = {
+                jtaID,
+                index: i,
+                title: details.note.title,
+                notebook: details.notebook,
+                tags: details.tags,
+                folders: this.folders,
+                question: '',
+                answer: '',
+                additionalFields: {
+                  customNoteType: extractedData.modelName,  // CRITICAL: Must be set
+                  customFields: extractedData.fields,        // CRITICAL: Must be set
+                },
+                joplinNoteId: note.id,
+              };
+              
+              this.log(levelApplication, `[EXTRACTION] Custom note item created:`);
+              this.log(levelDebug, `  modelName: ${extractedData.modelName}`);
+              this.log(levelDebug, `  customNoteType set to: ${item.additionalFields.customNoteType}`);
+              this.log(levelDebug, `  customFields keys: ${Object.keys(extractedData.fields).join(', ')}`);
+            } else {
+              this.log(levelApplication, `⚠️ Skipping JTA block - dynamic mapping failed for "${noteType}"`);
+              return;
+            }
+          } else {
+            // STANDARD NOTE TYPE PATH
+            this.log(levelApplication, `[EXTRACTION] Standard note detected (no data-note-type attribute)`);
+            
+            const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
+            
+            item = {
+              jtaID,
+              index: i,
+              title: details.note.title,
+              notebook: details.notebook,
+              question: $(el).find(".question").html() || '',
+              answer: $(el).find(".answer").html() || '',
+              additionalFields: additionalFields,
+              tags: details.tags,
+              folders: this.folders,
+              joplinNoteId: note.id,
+            };
+            
+            this.log(levelDebug, `[EXTRACTION] Standard note item created with question length: ${item.question.length}`);
+          }
+          
+          // Apply to both custom and standard
+          item.deckName = premiumDeckHandler 
+            ? premiumDeckHandler(details.tags, details.notebook, this.folders, this.log) 
+            : this.getNotebookPath(details.notebook.id);
+          
+          rewriteResourcePaths(item, enrichedResources, this.log);
+    
+          if (!isDynamic) {
+            // Clean images only for standard notes
+            if (item.question) {
+                const $question = cheerio.load(item.question, null, false);
+                $question('img[data-jta-image-type="question"]').remove();
+                item.question = $question.html();
+            }
+            if (item.answer) {
+                const $answer = cheerio.load(item.answer, null, false);
+                $answer('img[data-jta-image-type="answer"]').remove();
+                $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+                item.answer = $answer.html();
+            }
+          }
+          
+          this.log(levelDebug, `✅ Extracted item ${item.jtaID} (index: ${i}, type: ${isDynamic ? 'custom' : 'standard'})`);
+          quizItems.push(item);
+        });
+    
+        this.log(levelDebug, `📊 Extracted ${quizItems.length} quiz items from note ${note.id}`);
         
-        item = {
-          jtaID,
-          index: i, // ← ADD INDEX FOR STANDARD NOTES TOO
-          title: details.note.title,
-          notebook: details.notebook,
-          question: $(el).find(".question").html() || '',
-          answer: $(el).find(".answer").html() || '',
-          additionalFields: additionalFields,
-          tags: details.tags,
-          folders: this.folders,
-          index: i,                 
-          joplinNoteId: note.id,    
-        };
-      }
-      
-      rewriteResourcePaths(item, enrichedResources, this.log);
-
-      if (!isDynamic) {
-        if (item.question) {
-            const $question = cheerio.load(item.question, null, false);
-            $question('img[data-jta-image-type="question"]').remove();
-            item.question = $question.html();
-        }
-        if (item.answer) {
-            const $answer = cheerio.load(item.answer, null, false);
-            $answer('img[data-jta-image-type="answer"]').remove();
-            $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-            item.answer = $answer.html();
-        }
-      }
-
-      item.deckName = premiumDeckHandler 
-        ? premiumDeckHandler(details.tags, details.notebook, this.folders, this.log) 
-        : this.getNotebookPath(details.notebook.id);
-      
-      this.log(levelDebug, `✅ Extracted item ${item.jtaID} (index: ${i})`);
-      quizItems.push(item);
-    });
-
-    this.log(levelDebug, `📊 Extracted ${quizItems.length} quiz items from note ${note.id}`);
-    return quizItems;
+        // CRITICAL: Log the complete item structures before returning
+        quizItems.forEach((item, idx) => {
+          this.log(levelDebug, `[FINAL CHECK] Item ${idx} (${item.jtaID}):`);
+          this.log(levelDebug, `  - Has customNoteType: ${!!item.additionalFields?.customNoteType}`);
+          this.log(levelDebug, `  - Value: ${item.additionalFields?.customNoteType || 'UNDEFINED'}`);
+          this.log(levelDebug, `  - Has customFields: ${!!item.additionalFields?.customFields}`);
+          this.log(levelDebug, `  - Has question: ${!!item.question}`);
+          this.log(levelDebug, `  - Has answer: ${!!item.answer}`);
+        });
+        
+        return quizItems;
   }
 }
 
