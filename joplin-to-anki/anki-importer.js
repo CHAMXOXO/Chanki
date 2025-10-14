@@ -89,7 +89,6 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
             summary.updated++;
             log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}"`);
           } else {
-<<<<<<< HEAD
             // CREATE NEW STANDARD NOTE
             await aClient.createNote(
               item.question, 
