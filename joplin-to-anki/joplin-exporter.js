@@ -266,6 +266,8 @@ class JoplinExporter {
               customNoteType: extractedData.modelName,
               customFields: extractedData.fields,
             },
+            index: i,                 
+            joplinNoteId: note.id,    
           };
           this.log(levelDebug, `Created dynamic note item for ${jtaID}`);
         } else {
@@ -284,6 +286,8 @@ class JoplinExporter {
           additionalFields: additionalFields,
           tags: details.tags,
           folders: this.folders,
+          index: i,                 
+          joplinNoteId: note.id,    
         };
         this.log(levelDebug, `Created standard note item for ${jtaID}`);
       }
