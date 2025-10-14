@@ -1,7 +1,8 @@
-// anki-importer.js - FIXED Logging and Custom Note Type Routing
+// anki-importer.js - FIXED with Enhanced Debugging
 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
+// Helper to decode HTML entities
 const decodeHtmlEntities = (text) => {
   if (!text || typeof text !== 'string') return text;
   const entityMap = {
@@ -24,11 +25,25 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     skipped: 0, 
     failed: 0, 
     resourcesUploaded: 0, 
-    resourcesFailed: 0,
-    createdItems: [] 
+    resourcesFailed: 0 
   };
   
   log(levelApplication, `📦 Starting batch import of ${items.length} items...`);
+  
+  // CRITICAL DEBUG: Check what we received
+  let totalResourcesInItems = 0;
+  items.forEach(item => {
+    const resourceCount = item.resourcesToUpload?.length || 0;
+    totalResourcesInItems += resourceCount;
+    if (resourceCount > 0) {
+      log(levelApplication, `[DEBUG] Item ${item.jtaID} has ${resourceCount} resources to upload`);
+    }
+  });
+  log(levelApplication, `[DEBUG] Total resources across all items: ${totalResourcesInItems}`);
+  
+  if (!jClient) {
+    log(levelApplication, `⚠️ WARNING: jClient not provided - cannot download resources!`);
+  }
   
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
@@ -36,71 +51,105 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     
     const promises = batch.map(async (item) => {
       try {
+        // ====================================================================
+        // PHASE 1: MEDIA UPLOAD PIPELINE (BEFORE NOTE PROCESSING)
+        // ====================================================================
+        if (item.resourcesToUpload && item.resourcesToUpload.length > 0) {
+            log(levelApplication, `[MEDIA] 🎬 Starting upload of ${item.resourcesToUpload.length} resources for JTA ID ${item.jtaID}...`);
+            
+            for (const resource of item.resourcesToUpload) {
+                try {
+                    // Validate we have jClient
+                    if (!jClient) {
+                        throw new Error('Joplin client not provided to batchImporter - cannot download resources');
+                    }
+
+                    log(levelApplication, `[MEDIA] ⬇️ Downloading ${resource.fileName} (ID: ${resource.id}) from Joplin...`);
+                    
+                    // Download from Joplin
+                    const fileData = await jClient.request(
+                        jClient.urlGen("resources", resource.id, "file"), 
+                        "GET", 
+                        undefined, 
+                        undefined, 
+                        false, 
+                        "binary"
+                    );
+                    
+                    if (!fileData) {
+                        throw new Error(`No data returned for resource ${resource.id}`);
+                    }
+                    
+                    log(levelApplication, `[MEDIA] ⬆️ Uploading ${resource.fileName} to Anki (${fileData.length} bytes)...`);
+                    
+                    // Upload to Anki
+                    await aClient.storeMedia(resource.fileName, fileData);
+                    
+                    summary.resourcesUploaded++;
+                    log(levelApplication, `✅ [MEDIA] Successfully uploaded ${resource.fileName}`);
+
+                } catch (e) {
+                    summary.resourcesFailed++;
+                    log(levelApplication, `❌ [MEDIA] Failed to upload ${resource.fileName}: ${e.message}`);
+                    log(levelDebug, `[MEDIA] Error stack: ${e.stack}`);
+                }
+            }
+        } else {
+            log(levelDebug, `[MEDIA] No resources to upload for JTA ID ${item.jtaID}`);
+        }
+
+        // ====================================================================
+        // PHASE 2: NOTE PROCESSING (CREATE OR UPDATE)
+        // ====================================================================
         await aClient.ensureDeckExists(item.deckName);
         const existingNotes = await aClient.findNote(item.jtaID, item.deckName);
         
-        // FIXED: Explicit type checking with detailed logging
-        const isCustomNote = item.additionalFields && 
-                             item.additionalFields.customNoteType &&
-                             typeof item.additionalFields.customNoteType === 'string' &&
-                             item.additionalFields.customNoteType.trim().length > 0;
-        
-        log(levelDebug, `[TYPE CHECK] Item ${item.jtaID}: isCustomNote=${isCustomNote}, customNoteType=${item.additionalFields?.customNoteType}`);
-        
-        if (isCustomNote) {
-          // ========================================================================
-          // CUSTOM NOTE TYPE HANDLING
-          // ========================================================================
+        // Check if this is a custom/dynamic note type
+        if (item.additionalFields && item.additionalFields.customNoteType) {
+          // --- CUSTOM NOTE TYPE HANDLING ---
           const modelName = item.additionalFields.customNoteType;
           const fields = Object.fromEntries(
-            Object.entries(item.additionalFields.customFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
+            Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
           
-          log(levelApplication, `📥 Processing custom note with model: "${modelName}"`);
-          log(levelDebug, `   Fields: ${JSON.stringify(Object.keys(fields))}`);
-          
           if (existingNotes && existingNotes.length > 0) {
+            log(levelVerbose, `Updating custom note ${item.jtaID} in deck "${item.deckName}"`);
             await aClient.updateCustomNote(existingNotes[0], fields);
             await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
             summary.updated++;
-            log(levelApplication, `✅ Updated custom "${modelName}" card: "${item.title}"`);
+            log(levelApplication, `✅ Updated custom card: "${item.title}" (Model: ${modelName})`);
           } else {
+            log(levelVerbose, `Creating custom note ${item.jtaID} in deck "${item.deckName}"`);
             await aClient.createCustomNote(modelName, fields, item.deckName, item.tags, item.title, item.notebook);
             summary.created++;
-            summary.createdItems.push({ 
-              jtaID: item.jtaID, 
-              joplinNoteId: item.joplinNoteId, 
-              index: item.index 
-            });
-            log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
+            log(levelApplication, `✅ Created custom card: "${item.title}" (Model: ${modelName})`);
           }
         } else {
-          // ========================================================================
-          // STANDARD NOTE TYPE HANDLING
-          // ========================================================================
+          // --- STANDARD NOTE TYPE HANDLING ---
           const decodedAdditionalFields = Object.fromEntries(
             Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
           
-          const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
-          
-          log(levelDebug, `[TYPE CHECK] Standard note detected as type: ${cardType}`);
-          
           if (existingNotes && existingNotes.length > 0) {
-            // UPDATE EXISTING STANDARD NOTE
+            log(levelVerbose, `Updating standard note ${item.jtaID} in deck "${item.deckName}"`);
+            
+            // Build fields object for update
+            const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
             const fieldsToUpdate = {};
             
+            // Only update non-empty fields
             if (item.question) fieldsToUpdate.Question = decodeHtmlEntities(item.question);
             if (item.answer) fieldsToUpdate.Answer = decodeHtmlEntities(item.answer);
             
+            // Add additional fields
             Object.assign(fieldsToUpdate, decodedAdditionalFields);
             
             await aClient.updateNote(existingNotes[0], fieldsToUpdate);
             await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
             summary.updated++;
-            log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}"`);
+            log(levelApplication, `✅ Updated ${cardType} card: "${item.title}"`);
           } else {
-            // CREATE NEW STANDARD NOTE
+            log(levelVerbose, `Creating standard note ${item.jtaID} in deck "${item.deckName}"`);
             await aClient.createNote(
               item.question, 
               item.answer, 
@@ -113,12 +162,9 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
               item.deckName
             );
             summary.created++;
-            summary.createdItems.push({ 
-              jtaID: item.jtaID, 
-              joplinNoteId: item.joplinNoteId, 
-              index: item.index 
-            });
-            log(levelApplication, `✅ Created standard "${cardType}" card: "${item.title}"`);
+            
+            const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
+            log(levelApplication, `✅ Created ${cardType} card: "${item.title}"`);
           }
         }
       } catch (e) {
@@ -131,6 +177,7 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     await Promise.all(promises);
   }
   
+  // Final summary
   log(levelApplication, `
 📊 Batch Import Summary:
    • Created: ${summary.created}
