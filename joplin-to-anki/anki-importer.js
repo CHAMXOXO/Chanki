@@ -163,6 +163,7 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
                           item.deckName
                         );
                         summary.created++;
+                        
                         // --- CAPTURE THE CREATED ITEM'S COORDINATES ---
                         summary.createdItems.push({ jtaID: item.jtaID, joplinNoteId: item.joplinNoteId, index: item.index }); // <-- ADD THIS
                         
