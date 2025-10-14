@@ -25,7 +25,8 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     skipped: 0, 
     failed: 0, 
     resourcesUploaded: 0, 
-    resourcesFailed: 0 
+    resourcesFailed: 0,
+    createdItems: [] 
   };
   
   log(levelApplication, `📦 Starting batch import of ${items.length} items...`);
@@ -150,29 +151,32 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
             log(levelApplication, `✅ Updated ${cardType} card: "${item.title}"`);
           } else {
             log(levelVerbose, `Creating standard note ${item.jtaID} in deck "${item.deckName}"`);
-            await aClient.createNote(
-              item.question, 
-              item.answer, 
-              item.jtaID, 
-              item.title,
-              item.notebook, 
-              item.tags, 
-              item.folders, 
-              decodedAdditionalFields, 
-              item.deckName
-            );
-            summary.created++;
-            
-            const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
-            log(levelApplication, `✅ Created ${cardType} card: "${item.title}"`);
-          }
-        }
-      } catch (e) {
-        log(levelApplication, `❌ Failed to process JTA ID ${item.jtaID}: ${e.message}`);
-        log(levelDebug, `Error stack: ${e.stack}`);
-        summary.failed++;
-      }
-    });
+                        await aClient.createNote(
+                          item.question, 
+                          item.answer, 
+                          item.jtaID, 
+                          item.title,
+                          item.notebook, 
+                          item.tags, 
+                          item.folders, 
+                          decodedAdditionalFields, 
+                          item.deckName
+                        );
+                        summary.created++;
+                        
+                        // --- CAPTURE THE CREATED ITEM'S COORDINATES ---
+                        summary.createdItems.push({ jtaID: item.jtaID, joplinNoteId: item.joplinNoteId, index: item.index });
+                        
+                        const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
+                        log(levelApplication, `✅ Created ${cardType} card: "${item.title}"`);
+                      }
+                    }
+                  } catch (e) {
+                    log(levelApplication, `❌ Failed to process JTA ID ${item.jtaID}: ${e.message}`);
+                    log(levelDebug, `Error stack: ${e.stack}`);
+                    summary.failed++;
+                  }
+                });
     
     await Promise.all(promises);
   }
