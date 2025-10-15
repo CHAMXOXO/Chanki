@@ -1,4 +1,5 @@
-// Joplin Exporter - FIXED with Index Tracking for Standard Notes
+// Joplin Exporter - DEFINITIVE VERSION
+
 const cheerio = require('cheerio');
 const crypto = require('crypto');
 const { levelApplication, levelVerbose, levelDebug } = require('./log');
@@ -23,9 +24,6 @@ const generateUniqueID = (noteId, index = 0) => {
   return `joplin_${hash.substring(0, 12)}`;
 };
 
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
 const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   const fields = {
     explanation: '', clinicalCorrelation: '', extra: '', header: '', footer: '', sources: '',
@@ -68,104 +66,63 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
     ];
     const optionMatches = optionPatterns.map(p => (questionTextContent.match(p) || [])[1]?.trim() || '');
     if (optionMatches.filter(Boolean).length >= 2) {
-      fields.optionA = optionMatches[0]; 
-      fields.optionB = optionMatches[1];
-      fields.optionC = optionMatches[2]; 
-      fields.optionD = optionMatches[3];
+      fields.optionA = optionMatches[0]; fields.optionB = optionMatches[1];
+      fields.optionC = optionMatches[2]; fields.optionD = optionMatches[3];
     }
   }
   
-  for (const key in fields) {
-    if (!fields[key]) delete fields[key];
-  }
+  for (const key in fields) { if (!fields[key]) delete fields[key]; }
   
   return fields;
 };
 
 const enrichResourcesWithExtension = (resources, log) => {
   if (!resources || resources.length === 0) return resources;
-  
   return resources.map(resource => {
     if (!resource.file_extension && resource.title) {
       const parts = resource.title.split('.');
       const extension = parts.length > 1 ? parts[parts.length - 1] : '';
-      
-      if (extension) {
-        resource.file_extension = extension;
-        log(levelDebug, `[RESOURCE] Enriched resource ${resource.id}: extracted file_extension="${extension}"`);
-      }
+      if (extension) resource.file_extension = extension;
     }
     return resource;
   });
 };
 
 const rewriteResourcePaths = (item, joplinResources, log) => {
-    if (!joplinResources || joplinResources.length === 0) {
-        return item;
-    }
-
-    if (!item.resourcesToUpload) {
-        item.resourcesToUpload = [];
-    }
+    if (!joplinResources || joplinResources.length === 0) return item;
+    if (!item.resourcesToUpload) item.resourcesToUpload = [];
 
     joplinResources.forEach(resource => {
-        if (!resource || !resource.file_extension) {
-            return;
-        }
-
+        if (!resource || !resource.file_extension) return;
         const fileName = `${resource.id}.${resource.file_extension}`;
         const resourceLink = `:/${resource.id}`;
         let found = false;
-
         const fieldsToSearch = ['question', 'answer'];
         if (item.additionalFields) {
-            fieldsToSearch.push('questionImagePath', 'answerImagePath', 
-                               'explanation', 'clinicalCorrelation', 'extra', 
-                               'header', 'footer', 'sources', 'comments');
+            fieldsToSearch.push(...Object.keys(item.additionalFields));
         }
 
         for (const fieldName of fieldsToSearch) {
             let content;
-            
-            if (fieldName === 'question') {
-                content = item.question;
-            } else if (fieldName === 'answer') {
-                content = item.answer;
-            } else if (item.additionalFields) {
-                content = item.additionalFields[fieldName];
-            }
+            if (fieldName === 'question') content = item.question;
+            else if (fieldName === 'answer') content = item.answer;
+            else if (item.additionalFields) content = item.additionalFields[fieldName];
             
             if (content && typeof content === 'string' && content.includes(resourceLink)) {
                 const newContent = content.replace(new RegExp(resourceLink.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), fileName);
-                
-                if (fieldName === 'question') {
-                    item.question = newContent;
-                } else if (fieldName === 'answer') {
-                    item.answer = newContent;
-                } else if (item.additionalFields) {
-                    item.additionalFields[fieldName] = newContent;
-                }
-                
+                if (fieldName === 'question') item.question = newContent;
+                else if (fieldName === 'answer') item.answer = newContent;
+                else if (item.additionalFields) item.additionalFields[fieldName] = newContent;
                 found = true;
             }
         }
-
-        if (found) {
-            if (!item.resourcesToUpload.find(r => r.id === resource.id)) {
-                item.resourcesToUpload.push({
-                    id: resource.id,
-                    fileName: fileName
-                });
-            }
+        if (found && !item.resourcesToUpload.find(r => r.id === resource.id)) {
+            item.resourcesToUpload.push({ id: resource.id, fileName: fileName });
         }
     });
-
     return item;
 };
 
-// ============================================================================
-// MAIN EXPORTER CLASS
-// ============================================================================
 class JoplinExporter {
   constructor(joplinClient, log) {
     this.joplinClient = joplinClient;
@@ -179,14 +136,11 @@ class JoplinExporter {
   }
 
   getNotebookPath(notebookId) {
-    const path = []; 
-    let currentId = notebookId;
+    const path = []; let currentId = notebookId;
     while(currentId) {
         const folder = this.folders.find(f => f.id === currentId);
-        if (folder) { 
-          path.unshift(folder.title); 
-          currentId = folder.parent_id; 
-        } else break;
+        if (folder) { path.unshift(folder.title); currentId = folder.parent_id; }
+        else break;
     }
     return path.join('::');
   }
@@ -198,104 +152,59 @@ class JoplinExporter {
 
     if (jtaBlocks.length === 0) return [];
     
-    this.log(levelDebug, `🔍 Extracting quiz items from note ${note.id} (${note.title})`);
-    
     const details = await this.joplinClient.getNoteDetails(note.id);
     await this.fetchFolders();
-
     const enrichedResources = enrichResourcesWithExtension(details.resources, this.log);
 
-    // ========================================================================
-    // CRITICAL FIX: Track the index of each .jta block
-    // ========================================================================
     jtaBlocks.each((i, el) => {
       const jtaID = $(el).attr("data-id") || generateUniqueID(note.id, i);
       const noteType = $(el).attr('data-note-type');
       let item;
       const isDynamic = dynamicMapper && noteType && dynamicMapper.getAvailableNoteTypes().includes(noteType);
 
-      this.log(levelDebug, `Processing JTA block ${i} (ID: ${jtaID}, Type: ${isDynamic ? noteType : 'standard'})`);
-
       if (isDynamic) {
         const extractedData = dynamicMapper.extractFields($(el).html(), jtaID, noteType);
         if (extractedData) {
           item = {
-            jtaID,
-            index: i, // ← ADD INDEX
-            title: details.note.title,
-            notebook: details.notebook,
-            tags: details.tags,
-            folders: this.folders,
-            question: '',
-            answer: '',
-            additionalFields: {
-              customNoteType: extractedData.modelName,
-              customFields: extractedData.fields,
-            },
-            index: i,                 
+            jtaID, index: i, title: details.note.title, notebook: details.notebook,
+            tags: details.tags, folders: this.folders, question: '', answer: '',
+            additionalFields: { customNoteType: extractedData.modelName, customFields: extractedData.fields },
             joplinNoteId: note.id,    
           };
-        } else {
-          this.log(levelApplication, `⚠️ Skipping JTA block - dynamic mapping failed for "${noteType}"`);
-          return;
-        }
+        } else { return; }
       } else {
         const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
-        
         item = {
-          jtaID,
-          index: i, // ← ADD INDEX FOR STANDARD NOTES TOO
-          title: details.note.title,
-          notebook: details.notebook,
+          jtaID, index: i, title: details.note.title, notebook: details.notebook,
           question: $(el).find(".question").html() || '',
-          answer: $(el).find(".answer").html() || '',
+          answer: $(el).find(".answer-text").html() || '', // <-- THE CORRECTED LINE
           additionalFields: additionalFields,
-          tags: details.tags,
-          folders: this.folders,
-          index: i,                 
-          joplinNoteId: note.id,    
+          tags: details.tags, folders: this.folders, joplinNoteId: note.id,    
         };
       }
       
       rewriteResourcePaths(item, enrichedResources, this.log);
 
       if (!isDynamic) {
-        if (item.question) {
-            const $question = cheerio.load(item.question, null, false);
-            $question('img[data-jta-image-type="question"]').remove();
-            item.question = $question.html();
-        }
-        if (item.answer) {
-            const $answer = cheerio.load(item.answer, null, false);
-            $answer('img[data-jta-image-type="answer"]').remove();
-            $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-            item.answer = $answer.html();
-        }
+          // This cleanup is still valuable for the question field
+          if (item.question) {
+              const $q = cheerio.load(item.question, null, false);
+              $q('img').remove(); // A simpler, more robust cleanup
+              item.question = $q.html();
+          }
       }
 
       item.deckName = premiumDeckHandler 
         ? premiumDeckHandler(details.tags, details.notebook, this.folders, this.log) 
         : this.getNotebookPath(details.notebook.id);
       
-      this.log(levelDebug, `✅ Extracted item ${item.jtaID} (index: ${i})`);
       quizItems.push(item);
     });
 
-    this.log(levelDebug, `📊 Extracted ${quizItems.length} quiz items from note ${note.id}`);
     return quizItems;
   }
 }
 
-async function* exporter(joplinClient, fromDate, log) {
-  log(levelApplication, "⚠️ Using legacy exporter");
-}
+async function* exporter(joplinClient, fromDate, log) { log(levelApplication, "⚠️ Using legacy exporter"); }
 
-module.exports = { 
-  JoplinExporter, 
-  exporter, 
-  typeItem, 
-  typeResource, 
-  typeError, 
-  registerPremiumDeckHandler, 
-  registerDynamicMapper 
-};
+module.exports = { JoplinExporter, exporter, typeItem, typeResource, typeError, registerPremiumDeckHandler, registerDynamicMapper };
