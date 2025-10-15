@@ -26,7 +26,7 @@ const buildAnkiFieldsObject = (question, answer, jtaID, inferredType, enhancedFi
             fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation; fields["Footer"] = enhancedFields.footer;
             fields["Sources"] = enhancedFields.sources;
             break;
-        case 'imageOcclusion':
+        case 'image':
             fields["Header"] = enhancedFields.header; fields["QuestionImagePath"] = enhancedFields.questionImagePath;
             fields["AnswerImagePath"] = enhancedFields.answerImagePath; fields["AltText"] = enhancedFields.altText;
             fields["Question"] = question; fields["Answer"] = answer; fields["Origin"] = enhancedFields.origin;
@@ -119,7 +119,7 @@ class AnkiClient {
 
   detectCardType(question, answer, additionalFields = {}) {
     if (/\{\{c\d+::[^}]+\}\}/g.test(question || "")) return "cloze";
-    if ((additionalFields.questionImagePath||'').trim() || (additionalFields.answerImagePath||'').trim()) return "imageOcclusion";
+    if ((additionalFields.questionImagePath||'').trim() || (additionalFields.answerImagePath||'').trim()) return "image";
     const hasCorrectAnswer = (additionalFields.correctAnswer || '').trim().length > 0;
     const options = [additionalFields.optionA, additionalFields.optionB, additionalFields.optionC, additionalFields.optionD];
     const hasMinOptions = options.filter(opt => (opt || '').trim().length > 0).length >= 2;
@@ -313,7 +313,7 @@ const models = {
   basic: { name: "Joplin to Anki Basic Enhanced", fields: [ "Header", "Question", "Answer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
   cloze: { name: "Joplin to Anki Cloze Enhanced", fields: [ "Header", "Text", "Extra", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ], isCloze: true },
   mcq: { name: "Joplin to Anki MCQ Enhanced", fields: [ "Header", "Question", "OptionA", "OptionB", "OptionC", "OptionD", "CorrectAnswer", "Explanation", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] },
-  imageOcclusion: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
+  image: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
 };
 
 module.exports = AnkiClient;
