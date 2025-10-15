@@ -36,6 +36,31 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     
     const promises = batch.map(async (item) => {
       try {
+        // ====================================================================
+        // PHASE 1: UPLOAD RESOURCES (CRITICAL FIX)
+        // ====================================================================
+        if (item.resourcesToUpload && item.resourcesToUpload.length > 0 && jClient) {
+          log(levelApplication, `[MEDIA] 🎬 Uploading ${item.resourcesToUpload.length} resources for ${item.jtaID}...`);
+          
+          for (const resource of item.resourcesToUpload) {
+            try {
+              const fileData = await jClient.request(
+                jClient.urlGen("resources", resource.id, "file"), 
+                "GET", undefined, undefined, false, "binary"
+              );
+              
+              if (!fileData) throw new Error(`No data for resource ${resource.id}`);
+              
+              await aClient.storeMedia(resource.fileName, fileData);
+              summary.resourcesUploaded++;
+              log(levelApplication, `✅ [MEDIA] Uploaded ${resource.fileName}`);
+            } catch (e) {
+              summary.resourcesFailed++;
+              log(levelApplication, `❌ [MEDIA] Failed: ${resource.fileName}: ${e.message}`);
+            }
+          }
+        }
+        
         await aClient.ensureDeckExists(item.deckName);
         const existingNotes = await aClient.findNote(item.jtaID, item.deckName);
         

@@ -24,6 +24,8 @@ const generateUniqueID = (noteId, index = 0) => {
   return `joplin_${hash.substring(0, 12)}`;
 };
 
+// HELPER FUNCTIONS
+
 const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   const fields = {
     explanation: '', clinicalCorrelation: '', extra: '', header: '', footer: '', sources: '',
@@ -76,35 +78,26 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   return fields;
 };
 
-/**
- * FIXED: Enriches resources with file_extension extracted from the title field.
- * The Joplin API returns resources with id and title, but not file_extension.
- * We extract the extension from the title (e.g., "filename.png" -> "png").
- */
-
 const enrichResourcesWithExtension = (resources, log) => {
   if (!resources || resources.length === 0) return resources;
   
   return resources.map(resource => {
-    if (!resource.file_extension && resource.title) {
-      // Extract extension from title
-      const parts = resource.title.split('.');
-      const extension = parts.length > 1 ? parts[parts.length - 1] : '';
-      
-      if (extension) resource.file_extension = extension;
-      log(levelDebug, `[RESOURCE] Enriched resource ${resource.id}: extracted file_extension="${extension}" from title="${resource.title}"`);
+      if (!resource.file_extension && resource.title) {
+        // Extract extension from title
+        const parts = resource.title.split('.');
+        const extension = parts.length > 1 ? parts[parts.length - 1] : '';
+        
+        if (extension) {
+          resource.file_extension = extension;
+          log(levelDebug, `[RESOURCE] Enriched resource ${resource.id}: extracted file_extension="${extension}" from title="${resource.title}"`);
         } else {
-        	log(levelApplication, `⚠️ Could not extract file_extension from title "${resource.title}" for resource ${resource.id}`);
+          log(levelApplication, `⚠️ Could not extract file_extension from title "${resource.title}" for resource ${resource.id}`);
         }
-    }
-    return resource;
-  });
-};
+      }
+      return resource;
+    });
+  };
 
-/**
- * CRITICAL FIX: This function now properly converts Joplin resource paths
- * to Anki-friendly filenames AND populates the resourcesToUpload array.
- */
 const rewriteResourcePaths = (item, joplinResources, log) => {
     if (!joplinResources || joplinResources.length === 0) {
         log(levelDebug, `[RESOURCE] No resources provided for JTA ID ${item.jtaID}`);
@@ -138,8 +131,7 @@ const rewriteResourcePaths = (item, joplinResources, log) => {
         if (item.additionalFields) {
             fieldsToSearch.push('questionImagePath', 'answerImagePath', 
                                'explanation', 'clinicalCorrelation', 'extra', 
-                               'header', 'footer', 'sources', 'comments', 'action', 'innervation',
-                               'insertion', 'origin');
+                               'header', 'footer', 'sources', 'comments');
         }
 
         for (const fieldName of fieldsToSearch) {
@@ -172,22 +164,34 @@ const rewriteResourcePaths = (item, joplinResources, log) => {
         }
 
         if (found) {
-            if (!item.resourcesToUpload.find(r => r.id === resource.id)) {
-                item.resourcesToUpload.push({
-                    id: resource.id,
-                    fileName: fileName
-                });
-                log(levelApplication, `📎 Queued resource for upload: ${fileName} (ID: ${resource.id})`);
-            }
-        } else {
-            log(levelDebug, `[RESOURCE] Resource ${resource.id} not found in any fields`);
+                    if (!item.resourcesToUpload.find(r => r.id === resource.id)) {
+                        item.resourcesToUpload.push({
+                            id: resource.id,
+                            fileName: fileName
+                        });
+                        log(levelApplication, `📎 Queued resource for upload: ${fileName} (ID: ${resource.id})`);
+                    }
+                } else {
+                    log(levelDebug, `[RESOURCE] Resource ${resource.id} not found in any fields`);
+                }
+            });
+        
+            log(levelApplication, `[RESOURCE] 📊 Total queued for upload: ${item.resourcesToUpload.length}`);
+            return item;
+        };
+        
+const cleanupFieldHtml = (fieldObject) => {
+    for (const key in fieldObject) {
+        if (typeof fieldObject[key] === 'string' && fieldObject[key].includes('<summary>')) {
+            const $ = cheerio.load(fieldObject[key], null, false);
+            $('summary').remove();
+            fieldObject[key] = $.html();
         }
-    });
-
-    log(levelApplication, `[RESOURCE] 📊 Total queued for upload: ${item.resourcesToUpload.length}`);
-    return item;
-};
-
+    }
+    return fieldObject;
+}
+        
+// MAIN EXPORTER CLASS
 class JoplinExporter {
   constructor(joplinClient, log) {
     this.joplinClient = joplinClient;
@@ -225,13 +229,6 @@ class JoplinExporter {
       const details = await this.joplinClient.getNoteDetails(note.id);
       await this.fetchFolders();
   
-      this.log(levelApplication, `[RESOURCE] 📦 Note has ${details.resources?.length || 0} resources attached`);
-      if (details.resources && details.resources.length > 0) {
-          details.resources.forEach(r => {
-              this.log(levelDebug, `[RESOURCE] - Resource ID: ${r.id}, Title: ${r.title}, Has file_extension: ${r.hasOwnProperty('file_extension')}`);
-          });
-      }
-  
       // === FIX: Enrich resources with file_extension before processing ===
       const enrichedResources = enrichResourcesWithExtension(details.resources, this.log);
   
@@ -248,6 +245,7 @@ class JoplinExporter {
           if (extractedData) {
             item = {
               jtaID,
+              index: i,
               title: details.note.title,
               notebook: details.notebook,
               tags: details.tags,
@@ -257,6 +255,7 @@ class JoplinExporter {
               additionalFields: {
                 customNoteType: extractedData.modelName,
                 customFields: extractedData.fields,
+                joplinNoteID: note.id,
               },
             };
             this.log(levelDebug, `Created dynamic note item for ${jtaID}`);
@@ -269,6 +268,7 @@ class JoplinExporter {
           
           item = {
             jtaID,
+            index: i,
             title: details.note.title,
             notebook: details.notebook,
             question: $(el).find(".question").html() || '',
@@ -276,36 +276,28 @@ class JoplinExporter {
             additionalFields: additionalFields,
             tags: details.tags,
             folders: this.folders,
+            joplinNoteId: note.id,
           };
           this.log(levelDebug, `Created standard note item for ${jtaID}`);
         }
         
-        // === STEP 2: REWRITE RESOURCE PATHS (with enriched resources) ===
-        this.log(levelDebug, `[RESOURCE] About to rewrite paths for ${jtaID}...`);
+        // === STEP 2: REWRITE RESOURCE PATHS (with enriched resources) ===;
         rewriteResourcePaths(item, enrichedResources, this.log);
   
         // === STEP 3: CLEANUP HTML ===
         if (!isDynamic) {
-          if (item.question) {
-              const $question = cheerio.load(item.question, null, false);
-              const removedQuestionImgs = $question('img[data-jta-image-type="question"]').length;
-              $question('img[data-jta-image-type="question"]').remove();
-              item.question = $question.html();
-              if (removedQuestionImgs > 0) {
-                  this.log(levelDebug, `Removed ${removedQuestionImgs} question images from HTML`);
-              }
-          }
-          if (item.answer) {
-              const $answer = cheerio.load(item.answer, null, false);
-              const removedAnswerImgs = $answer('img[data-jta-image-type="answer"]').length;
-              $answer('img[data-jta-image-type="answer"]').remove();
-              $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-              item.answer = $answer.html();
-              if (removedAnswerImgs > 0) {
-                  this.log(levelDebug, `Removed ${removedAnswerImgs} answer images from HTML`);
-              }
-          }
+        if (item.question) {
+            const $question = cheerio.load(item.question, null, false);
+            $question('img[data-jta-image-type="question"]').remove();
+            item.question = $question.html();
         }
+        if (item.answer) {
+            const $answer = cheerio.load(item.answer, null, false);
+            $answer('img[data-jta-image-type="answer"]').remove();
+            $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+            item.answer = $answer.html();
+        }
+      }
 
       // === STEP 4: FINALIZE ===
       item.deckName = premiumDeckHandler 
