@@ -24,8 +24,6 @@ const generateUniqueID = (noteId, index = 0) => {
   return `joplin_${hash.substring(0, 12)}`;
 };
 
-// HELPER FUNCTIONS
-
 const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   const fields = {
     explanation: '', clinicalCorrelation: '', extra: '', header: '', footer: '', sources: '',
@@ -131,7 +129,8 @@ const rewriteResourcePaths = (item, joplinResources, log) => {
         if (item.additionalFields) {
             fieldsToSearch.push('questionImagePath', 'answerImagePath', 
                                'explanation', 'clinicalCorrelation', 'extra', 
-                               'header', 'footer', 'sources', 'comments');
+                               'header', 'footer', 'sources', 'comments', 'action', 'innervation',
+                               'insertion', 'origin');
         }
 
         for (const fieldName of fieldsToSearch) {
@@ -180,18 +179,7 @@ const rewriteResourcePaths = (item, joplinResources, log) => {
             return item;
         };
         
-const cleanupFieldHtml = (fieldObject) => {
-    for (const key in fieldObject) {
-        if (typeof fieldObject[key] === 'string' && fieldObject[key].includes('<summary>')) {
-            const $ = cheerio.load(fieldObject[key], null, false);
-            $('summary').remove();
-            fieldObject[key] = $.html();
-        }
-    }
-    return fieldObject;
-}
-        
-// MAIN EXPORTER CLASS
+
 class JoplinExporter {
   constructor(joplinClient, log) {
     this.joplinClient = joplinClient;
@@ -286,18 +274,20 @@ class JoplinExporter {
   
         // === STEP 3: CLEANUP HTML ===
         if (!isDynamic) {
-        if (item.question) {
-            const $question = cheerio.load(item.question, null, false);
-            $question('img[data-jta-image-type="question"]').remove();
-            item.question = $question.html();
+          if (item.question) {
+              const $question = cheerio.load(item.question, null, false);
+              const removedQuestionImgs = $question('img[data-jta-image-type="question"]').length;
+              $question('img[data-jta-image-type="question"]').remove();
+              item.question = $question.html();
+          }
+          if (item.answer) {
+              const $answer = cheerio.load(item.answer, null, false);
+              const removedAnswerImgs = $answer('img[data-jta-image-type="answer"]').length;
+              $answer('img[data-jta-image-type="answer"]').remove();
+              $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+              item.answer = $answer.html();
+          }
         }
-        if (item.answer) {
-            const $answer = cheerio.load(item.answer, null, false);
-            $answer('img[data-jta-image-type="answer"]').remove();
-            $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-            item.answer = $answer.html();
-        }
-      }
 
       // === STEP 4: FINALIZE ===
       item.deckName = premiumDeckHandler 
