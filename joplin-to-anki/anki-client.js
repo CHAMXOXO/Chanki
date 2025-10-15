@@ -234,6 +234,9 @@ class AnkiClient {
     return this.doRequest({ action: "findNotes", version: 6, params: { query } });
   }
 
+    // In anki-client.js, find the getAllJtaNotesInfo() method (around line 180-220)
+    // Replace the entire method with this version:
+    
     async getAllJtaNotesInfo() {
       this.log(levelVerbose, '🔍 Fetching all JTA notes from Anki for state comparison...');
       const noteIds = await this.doRequest({
@@ -252,10 +255,13 @@ class AnkiClient {
         if (note && note.fields && note.fields['Joplin to Anki ID']) {
           const jtaID = note.fields['Joplin to Anki ID'].value;
           if (jtaID) {
+            // STEP 2 FIX: Normalize Anki mod time to ISO string with .000Z
+            const ankiModTimeUtc = new Date(note.mod * 1000).toISOString().replace(/\.\d{3}Z$/, '.000Z');
+            
             notesMap.set(jtaID, {
               ankiNoteId: note.noteId,
               modelName: note.modelName,
-              ankiModTimeUtc: new Date(note.mod * 1000).toISOString(),
+              ankiModTimeUtc: ankiModTimeUtc,
               fields: note.fields,
               tags: note.tags,
             });
