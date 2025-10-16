@@ -1645,7 +1645,23 @@ basic_model = Model(
 }
 .toggle-btn:hover {
     transform: translateY(-3px) scale(1.05);
-    animation-play-state: paused;
+    animation-play-state: paused;<span class="">
+  <div class="header">%%Header%%</div>
+  <span class="question">
+    %%Question%%<br><br>
+    A) %%OptionA%%<br>
+    B) %%OptionB%%<br>
+    C) %%OptionC%%<br>
+    D) %%OptionD%%
+  </span>
+  <details class="answer">
+    <div class="correct-answer">%%CorrectAnswer%%</div>
+    <div class="explanation">%%Explanation%%</div>
+    <div class="correlation">%%Clinical Correlation%%</div>
+<div class="footer">%%Footer%%</div>
+  <div class="sources">%%Sources%%</div>
+  </details>
+</span> 
 }
 .toggle-btn:active {
     transform: translateY(0);
