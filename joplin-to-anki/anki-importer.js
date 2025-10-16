@@ -1,4 +1,4 @@
-// anki-importer.js - FIXED Logging for Standard Notes
+// anki-importer.js - FIXED with proper field deletion support
 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
@@ -36,9 +36,7 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     
     const promises = batch.map(async (item) => {
       try {
-        // ====================================================================
-        // PHASE 1: UPLOAD RESOURCES (CRITICAL FIX)
-        // ====================================================================
+        // PHASE 1: UPLOAD RESOURCES
         if (item.resourcesToUpload && item.resourcesToUpload.length > 0 && jClient) {
           log(levelApplication, `[MEDIA] 🎬 Uploading ${item.resourcesToUpload.length} resources for ${item.jtaID}...`);
           
@@ -67,9 +65,7 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
         const isCustomNote = item.additionalFields && item.additionalFields.customNoteType;
         
         if (isCustomNote) {
-          // ========================================================================
           // CUSTOM NOTE TYPE HANDLING
-          // ========================================================================
           const modelName = item.additionalFields.customNoteType;
           const fields = Object.fromEntries(
             Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
@@ -91,30 +87,52 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
             log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
           }
         } else {
-          // ========================================================================
-          // STANDARD NOTE TYPE HANDLING (FIXED LOGGING)
-          // ========================================================================
+          // STANDARD NOTE TYPE HANDLING
           const decodedAdditionalFields = Object.fromEntries(
-            Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
+            Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v || '')])
           );
           
           const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
           
           if (existingNotes && existingNotes.length > 0) {
-            // UPDATE EXISTING STANDARD NOTE
+            // === FIX: UPDATE WITH PROPER FIELD CLEARING ===
             const fieldsToUpdate = {};
             
-            if (item.question) fieldsToUpdate.Question = decodeHtmlEntities(item.question);
-            if (item.answer) fieldsToUpdate.Answer = decodeHtmlEntities(item.answer);
+            // Always include Question and Answer (use empty string if not present)
+            fieldsToUpdate.Question = decodeHtmlEntities(item.question || '');
+            fieldsToUpdate.Answer = decodeHtmlEntities(item.answer || '');
             
-            Object.assign(fieldsToUpdate, decodedAdditionalFields);
+            // === FIX: Include ALL possible fields, even if empty ===
+            // This ensures deleted fields get cleared in Anki
+            // IMPORTANT: %%FieldName%% is treated as VALID content, not a placeholder
+            const allPossibleFields = [
+              'Header', 'Footer', 'Sources', 'Explanation', 'Clinical Correlation',
+              'Extra', 'Comments', 'Origin', 'Insertion', 'Innervation', 'Action',
+              'OptionA', 'OptionB', 'OptionC', 'OptionD', 'CorrectAnswer',
+              'QuestionImagePath', 'AnswerImagePath', 'AltText'
+            ];
+            
+            for (const fieldName of allPossibleFields) {
+              const camelCase = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
+              let fieldValue = '';
+              
+              if (decodedAdditionalFields.hasOwnProperty(camelCase)) {
+                fieldValue = decodedAdditionalFields[camelCase];
+              } else if (decodedAdditionalFields.hasOwnProperty(fieldName)) {
+                fieldValue = decodedAdditionalFields[fieldName];
+              }
+              
+              // Only send to Anki if field exists in the model
+              // Empty string is valid and will clear the field
+              fieldsToUpdate[fieldName] = fieldValue || '';
+            }
             
             await aClient.updateNote(existingNotes[0], fieldsToUpdate);
             await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
             summary.updated++;
-            log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}"`);
+            log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}" (${Object.keys(fieldsToUpdate).length} fields)`);
           } else {
-            // CREATE NEW STANDARD NOTE
+            // CREATE NEW
             await aClient.createNote(
               item.question, 
               item.answer, 
