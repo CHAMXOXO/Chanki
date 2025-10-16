@@ -1,4 +1,4 @@
-// anki-client.js 
+// anki-client.js - FIXED
 
 const axios = require('axios');
 const fs = require('fs').promises;
@@ -43,12 +43,12 @@ class AnkiClient {
   constructor(ankiURL = "http://127.0.0.1:8765", log = console.log) {
     this.baseUrl = ankiURL;
     this.log = log;
-    this.deckCache = new Set(); // Cache to avoid repeated deck creation calls
+    this.deckCache = new Set();
   }
 
   async doRequest(payload) {
     const maxRetries = 5;
-    const baseTimeout = 5000; // Start with a 5-second timeout
+    const baseTimeout = 5000;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -234,78 +234,84 @@ class AnkiClient {
     return this.doRequest({ action: "findNotes", version: 6, params: { query } });
   }
 
-    // In anki-client.js, find the getAllJtaNotesInfo() method (around line 180-220)
-    // Replace the entire method with this version:
-    
-    async getAllJtaNotesInfo() {
-      this.log(levelVerbose, '🔍 Fetching all JTA notes from Anki for state comparison...');
-      const noteIds = await this.doRequest({
-        action: "findNotes",
-        version: 6,
-        params: { query: `"Joplin to Anki ID:*"` }
-      });
-      if (!noteIds || noteIds.length === 0) {
-        this.log(levelApplication, 'ℹ️ No existing JTA notes found in Anki.');
-        return new Map();
-      }
-      this.log(levelDebug, `Found ${noteIds.length} JTA notes in Anki. Fetching their info...`);
-      const notesInfo = await this.getNoteInfo(noteIds);
-      const notesMap = new Map();
-      for (const note of notesInfo) {
-        if (note && note.fields && note.fields['Joplin to Anki ID']) {
-          const jtaID = note.fields['Joplin to Anki ID'].value;
-          if (jtaID) {
-            // STEP 2 FIX: Normalize Anki mod time to ISO string with .000Z
-            const ankiModTimeUtc = new Date(note.mod * 1000).toISOString().replace(/\.\d{3}Z$/, '.000Z');
-            
-            notesMap.set(jtaID, {
-              ankiNoteId: note.noteId,
-              modelName: note.modelName,
-              ankiModTimeUtc: ankiModTimeUtc,
-              fields: note.fields,
-              tags: note.tags,
-            });
-          }
+  async getAllJtaNotesInfo() {
+    this.log(levelVerbose, '🔍 Fetching all JTA notes from Anki for state comparison...');
+    const noteIds = await this.doRequest({
+      action: "findNotes",
+      version: 6,
+      params: { query: `"Joplin to Anki ID:*"` }
+    });
+    if (!noteIds || noteIds.length === 0) {
+      this.log(levelApplication, 'ℹ️ No existing JTA notes found in Anki.');
+      return new Map();
+    }
+    this.log(levelDebug, `Found ${noteIds.length} JTA notes in Anki. Fetching their info...`);
+    const notesInfo = await this.getNoteInfo(noteIds);
+    const notesMap = new Map();
+    for (const note of notesInfo) {
+      if (note && note.fields && note.fields['Joplin to Anki ID']) {
+        const jtaID = note.fields['Joplin to Anki ID'].value;
+        if (jtaID) {
+          const ankiModTimeUtc = new Date(note.mod * 1000).toISOString().replace(/\.\d{3}Z$/, '.000Z');
+          
+          notesMap.set(jtaID, {
+            ankiNoteId: note.noteId,
+            modelName: note.modelName,
+            ankiModTimeUtc: ankiModTimeUtc,
+            fields: note.fields,
+            tags: note.tags,
+          });
         }
       }
-      this.log(levelVerbose, `✅ Successfully processed info for ${notesMap.size} Anki notes.`);
-      return notesMap;
     }
+    this.log(levelVerbose, `✅ Successfully processed info for ${notesMap.size} Anki notes.`);
+    return notesMap;
+  }
 
-  /**
-   * Retrieves full note information for a specific list of JTA IDs.
-   * @param {string[]} jtaIds - An array of Joplin to Anki IDs.
-   * @returns {Promise<any[]>} A promise that resolves to an array of note info objects.
-   */
   async getNotesInfoByJtaIds(jtaIds) {
-      if (!jtaIds || jtaIds.length === 0) {
-          return [];
+    if (!jtaIds || jtaIds.length === 0) {
+      return [];
+    }
+    
+    const allNotes = [];
+    
+    for (const jtaID of jtaIds) {
+      try {
+        const noteIds = await this.doRequest({
+          action: "findNotes",
+          version: 6,
+          params: { query: `"Joplin to Anki ID:${jtaID}"` }
+        });
+        
+        if (noteIds && noteIds.length > 0) {
+          const notesInfo = await this.doRequest({
+            action: "notesInfo",
+            version: 6,
+            params: { notes: noteIds }
+          });
+          allNotes.push(...notesInfo);
+        }
+      } catch (e) {
+        this.log(levelVerbose, `⚠️ Could not fetch note for JTA ID ${jtaID}: ${e.message}`);
       }
-      
-      const allNotes = [];
-      
-      for (const jtaID of jtaIds) {
-          try {
-              const noteIds = await this.doRequest({
-                  action: "findNotes",
-                  version: 6,
-                  params: { query: `"Joplin to Anki ID:${jtaID}"` }
-              });
-              
-              if (noteIds && noteIds.length > 0) {
-                  const notesInfo = await this.doRequest({
-                      action: "notesInfo",
-                      version: 6,
-                      params: { notes: noteIds }
-                  });
-                  allNotes.push(...notesInfo);
-              }
-          } catch (e) {
-              this.log(levelVerbose, `⚠️ Could not fetch note for JTA ID ${jtaID}: ${e.message}`);
-          }
-      }
-      
-      return allNotes;
+    }
+    
+    return allNotes;
+  }
+
+  async retrieveMediaFile(filename) {
+    try {
+      this.log(levelDebug, `Retrieving media file from Anki: ${filename}`);
+      const result = await this.doRequest({
+        action: "retrieveMediaFile",
+        version: 6,
+        params: { filename: filename }
+      });
+      return result;
+    } catch (error) {
+      this.log(levelApplication, `⚠️ Failed to retrieve media file ${filename}: ${error.message}`);
+      return false;
+    }
   }
 }
 

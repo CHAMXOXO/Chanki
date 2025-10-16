@@ -1,8 +1,9 @@
-// joplin-client.js - DIAGNOSTIC VERSION
+// joplin-client.js - COMPLETE VERSION with Media Support
 
 const axios = require("axios");
 const fs = require('fs').promises;
 const path = require('path');
+const FormData = require('form-data');
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
 const healthyPingResponse = "JoplinClipperServer";
@@ -186,7 +187,6 @@ const newClient = (url, token, log) => {
       return allNotes;
     },
 
-    // DIAGNOSTIC: Enhanced getNoteDetails with detailed resource logging
     async getNoteDetails(noteId) {
       try {
         log(levelDebug, `Fetching details for note ${noteId}`);
@@ -237,7 +237,6 @@ const newClient = (url, token, log) => {
         const notebook = foldersArray.find(folder => folder.id === fullNote.parent_id) || 
           { title: "Unknown", id: fullNote.parent_id };
 
-        // === DIAGNOSTIC: Detailed resource inspection ===
         const resources = Array.isArray(resourcesResponse) ? resourcesResponse : 
           (Array.isArray(resourcesResponse?.items) ? resourcesResponse.items : []);
 
@@ -305,6 +304,68 @@ const newClient = (url, token, log) => {
       } catch (error) {
         this.log(levelApplication, `Error updating note body for ${noteId}: ${error.message}`);
         throw error;
+      }
+    },
+
+    async createResource(buffer, filename, mimeType, noteId = null) {
+      const form = new FormData();
+      
+      form.append('data', buffer, {
+        filename: filename,
+        contentType: mimeType
+      });
+      
+      const props = {
+        title: filename,
+        mime: mimeType
+      };
+      form.append('props', JSON.stringify(props));
+      
+      try {
+        const params = new URLSearchParams();
+        params.append('token', this.token);
+        
+        const config = {
+          method: 'POST',
+          url: `/resources?${params.toString()}`,
+          data: form,
+          headers: {
+            ...form.getHeaders()
+          },
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
+        };
+        
+        const response = await makeRequestWithRetry(config);
+        
+        this.log(levelDebug, `Created resource: ${response.id} (${filename})`);
+        
+        if (noteId && response.id) {
+          await this.attachResourceToNote(response.id, noteId);
+        }
+        
+        return response;
+      } catch (error) {
+        this.log(levelApplication, `❌ Failed to create resource: ${error.message}`);
+        throw error;
+      }
+    },
+
+    async attachResourceToNote(resourceId, noteId) {
+      try {
+        const params = new URLSearchParams();
+        params.append('token', this.token);
+        
+        await makeRequestWithRetry({
+          method: 'POST',
+          url: `/notes/${noteId}/resources?${params.toString()}`,
+          data: { id: resourceId },
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        this.log(levelDebug, `Attached resource ${resourceId} to note ${noteId}`);
+      } catch (error) {
+        this.log(levelVerbose, `Could not attach resource to note: ${error.message}`);
       }
     },
 
