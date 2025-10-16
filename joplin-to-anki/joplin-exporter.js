@@ -1,4 +1,4 @@
-// Joplin Exporter - FIXED VERSION (Image Field Preservation)
+// Joplin Exporter - FIXED VERSION (MCQ Cleanup + Image Field Preservation)
 
 const cheerio = require('cheerio');
 const crypto = require('crypto');
@@ -45,7 +45,6 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
   fields.innervation = $('.innervation', jtaElement).html()?.trim() || '';
   fields.action = $('.action', jtaElement).html()?.trim() || '';
   
-  // === FIX #1: Extract image paths BEFORE cleanup ===
   const questionImgEl = $('img[data-jta-image-type="question"]', jtaElement);
   if (questionImgEl.length > 0) {
     fields.questionImagePath = questionImgEl.attr('src') || '';
@@ -59,6 +58,7 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
     log(levelDebug, `[EXTRACT] Found answerImagePath: ${fields.answerImagePath}`);
   }
   
+  // For MCQ, we extract from the plain text content of the .question div
   const questionTextContent = ($('.question', jtaElement).text() || "");
   if (questionTextContent.length > 0) {
     const optionPatterns = [
@@ -68,17 +68,14 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
         /(?:D\)|D\.)\s*([\s\S]*?)(?=\s*$)/i
     ];
     const optionMatches = optionPatterns.map(p => (questionTextContent.match(p) || [])[1]?.trim() || '');
+    
+    // Check if at least two options were found to consider it an MCQ
     if (optionMatches.filter(Boolean).length >= 2) {
-      fields.optionA = optionMatches[0]; fields.optionB = optionMatches[1];
-      fields.optionC = optionMatches[2]; fields.optionD = optionMatches[3];
-
-    fields.Question = questionTextContent
-        .replace(/(?:[A-D]\)|[A-D]\.)\s*[\s\S]*?(?=(?:[A-D]\)|[A-D]\.|$))/gi, '')
-        .replace(/\n\s*\n\s*\n/g, '\n\n')  // Multiple newlines → double newline
-        .replace(/[ \t]+/g, ' ')            // Multiple spaces/tabs → single space
-        .replace(/^\s+|\s+$/gm, '')         // Trim each line
-        .replace(/\n{3,}/g, '\n\n')         // Max 2 consecutive newlines
-        .trim(); 
+      log(levelDebug, '[EXTRACT-MCQ] Detected options, assigning to fields.');
+      fields.optionA = optionMatches[0]; 
+      fields.optionB = optionMatches[1];
+      fields.optionC = optionMatches[2]; 
+      fields.optionD = optionMatches[3];
     }
   }
   
@@ -260,15 +257,39 @@ class JoplinExporter {
             return;
           }
         } else {
-          // === FIX #2: Extract additional fields FIRST (includes image paths) ===
           const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
           
+          let questionHtml = $(el).find(".question").html() || '';
+
+          // =================================================================
+          // ### START: FIX FOR MCQ DUPLICATION AND CLEANUP ###
+          // =================================================================
+          // If options were found, this is an MCQ card. We must clean them from the main question field.
+          if (additionalFields.optionA || additionalFields.optionB || additionalFields.optionC || additionalFields.optionD) {
+            this.log(levelDebug, `[CLEANUP-MCQ] Options detected. Removing them from the main question HTML.`);
+            
+            // This regex finds option markers (e.g., "A)", "B.") and everything following them
+            // until the next option marker or the end of the content.
+            const optionRemovalPattern = /(<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)\s*[\s\S]*?(?=(?:<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)|$)/gi;
+
+            // Replace the matched options with an empty string
+            questionHtml = questionHtml.replace(optionRemovalPattern, '');
+
+            // Trim any leftover whitespace or <br> tags from the end to prevent empty lines
+            questionHtml = questionHtml.replace(/(<br\s*\/?>|\s)*$/, '').trim();
+
+            this.log(levelDebug, `[CLEANUP-MCQ] Cleaned Question HTML: ${questionHtml}`);
+          }
+          // =================================================================
+          // ### END: FIX FOR MCQ DUPLICATION AND CLEANUP ###
+          // =================================================================
+
           item = {
             jtaID,
             index: i,
             title: details.note.title,
             notebook: details.notebook,
-            question: $(el).find(".question").html() || '',
+            question: questionHtml, // Use the now-cleaned question HTML
             answer: $(el).find(".answer").html() || '',
             additionalFields: additionalFields,
             tags: details.tags,
@@ -278,23 +299,20 @@ class JoplinExporter {
           this.log(levelDebug, `Created standard note item for ${jtaID}`);
         }
         
-        // Rewrite resource paths
         rewriteResourcePaths(item, enrichedResources, this.log);
 
-        // === FIX #3: CLEANUP HTML - Now safe because image paths already extracted ===
+        // Standard cleanup logic (now safe for MCQs)
         if (!isDynamic) {
           if (item.question) {
               const $question = cheerio.load(item.question, null, false);
               $question('img[data-jta-image-type="question"]').remove();
               item.question = $question.html();
-              this.log(levelDebug, `[CLEANUP] Removed question image from question field (already in questionImagePath)`);
           }
           if (item.answer) {
               const $answer = cheerio.load(item.answer, null, false);
               $answer('img[data-jta-image-type="answer"]').remove();
               $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
               item.answer = $answer.html();
-              this.log(levelDebug, `[CLEANUP] Removed answer image and nested fields from answer field`);
           }
         }
 
@@ -303,8 +321,6 @@ class JoplinExporter {
         : this.getNotebookPath(details.notebook.id);
       
       this.log(levelApplication, `✅ Extracted item ${item.jtaID} with ${item.resourcesToUpload?.length || 0} resources queued`);
-      this.log(levelDebug, `   - questionImagePath: ${item.additionalFields?.questionImagePath || 'none'}`);
-      this.log(levelDebug, `   - answerImagePath: ${item.additionalFields?.answerImagePath || 'none'}`);
       
       quizItems.push(item);
     });
