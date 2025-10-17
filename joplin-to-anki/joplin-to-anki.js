@@ -70,7 +70,8 @@ const run = async (logLevel, joplinURL, joplinToken, exportFromDate, ankiURL, op
   } else {
     // FREE / LEGACY PATH: Run the original one-way sync logic
     log(levelApplication, "Running with Free One-Way Sync Logic...");
-    await runLegacyOneWaySync(jClient, aClient, exportFromDate, options);
+    await 
+    (jClient, aClient, exportFromDate, options);
   }
 
   log(levelApplication, "✨ SYNC COMPLETED");
@@ -110,7 +111,7 @@ async function runLegacyOneWaySync(jClient, aClient, exportFromDate, options) {
                     };
                 }
             });
-            const results = await batchImporter(aClient, processedItems, batchSize, log);
+            const results = await batchImporter(aClient, processedItems, batchSize, log, jClient, {}); // Empty map for legacy sync
             sync.summary.created += results.created;
             sync.summary.updated += results.updated;
             sync.summary.skipped += results.skipped;

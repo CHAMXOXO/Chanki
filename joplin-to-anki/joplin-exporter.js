@@ -211,123 +211,115 @@ class JoplinExporter {
       return path.join('::');
     }
   
-  async extractQuizItems(note) {
-      const quizItems = [];
-      const $ = cheerio.load(note.body);
-      const jtaBlocks = $(".jta");
+  // PASTE THIS ENTIRE BLOCK TO REPLACE THE OLD extractQuizItems FUNCTION
   
-      if (jtaBlocks.length === 0) return [];
-      
-      this.log(levelApplication, `🔍 Extracting quiz items from note ${note.id} (${note.title})`);
-      
-      const details = await this.joplinClient.getNoteDetails(note.id);
-      await this.fetchFolders();
-
-      const enrichedResources = enrichResourcesWithExtension(details.resources, this.log);
-
-      jtaBlocks.each((i, el) => {
-        const jtaID = $(el).attr("data-id") || generateUniqueID(note.id, i);
-        const noteType = $(el).attr('data-note-type');
-        let item;
-        const isDynamic = dynamicMapper && noteType && dynamicMapper.getAvailableNoteTypes().includes(noteType);
-
-        this.log(levelDebug, `Processing JTA block ${i} (ID: ${jtaID}, Type: ${isDynamic ? noteType : 'standard'})`);
-
-        if (isDynamic) {
-          const extractedData = dynamicMapper.extractFields($(el).html(), jtaID, noteType);
-          if (extractedData) {
+    async extractQuizItems(note) {
+        const quizItems = [];
+        const $ = cheerio.load(note.body);
+        const jtaBlocks = $(".jta");
+    
+        if (jtaBlocks.length === 0) return [];
+        
+        this.log(levelApplication, `🔍 Extracting quiz items from note ${note.id} (${note.title})`);
+        
+        const details = await this.joplinClient.getNoteDetails(note.id);
+        await this.fetchFolders();
+  
+        const enrichedResources = enrichResourcesWithExtension(details.resources, this.log);
+  
+        jtaBlocks.each((i, el) => {
+          const jtaID = $(el).attr("data-id") || generateUniqueID(note.id, i);
+          const noteType = $(el).attr('data-note-type');
+          let item;
+  
+          // --- ADDED LOGGING START ---
+          this.log(levelDebug, `[EXPORTER-DEBUG] JTA block ${i}: found data-note-type attribute with value: "${noteType}"`);
+          const isDynamic = dynamicMapper && noteType && dynamicMapper.getAvailableNoteTypes().includes(noteType);
+          this.log(levelDebug, `[EXPORTER-DEBUG] JTA block ${i}: Is this a dynamic note? -> ${isDynamic}`);
+          // --- ADDED LOGGING END ---
+  
+          if (isDynamic) {
+            this.log(levelDebug, `[EXPORTER-DEBUG] Processing block ${i} as a DYNAMIC note.`);
+            const extractedData = dynamicMapper.extractFields($(el).html(), jtaID, noteType);
+            if (extractedData) {
+              item = {
+                jtaID,
+                index: i,
+                title: details.note.title,
+                notebook: details.notebook,
+                tags: details.tags,
+                folders: this.folders,
+                question: '',
+                answer: '',
+                additionalFields: {
+                  customNoteType: extractedData.modelName,
+                  customFields: extractedData.fields,
+                  joplinNoteID: note.id,
+                },
+              };
+              this.log(levelDebug, `[EXPORTER-DEBUG] Successfully created DYNAMIC item object for ${jtaID}.`);
+            } else {
+              this.log(levelApplication, `⚠️ Skipping JTA block - dynamic mapping failed for "${noteType}"`);
+              return;
+            }
+          } else {
+            this.log(levelDebug, `[EXPORTER-DEBUG] Processing block ${i} as a STANDARD note.`);
+            const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
+            
+            let questionHtml = $(el).find(".question").html() || '';
+            if (additionalFields.optionA || additionalFields.optionB || additionalFields.optionC || additionalFields.optionD) {
+              const optionRemovalPattern = /(<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)\s*[\s\S]*?(?=(?:<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)|$)/gi;
+              questionHtml = questionHtml.replace(optionRemovalPattern, '');
+              questionHtml = questionHtml.replace(/(<br\s*\/?>|\s)*$/, '').trim();
+            }
+  
             item = {
               jtaID,
               index: i,
               title: details.note.title,
               notebook: details.notebook,
+              question: questionHtml,
+              answer: $(el).find(".answer").html() || '',
+              additionalFields: additionalFields,
               tags: details.tags,
               folders: this.folders,
-              question: '',
-              answer: '',
-              additionalFields: {
-                customNoteType: extractedData.modelName,
-                customFields: extractedData.fields,
-                joplinNoteID: note.id,
-              },
+              joplinNoteId: note.id,
             };
-            this.log(levelDebug, `Created dynamic note item for ${jtaID}`);
-          } else {
-            this.log(levelApplication, `⚠️ Skipping JTA block - dynamic mapping failed for "${noteType}"`);
-            return;
+            this.log(levelDebug, `[EXPORTER-DEBUG] Successfully created STANDARD item object for ${jtaID}`);
           }
-        } else {
-          const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
           
-          let questionHtml = $(el).find(".question").html() || '';
-
-          // =================================================================
-          // ### START: FIX FOR MCQ DUPLICATION AND CLEANUP ###
-          // =================================================================
-          // If options were found, this is an MCQ card. We must clean them from the main question field.
-          if (additionalFields.optionA || additionalFields.optionB || additionalFields.optionC || additionalFields.optionD) {
-            this.log(levelDebug, `[CLEANUP-MCQ] Options detected. Removing them from the main question HTML.`);
-            
-            // This regex finds option markers (e.g., "A)", "B.") and everything following them
-            // until the next option marker or the end of the content.
-            const optionRemovalPattern = /(<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)\s*[\s\S]*?(?=(?:<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)|$)/gi;
-
-            // Replace the matched options with an empty string
-            questionHtml = questionHtml.replace(optionRemovalPattern, '');
-
-            // Trim any leftover whitespace or <br> tags from the end to prevent empty lines
-            questionHtml = questionHtml.replace(/(<br\s*\/?>|\s)*$/, '').trim();
-
-            this.log(levelDebug, `[CLEANUP-MCQ] Cleaned Question HTML: ${questionHtml}`);
+          // --- ADDED LOGGING START ---
+          this.log(levelDebug, `[EXPORTER-DEBUG] Item object for ${jtaID} BEFORE resource rewrite: ${JSON.stringify(item, null, 2)}`);
+          // --- ADDED LOGGING END ---
+  
+          rewriteResourcePaths(item, enrichedResources, this.log);
+  
+          if (!isDynamic) {
+            if (item.question) {
+                const $question = cheerio.load(item.question, null, false);
+                $question('img[data-jta-image-type="question"]').remove();
+                item.question = $question.html();
+            }
+            if (item.answer) {
+                const $answer = cheerio.load(item.answer, null, false);
+                $answer('img[data-jta-image-type="answer"]').remove();
+                $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
+                item.answer = $answer.html();
+            }
           }
-          // =================================================================
-          // ### END: FIX FOR MCQ DUPLICATION AND CLEANUP ###
-          // =================================================================
-
-          item = {
-            jtaID,
-            index: i,
-            title: details.note.title,
-            notebook: details.notebook,
-            question: questionHtml, // Use the now-cleaned question HTML
-            answer: $(el).find(".answer").html() || '',
-            additionalFields: additionalFields,
-            tags: details.tags,
-            folders: this.folders,
-            joplinNoteId: note.id,
-          };
-          this.log(levelDebug, `Created standard note item for ${jtaID}`);
-        }
+  
+        item.deckName = premiumDeckHandler 
+          ? premiumDeckHandler(details.tags, details.notebook, this.folders, this.log) 
+          : this.getNotebookPath(details.notebook.id);
         
-        rewriteResourcePaths(item, enrichedResources, this.log);
-
-        // Standard cleanup logic (now safe for MCQs)
-        if (!isDynamic) {
-          if (item.question) {
-              const $question = cheerio.load(item.question, null, false);
-              $question('img[data-jta-image-type="question"]').remove();
-              item.question = $question.html();
-          }
-          if (item.answer) {
-              const $answer = cheerio.load(item.answer, null, false);
-              $answer('img[data-jta-image-type="answer"]').remove();
-              $answer('.explanation, .correlation, .comments, .extra, .header, .footer, .sources, .origin, .insertion, .innervation, .action').remove();
-              item.answer = $answer.html();
-          }
-        }
-
-      item.deckName = premiumDeckHandler 
-        ? premiumDeckHandler(details.tags, details.notebook, this.folders, this.log) 
-        : this.getNotebookPath(details.notebook.id);
-      
-      this.log(levelApplication, `✅ Extracted item ${item.jtaID} with ${item.resourcesToUpload?.length || 0} resources queued`);
-      
-      quizItems.push(item);
-    });
-
-    this.log(levelApplication, `📊 Extracted ${quizItems.length} quiz items from note ${note.id}`);
-    return quizItems;
-  }
+        this.log(levelApplication, `✅ Extracted item ${item.jtaID} with ${item.resourcesToUpload?.length || 0} resources queued`);
+        
+        quizItems.push(item);
+      });
+  
+      this.log(levelApplication, `📊 Extracted ${quizItems.length} quiz items from note ${note.id}`);
+      return quizItems;
+    }
 }
 
 async function* exporter(joplinClient, fromDate, log) {

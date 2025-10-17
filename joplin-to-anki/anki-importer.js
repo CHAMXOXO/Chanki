@@ -17,7 +17,50 @@ const decodeHtmlEntities = (text) => {
   return decoded;
 };
 
-const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
+/**
+ * Converts Joplin resource links back to Anki media filenames
+ * @param {string} html - HTML content with potential Joplin resource links
+ * @param {object} mediaConversionMap - Bidirectional mapping of resources
+ * @param {function} log - Logging function
+ * @returns {string} - HTML with Anki filenames restored
+ */
+const convertJoplinResourcesToAnkiMedia = (html, mediaConversionMap, log) => {
+  if (!html || typeof html !== 'string') return html;
+  if (!mediaConversionMap || Object.keys(mediaConversionMap).length === 0) return html;
+  
+  const cheerio = require('cheerio');
+  const $ = cheerio.load(html, { decodeEntities: false });
+  const images = $('img');
+  let converted = 0;
+  
+  images.each((i, imgElement) => {
+    const img = $(imgElement);
+    const src = img.attr('src');
+    
+    // Check if it's a Joplin resource link (format: ":/{resource-id}")
+    if (src && src.startsWith(':/')) {
+      const resourceId = src.replace(':/', '');
+      
+      // Look up the original Anki filename using reverse mapping
+      if (mediaConversionMap[resourceId]) {
+        const originalAnkiFilename = mediaConversionMap[resourceId];
+        img.attr('src', originalAnkiFilename);
+        converted++;
+        log(levelDebug, `[MEDIA-REVERSE] ✅ :/${resourceId} → ${originalAnkiFilename}`);
+      } else {
+        log(levelVerbose, `[MEDIA-REVERSE] ⚠️ No mapping found for :/${resourceId} (might be a managed resource)`);
+      }
+    }
+  });
+  
+  if (converted > 0) {
+    log(levelApplication, `[MEDIA-REVERSE] 📊 Converted ${converted} Joplin resource(s) back to Anki media`);
+  }
+  
+  return $.html();
+};
+
+const batchImporter = async (aClient, items, batchSize = 10, log, jClient, mediaConversionMap = {}) => {
   const summary = { 
     created: 0, 
     updated: 0, 
@@ -36,6 +79,7 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
     
     const promises = batch.map(async (item) => {
       try {
+      log(levelDebug, `[IMPORTER-DEBUG] Processing item ${item.jtaID}. Full item object received: ${JSON.stringify(item, null, 2)}`);
         // PHASE 1: UPLOAD RESOURCES
         if (item.resourcesToUpload && item.resourcesToUpload.length > 0 && jClient) {
           log(levelApplication, `[MEDIA] 🎬 Uploading ${item.resourcesToUpload.length} resources for ${item.jtaID}...`);
@@ -63,10 +107,14 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
         const existingNotes = await aClient.findNote(item.jtaID, item.deckName);
         
         const isCustomNote = item.additionalFields && item.additionalFields.customNoteType;
+
+        log(levelDebug, `[IMPORTER-DEBUG] Item ${item.jtaID}: Is this a custom note? -> ${isCustomNote}`);
         
         if (isCustomNote) {
           // CUSTOM NOTE TYPE HANDLING
           const modelName = item.additionalFields.customNoteType;
+          log(levelDebug, `[IMPORTER-DEBUG] Taking the CUSTOM note path for ${item.jtaID}.`);
+          log(levelDebug, `[IMPORTER-DEBUG] Custom ModelName: "${modelName}". Fields to be sent to Anki: ${JSON.stringify(item.additionalFields.customFields, null, 2)}`);
           const fields = Object.fromEntries(
             Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
@@ -91,6 +139,8 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
           const decodedAdditionalFields = Object.fromEntries(
             Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v || '')])
           );
+
+          log(levelDebug, `[IMPORTER-DEBUG] Taking the STANDARD note path for ${item.jtaID}.`);
           
           const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
           
@@ -98,9 +148,21 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
             // === FIX: UPDATE WITH PROPER FIELD CLEARING ===
             const fieldsToUpdate = {};
             
+            // ✅ CONVERT JOPLIN RESOURCES BACK TO ANKI FILENAMES FIRST
+            const convertedQuestion = convertJoplinResourcesToAnkiMedia(
+              item.question || '', 
+              mediaConversionMap, 
+              log
+            );
+            const convertedAnswer = convertJoplinResourcesToAnkiMedia(
+              item.answer || '', 
+              mediaConversionMap, 
+              log
+            );
+            
             // Always include Question and Answer (use empty string if not present)
-            fieldsToUpdate.Question = decodeHtmlEntities(item.question || '');
-            fieldsToUpdate.Answer = decodeHtmlEntities(item.answer || '');
+            fieldsToUpdate.Question = decodeHtmlEntities(convertedQuestion);
+            fieldsToUpdate.Answer = decodeHtmlEntities(convertedAnswer);
             
             // === FIX: Include ALL possible fields, even if empty ===
             // This ensures deleted fields get cleared in Anki
@@ -122,6 +184,11 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
                 fieldValue = decodedAdditionalFields[fieldName];
               }
               
+              // ✅ CONVERT RESOURCES IN THIS FIELD TOO (if it contains HTML)
+              if (fieldValue && typeof fieldValue === 'string' && fieldValue.includes(':/')) {
+                fieldValue = convertJoplinResourcesToAnkiMedia(fieldValue, mediaConversionMap, log);
+              }
+              
               // Only send to Anki if field exists in the model
               // Empty string is valid and will clear the field
               fieldsToUpdate[fieldName] = fieldValue || '';
@@ -133,17 +200,40 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient) => {
             log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}" (${Object.keys(fieldsToUpdate).length} fields)`);
           } else {
             // CREATE NEW
-            await aClient.createNote(
+            // ✅ CONVERT RESOURCES BEFORE CREATING
+            const convertedQuestion = convertJoplinResourcesToAnkiMedia(
               item.question, 
+              mediaConversionMap, 
+              log
+            );
+            const convertedAnswer = convertJoplinResourcesToAnkiMedia(
               item.answer, 
+              mediaConversionMap, 
+              log
+            );
+            
+            // Also convert resources in additional fields
+            const convertedAdditionalFields = {};
+            for (const [key, value] of Object.entries(decodedAdditionalFields)) {
+              if (value && typeof value === 'string' && value.includes(':/')) {
+                convertedAdditionalFields[key] = convertJoplinResourcesToAnkiMedia(value, mediaConversionMap, log);
+              } else {
+                convertedAdditionalFields[key] = value;
+              }
+            }
+            
+            await aClient.createNote(
+              convertedQuestion, 
+              convertedAnswer, 
               item.jtaID, 
               item.title,
               item.notebook, 
               item.tags, 
               item.folders, 
-              decodedAdditionalFields, 
+              convertedAdditionalFields, 
               item.deckName
             );
+            
             summary.created++;
             summary.createdItems.push({ 
               jtaID: item.jtaID, 
