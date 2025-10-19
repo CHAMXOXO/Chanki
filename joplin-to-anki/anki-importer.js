@@ -118,12 +118,6 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient, media
           const fields = Object.fromEntries(
             Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
-          
-          if (isCustomNote) {
-            // CUSTOM NOTE TYPE HANDLING
-            const modelName = item.additionalFields.customNoteType;
-            log(levelDebug, `[IMPORTER-DEBUG] Taking the CUSTOM note path for ${item.jtaID}.`);
-            log(levelDebug, `[IMPORTER-DEBUG] Custom ModelName: "${modelName}". Fields to be sent to Anki: ${JSON.stringify(item.additionalFields.customFields, null, 2)}`);
             
             // ✅ CONVERT JOPLIN RESOURCES TO ANKI MEDIA IN CUSTOM FIELDS
             const fields = {};
