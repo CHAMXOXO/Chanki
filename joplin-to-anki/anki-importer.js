@@ -119,20 +119,43 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient, media
             Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
           );
           
-          if (existingNotes && existingNotes.length > 0) {
-            await aClient.updateCustomNote(existingNotes[0], fields);
-            await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
-            summary.updated++;
-            log(levelApplication, `✅ Updated custom "${modelName}" card: "${item.title}"`);
-          } else {
-            await aClient.createCustomNote(modelName, fields, item.deckName, item.tags, item.title, item.notebook);
-            summary.created++;
-            summary.createdItems.push({ 
-              jtaID: item.jtaID, 
-              joplinNoteId: item.joplinNoteId, 
-              index: item.index 
-            });
-            log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
+          if (isCustomNote) {
+            // CUSTOM NOTE TYPE HANDLING
+            const modelName = item.additionalFields.customNoteType;
+            log(levelDebug, `[IMPORTER-DEBUG] Taking the CUSTOM note path for ${item.jtaID}.`);
+            log(levelDebug, `[IMPORTER-DEBUG] Custom ModelName: "${modelName}". Fields to be sent to Anki: ${JSON.stringify(item.additionalFields.customFields, null, 2)}`);
+            
+            // ✅ CONVERT JOPLIN RESOURCES TO ANKI MEDIA IN CUSTOM FIELDS
+            const fields = {};
+            for (const [fieldName, fieldValue] of Object.entries(item.additionalFields.customFields)) {
+              let convertedValue = decodeHtmlEntities(fieldValue);
+              
+              // Check if this field contains HTML with potential Joplin resource links
+              if (convertedValue && typeof convertedValue === 'string' && convertedValue.includes(':/')) {
+                log(levelDebug, `[CUSTOM-MEDIA] Checking field "${fieldName}" for Joplin resources`);
+                convertedValue = convertJoplinResourcesToAnkiMedia(convertedValue, mediaConversionMap, log);
+              }
+              
+              fields[fieldName] = convertedValue;
+            }
+            
+            log(levelDebug, `[CUSTOM-NOTE] Processed ${Object.keys(fields).length} fields for custom note type "${modelName}"`);
+            
+            if (existingNotes && existingNotes.length > 0) {
+              await aClient.updateCustomNote(existingNotes[0], fields);
+              await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
+              summary.updated++;
+              log(levelApplication, `✅ Updated custom "${modelName}" card: "${item.title}" (${Object.keys(fields).length} fields)`);
+            } else {
+              await aClient.createCustomNote(modelName, fields, item.deckName, item.tags, item.title, item.notebook);
+              summary.created++;
+              summary.createdItems.push({ 
+                jtaID: item.jtaID, 
+                joplinNoteId: item.joplinNoteId, 
+                index: item.index 
+              });
+              log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
+            }
           }
         } else {
           // STANDARD NOTE TYPE HANDLING

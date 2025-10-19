@@ -129,9 +129,7 @@ class AnkiClient {
   
   async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}, deckName = "Default") {
     this.log(levelApplication, `📥 createNote called with deckName: "${deckName}"`);
-    if (!deckName || deckName === "Default") {
-      this.log(levelApplication, `⚠️ WARNING: deckName is "${deckName}" - this suggests the deck name wasn't passed correctly from the exporter!`);
-    }
+    
     const verifiedDeckName = await this.ensureDeckExists(deckName);
     this.log(levelApplication, `Creating note in deck: ${verifiedDeckName}`);
     const cardType = this.detectCardType(question, answer, additionalFields);

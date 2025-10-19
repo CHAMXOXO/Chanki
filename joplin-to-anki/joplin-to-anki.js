@@ -4,6 +4,7 @@ const { exporter, typeItem, typeResource, typeError } = require("./joplin-export
 const batchImporter = require("./anki-importer");
 const joplin = require("./joplin-client");
 const anki = require("./anki-client");
+const cheerio = require("cheerio");
 const { log, setLevel, levelApplication, levelVerbose } = require("./log");
 
 // ============================================================================
@@ -68,10 +69,9 @@ const run = async (logLevel, joplinURL, joplinToken, exportFromDate, ankiURL, op
     await engine.run();
 
   } else {
-    // FREE / LEGACY PATH: Run the original one-way sync logic
-    log(levelApplication, "Running with Free One-Way Sync Logic...");
-    await 
-    (jClient, aClient, exportFromDate, options);
+      // FREE / LEGACY PATH: Run the original one-way sync logic
+      log(levelApplication, "Running with Free One-Way Sync Logic...");
+      await runLegacyOneWaySync(jClient, aClient, exportFromDate, options);  // ✅ FIXED
   }
 
   log(levelApplication, "✨ SYNC COMPLETED");
@@ -82,7 +82,6 @@ const run = async (logLevel, joplinURL, joplinToken, exportFromDate, ankiURL, op
  * The original one-way sync logic, now encapsulated in its own function.
  */
 async function runLegacyOneWaySync(jClient, aClient, exportFromDate, options) {
-    // ... (This function does not need any changes)
     const { batchSize = 10, markdownProcessing = true } = options;
     const sync = {
         startTime: new Date(),
@@ -100,18 +99,33 @@ async function runLegacyOneWaySync(jClient, aClient, exportFromDate, options) {
         log(levelApplication, `📊 Collected ${allItems.length} items for batch processing`);
         if (allItems.length > 0) {
             const processedItems = allItems.map(item => {
-                if (item.additionalFields && item.additionalFields.customNoteType) {
-                    return { ...item, additionalFields: { ...item.additionalFields, deckName: item.deckName } };
-                } else {
-                    return {
-                        ...item,
-                        question: stripDetails(markdownProcessing ? marked(item.question || '') : item.question),
-                        answer: stripDetails(markdownProcessing ? marked(item.answer || '') : item.answer),
-                        additionalFields: { ...item.additionalFields, deckName: item.deckName }
-                    };
-                }
+                // --- START: FIX LOGIC FOR FREE MODE ---
+
+                // FIX 1: Correctly extract the answer from the ".answer-text" div.
+                const $ = cheerio.load(item.answer || '');
+                const answerTextHtml = $('.answer-text').html();
+                // If we found .answer-text, use its content. Otherwise, fall back to the original answer.
+                const finalAnswerHtml = answerTextHtml !== null ? answerTextHtml : item.answer;
+
+                // Create the final, processed item for the legacy importer.
+                const processedItem = {
+                    ...item,
+                    // FIX 2: Force the deck name to "Default" for all free-mode notes.
+                    deckName: "Default", 
+                    question: stripDetails(markdownProcessing ? marked(item.question || '') : item.question),
+                    // Use our newly cleaned answer HTML.
+                    answer: stripDetails(markdownProcessing ? marked(finalAnswerHtml || '') : finalAnswerHtml),
+                    additionalFields: {
+                         ...item.additionalFields,
+                         // Also force the deck name here for consistency.
+                         deckName: "Default" 
+                    }
+                };
+
+                return processedItem;
+                // --- END: FIX LOGIC FOR FREE MODE ---
             });
-            const results = await batchImporter(aClient, processedItems, batchSize, log, jClient, {}); // Empty map for legacy sync
+            const results = await batchImporter(aClient, processedItems, batchSize, log, jClient, {});
             sync.summary.created += results.created;
             sync.summary.updated += results.updated;
             sync.summary.skipped += results.skipped;

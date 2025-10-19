@@ -58,9 +58,11 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
     log(levelDebug, `[EXTRACT] Found answerImagePath: ${fields.answerImagePath}`);
   }
   
-  // For MCQ, we extract from the plain text content of the .question div
+ // For MCQ, we extract from the plain text content of the .question div
   const questionTextContent = ($('.question', jtaElement).text() || "");
   if (questionTextContent.length > 0) {
+    this.log(levelDebug, `[EXTRACT-MCQ] Checking question text for MCQ options: ${questionTextContent.substring(0, 100)}...`);
+    
     const optionPatterns = [
         /(?:A\)|A\.)\s*([\s\S]*?)(?=\s*(?:B\)|B\.|$))/i, 
         /(?:B\)|B\.)\s*([\s\S]*?)(?=\s*(?:C\)|C\.|$))/i,
@@ -70,13 +72,30 @@ const extractAdditionalFieldsFromElement = ($, jtaElement, log) => {
     const optionMatches = optionPatterns.map(p => (questionTextContent.match(p) || [])[1]?.trim() || '');
     
     // Check if at least two options were found to consider it an MCQ
-    if (optionMatches.filter(Boolean).length >= 2) {
-      log(levelDebug, '[EXTRACT-MCQ] Detected options, assigning to fields.');
-      fields.optionA = optionMatches[0]; 
-      fields.optionB = optionMatches[1];
-      fields.optionC = optionMatches[2]; 
-      fields.optionD = optionMatches[3];
+    const validOptions = optionMatches.filter(Boolean);
+    if (validOptions.length >= 2) {
+      this.log(levelApplication, `[EXTRACT-MCQ] ✅ Detected MCQ with ${validOptions.length} options`);
+      fields.optionA = optionMatches[0] || ''; 
+      fields.optionB = optionMatches[1] || '';
+      fields.optionC = optionMatches[2] || ''; 
+      fields.optionD = optionMatches[3] || '';
+      
+      // Log what we extracted
+      this.log(levelDebug, `[EXTRACT-MCQ] Option A: ${fields.optionA.substring(0, 30)}...`);
+      this.log(levelDebug, `[EXTRACT-MCQ] Option B: ${fields.optionB.substring(0, 30)}...`);
+      if (fields.optionC) this.log(levelDebug, `[EXTRACT-MCQ] Option C: ${fields.optionC.substring(0, 30)}...`);
+      if (fields.optionD) this.log(levelDebug, `[EXTRACT-MCQ] Option D: ${fields.optionD.substring(0, 30)}...`);
+    } else {
+      this.log(levelDebug, `[EXTRACT-MCQ] Not an MCQ - only found ${validOptions.length} options`);
     }
+  }
+  
+  // ✅ ALSO EXTRACT CORRECT ANSWER (CRITICAL FOR MCQ DETECTION!)
+  // Check for correct answer in multiple possible locations
+  const correctAnswerElement = $('.correct-answer', jtaElement);
+  if (correctAnswerElement.length > 0) {
+    fields.correctAnswer = correctAnswerElement.text()?.trim() || '';
+    this.log(levelDebug, `[EXTRACT-MCQ] Found correct answer: ${fields.correctAnswer}`);
   }
   
   for (const key in fields) { if (!fields[key]) delete fields[key]; }
@@ -266,11 +285,45 @@ class JoplinExporter {
             this.log(levelDebug, `[EXPORTER-DEBUG] Processing block ${i} as a STANDARD note.`);
             const additionalFields = extractAdditionalFieldsFromElement($, el, this.log);
             
-            let questionHtml = $(el).find(".question").html() || '';
+            // --- FIX START: Improved Question Extraction for Image Notes ---
+            const isImageNote = additionalFields.questionImagePath || additionalFields.answerImagePath;
+            const questionSelector = isImageNote ? ".image-question" : ".question";
+            let questionHtml = $(el).find(questionSelector).html() || '';
+            // --- FIX END ---
+            
             if (additionalFields.optionA || additionalFields.optionB || additionalFields.optionC || additionalFields.optionD) {
+              this.log(levelDebug, `[EXTRACT-MCQ] Cleaning options from question HTML...`);
+              this.log(levelDebug, `[EXTRACT-MCQ] Original question HTML length: ${questionHtml.length}`);
+              
+              // ✅ EXTRACT AND PRESERVE IMAGES BEFORE CLEANING OPTIONS
+              const $tempQuestion = cheerio.load(questionHtml, { decodeEntities: false });
+              const images = $tempQuestion('img');
+              const extractedImages = [];
+              
+              images.each((i, img) => {
+                const imgHtml = $tempQuestion.html(img);
+                extractedImages.push(imgHtml);
+                this.log(levelDebug, `[EXTRACT-MCQ] Preserved image ${i}: ${imgHtml.substring(0, 50)}...`);
+              });
+              
+              // Remove images temporarily
+              images.remove();
+              let cleanedHtml = $tempQuestion.html();
+              
+              // Clean the options
               const optionRemovalPattern = /(<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)\s*[\s\S]*?(?=(?:<br\s*\/?>\s*)?(?:[A-D]\)|[A-D]\.)|$)/gi;
-              questionHtml = questionHtml.replace(optionRemovalPattern, '');
-              questionHtml = questionHtml.replace(/(<br\s*\/?>|\s)*$/, '').trim();
+              cleanedHtml = cleanedHtml.replace(optionRemovalPattern, '');
+              cleanedHtml = cleanedHtml.replace(/(<br\s*\/?>|\s)*$/, '').trim();
+              
+              // ✅ RE-ADD IMAGES AFTER CLEANING
+              if (extractedImages.length > 0) {
+                questionHtml = cleanedHtml + '\n' + extractedImages.join('\n');
+                this.log(levelApplication, `[EXTRACT-MCQ] ✅ Preserved ${extractedImages.length} image(s) in MCQ question`);
+              } else {
+                questionHtml = cleanedHtml;
+              }
+              
+              this.log(levelDebug, `[EXTRACT-MCQ] Cleaned question HTML length: ${questionHtml.length}`);
             }
   
             item = {
@@ -323,7 +376,31 @@ class JoplinExporter {
 }
 
 async function* exporter(joplinClient, fromDate, log) {
-  log(levelApplication, "⚠️ Using legacy exporter - consider upgrading to JoplinExporter class");
+  log(levelApplication, "✅ Using legacy one-way exporter.");
+
+  const exporterInstance = new JoplinExporter(joplinClient, log);
+
+  const allNotes = await joplinClient.getAllNotes(
+    "id,updated_time,title,parent_id,body"
+  );
+  log(levelVerbose, `Legacy exporter found ${allNotes.length} total notes to check.`);
+
+  for (const note of allNotes) {
+    try {
+      const items = await exporterInstance.extractQuizItems(note);
+
+      if (items.length > 0) {
+        log(levelApplication, `   -> Found ${items.length} item(s) in note "${note.title}"`);
+        for (const item of items) {
+          // The legacy runner expects the data in this specific format.
+          yield { type: typeItem, data: item };
+        }
+      }
+    } catch (e) {
+      log(levelApplication, `⚠️ Error processing note ${note.id} in legacy exporter: ${e.message}`);
+      yield { type: typeError, data: e.message };
+    }
+  }
 }
 
 module.exports = { 
