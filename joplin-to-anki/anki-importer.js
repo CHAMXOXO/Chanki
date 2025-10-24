@@ -111,13 +111,10 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient, media
         log(levelDebug, `[IMPORTER-DEBUG] Item ${item.jtaID}: Is this a custom note? -> ${isCustomNote}`);
         
         if (isCustomNote) {
-          // CUSTOM NOTE TYPE HANDLING
-          const modelName = item.additionalFields.customNoteType;
-          log(levelDebug, `[IMPORTER-DEBUG] Taking the CUSTOM note path for ${item.jtaID}.`);
-          log(levelDebug, `[IMPORTER-DEBUG] Custom ModelName: "${modelName}". Fields to be sent to Anki: ${JSON.stringify(item.additionalFields.customFields, null, 2)}`);
-          const fields = Object.fromEntries(
-            Object.entries(item.additionalFields.customFields).map(([k, v]) => [k, decodeHtmlEntities(v)])
-          );
+            // CUSTOM NOTE TYPE HANDLING
+            const modelName = item.additionalFields.customNoteType;
+            log(levelDebug, `[IMPORTER-DEBUG] Taking the CUSTOM note path for ${item.jtaID}.`);
+            log(levelDebug, `[IMPORTER-DEBUG] Custom ModelName: "${modelName}". Fields to be sent to Anki: ${JSON.stringify(item.additionalFields.customFields, null, 2)}`);
             
             // ✅ CONVERT JOPLIN RESOURCES TO ANKI MEDIA IN CUSTOM FIELDS
             const fields = {};
@@ -150,7 +147,6 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient, media
               });
               log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
             }
-          }
         } else {
           // STANDARD NOTE TYPE HANDLING
           const decodedAdditionalFields = Object.fromEntries(
