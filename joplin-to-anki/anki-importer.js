@@ -187,15 +187,32 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient, media
               'QuestionImagePath', 'AnswerImagePath', 'AltText'
             ];
             
+            // Mapping from Anki field names to additionalFields keys
+            const fieldMapping = {
+              'Header': 'header',
+              'Footer': 'footer',
+              'Sources': 'sources',
+              'Explanation': 'explanation',
+              'Clinical Correlation': 'clinicalCorrelation',
+              'Extra': 'extra',
+              'Comments': 'comments',
+              'Origin': 'origin',
+              'Insertion': 'insertion',
+              'Innervation': 'innervation',
+              'Action': 'action',
+              'OptionA': 'optionA',
+              'OptionB': 'optionB',
+              'OptionC': 'optionC',
+              'OptionD': 'optionD',
+              'CorrectAnswer': 'correctAnswer',
+              'QuestionImagePath': 'questionImagePath',
+              'AnswerImagePath': 'answerImagePath',
+              'AltText': 'altText'
+            };
+            
             for (const fieldName of allPossibleFields) {
-              const camelCase = fieldName.charAt(0).toLowerCase() + fieldName.slice(1);
-              let fieldValue = '';
-              
-              if (decodedAdditionalFields.hasOwnProperty(camelCase)) {
-                fieldValue = decodedAdditionalFields[camelCase];
-              } else if (decodedAdditionalFields.hasOwnProperty(fieldName)) {
-                fieldValue = decodedAdditionalFields[fieldName];
-              }
+              const fieldKey = fieldMapping[fieldName];
+              let fieldValue = decodedAdditionalFields[fieldKey] || '';
               
               // ✅ CONVERT RESOURCES IN THIS FIELD TOO (if it contains HTML)
               if (fieldValue && typeof fieldValue === 'string' && fieldValue.includes(':/')) {
