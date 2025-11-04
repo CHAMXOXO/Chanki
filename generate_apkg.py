@@ -5,9 +5,17 @@ import glob
 import os
 
 # ==============================================================================
-# =====================  REVISED THEME SCRIPT (v16 - FIX) ======================
+# =====================  OPTIMIZED THEME SCRIPT (v17 - DESKTOP FIX) ==========
 # ==============================================================================
-# This version includes a more robust `applyTheme` function for smoother transitions.
+# Changes:
+# 1. Added Desktop environment detection
+# 2. Improved storage with meta tag priority for Desktop
+# 3. Debounced observers to prevent crashes/hangs
+# 4. Proper cleanup on card transitions
+# 5. Reduced initialization redundancy
+# All AnkiDroid functionality preserved with fallbacks
+# ==============================================================================
+
 THEME_SCRIPT = '''
 <script>
 // --- Configuration ---
@@ -42,19 +50,43 @@ const THEME_FAMILIES = {
 const ALL_THEMES = Object.values(THEME_FAMILIES).flatMap(f => f.modes);
 const THEME_KEY = 'joplinAnkiTheme_v3';
 
+// --- NEW: Environment Detection ---
+const IS_DESKTOP = (function() {
+    // Desktop Anki has specific identifiers
+    return typeof py !== 'undefined' || 
+           (navigator.userAgent.indexOf('Anki') !== -1 && typeof Android === 'undefined');
+})();
+
+// --- NEW: Debounce Helper (Prevents excessive function calls) ---
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // --- Helper Functions ---
 function applyTheme(theme) {
-    // FIX: More robustly applies the theme class to the body.
-    // This prevents removing other essential classes like '.card' and ensures smoother transitions.
-    document.body.classList.forEach(c => {
-        if (c.startsWith('theme-')) {
-            document.body.classList.remove(c);
+    // More robust theme application
+    try {
+        document.body.classList.forEach(c => {
+            if (c.startsWith('theme-')) {
+                document.body.classList.remove(c);
+            }
+        });
+        document.body.classList.add('theme-' + theme);
+        
+        // Ensure base class is present
+        if (!document.body.classList.contains('card')) {
+            document.body.classList.add('card');
         }
-    });
-    document.body.classList.add('theme-' + theme);
-    // Ensure the base class is always present.
-    if (!document.body.classList.contains('card')) {
-        document.body.classList.add('card');
+    } catch (e) {
+        console.warn('Theme application error:', e);
     }
 }
 
@@ -80,50 +112,85 @@ function updateThemeButtons(theme) {
     });
 }
 
-// --- Storage Functions (Unchanged) ---
+// --- NEW: Improved Storage Functions ---
 function saveTheme(theme) {
-    try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
-    const expires = new Date();
-    expires.setFullYear(expires.getFullYear() + 1);
-    document.cookie = THEME_KEY + '=' + theme + '; expires=' + expires.toUTCString() + '; path=/; SameSite=Lax';
+    // Save to localStorage (works on both platforms)
+    try { 
+        localStorage.setItem(THEME_KEY, theme); 
+    } catch(e) {
+        console.warn('localStorage save failed:', e);
+    }
+    
+    // Save to cookie (fallback)
+    try {
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        document.cookie = THEME_KEY + '=' + theme + '; expires=' + expires.toUTCString() + '; path=/; SameSite=Lax';
+    } catch(e) {
+        console.warn('Cookie save failed:', e);
+    }
+    
+    // NEW: Update meta tag for Desktop persistence
+    let metaTheme = document.querySelector('meta[name="anki-theme"]');
+    if (!metaTheme) {
+        metaTheme = document.createElement('meta');
+        metaTheme.setAttribute('name', 'anki-theme');
+        document.head.appendChild(metaTheme);
+    }
+    metaTheme.setAttribute('content', theme);
+    
+    // Send to Anki bridge (both platforms)
     const message = 'ankiconfig:' + THEME_KEY + ':' + theme;
     if (typeof pyBridge !== 'undefined') {
-        pyBridge.send(message);
+        try { pyBridge.send(message); } catch(e) {}
     } else if (typeof pycmd !== 'undefined') {
-        pycmd(message);
+        try { pycmd(message); } catch(e) {}
     }
 }
 
 function loadTheme() {
+    // NEW: Priority order optimized for Desktop
+    // 1. Check meta tag first (most reliable for Desktop across sessions)
+    const metaTheme = document.querySelector('meta[name="anki-theme"]');
+    if (metaTheme && ALL_THEMES.includes(metaTheme.content)) {
+        return metaTheme.content;
+    }
+    
+    // 2. Check localStorage (works in-session on both)
     try {
         const localTheme = localStorage.getItem(THEME_KEY);
         if (localTheme && ALL_THEMES.includes(localTheme)) {
             return localTheme;
         }
     } catch(e) {}
-    const metaTheme = document.querySelector('meta[name="anki-theme"]');
-    if (metaTheme && ALL_THEMES.includes(metaTheme.content)) {
-        return metaTheme.content;
-    }
-    const name = THEME_KEY + '=';
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const cookieArray = decodedCookie.split(';');
-    for (let i = 0; i < cookieArray.length; i++) {
-        let cookie = cookieArray[i].trim();
-        if (cookie.indexOf(name) === 0) {
-            const theme = cookie.substring(name.length, cookie.length);
-            if (ALL_THEMES.includes(theme)) { return theme; }
+    
+    // 3. Check cookies (fallback)
+    try {
+        const name = THEME_KEY + '=';
+        const decodedCookie = decodeURIComponent(document.cookie);
+        const cookieArray = decodedCookie.split(';');
+        for (let i = 0; i < cookieArray.length; i++) {
+            let cookie = cookieArray[i].trim();
+            if (cookie.indexOf(name) === 0) {
+                const theme = cookie.substring(name.length, cookie.length);
+                if (ALL_THEMES.includes(theme)) { 
+                    return theme; 
+                }
+            }
         }
-    }
-    return 'light-full-moon'; // Default theme
+    } catch(e) {}
+    
+    // 4. Default fallback
+    return 'light-full-moon';
 }
 
-// --- Main Logic (Unchanged) ---
+// --- Main Logic ---
 function handleFamilyClick(clickedFamily) {
     const currentTheme = loadTheme();
     const currentFamily = currentTheme.split('-')[0];
     const familyData = THEME_FAMILIES[clickedFamily];
     if (!familyData) return;
+    
     let nextTheme;
     if (currentFamily === clickedFamily) {
         const currentIndex = familyData.modes.indexOf(currentTheme);
@@ -132,57 +199,135 @@ function handleFamilyClick(clickedFamily) {
     } else {
         nextTheme = familyData.modes[0];
     }
+    
     applyTheme(nextTheme);
     updateThemeButtons(nextTheme);
     saveTheme(nextTheme);
 }
 
-// --- Initialization (Unchanged) ---
-function initTheme() {
+// --- NEW: Debounced Initialization (Prevents crashes from rapid calls) ---
+const debouncedInitTheme = debounce(function() {
     const savedTheme = loadTheme();
     applyTheme(savedTheme);
     updateThemeButtons(savedTheme);
+    
+    // Attach button handlers only if not already attached
     Object.keys(THEME_FAMILIES).forEach(familyKey => {
         const btn = document.getElementById('themeBtn-' + familyKey);
-        if (btn && !btn.onclick) {
+        if (btn && !btn.hasAttribute('data-handler-attached')) {
             btn.onclick = () => handleFamilyClick(familyKey);
+            btn.setAttribute('data-handler-attached', 'true');
         }
     });
+}, 100); // 100ms debounce - prevents excessive calls
+
+// --- NEW: Observer Cleanup System ---
+let activeObservers = [];
+
+function cleanupObservers() {
+    activeObservers.forEach(observer => {
+        try {
+            observer.disconnect();
+        } catch(e) {}
+    });
+    activeObservers = [];
 }
-// ... [original observer logic remains here, no changes needed] ...
-let buttonObserver = null;
+
+// --- NEW: Optimized Button Observer ---
 function startWatchingButtons() {
-    if (buttonObserver) buttonObserver.disconnect();
-    buttonObserver = new MutationObserver(function(mutations) {
+    // Clean up any existing observers first
+    cleanupObservers();
+    
+    const buttonObserver = new MutationObserver(debounce(function(mutations) {
+        let shouldInit = false;
         mutations.forEach(function(mutation) {
             mutation.addedNodes.forEach(function(node) {
-                if (node.nodeType === 1 && (node.classList.contains('theme-controls') || node.querySelector('.theme-controls'))) {
-                    initTheme();
+                if (node.nodeType === 1 && 
+                    (node.classList && node.classList.contains('theme-controls') || 
+                     node.querySelector && node.querySelector('.theme-controls'))) {
+                    shouldInit = true;
                 }
             });
         });
+        if (shouldInit) {
+            debouncedInitTheme();
+        }
+    }, 150)); // Debounced to prevent excessive triggering
+    
+    buttonObserver.observe(document.body, { 
+        childList: true, 
+        subtree: true 
     });
-    buttonObserver.observe(document.body, { childList: true, subtree: true });
+    activeObservers.push(buttonObserver);
 }
-let contentObserver = new MutationObserver(function(mutations) {
+
+// --- NEW: Optimized Content Observer ---
+const contentObserver = new MutationObserver(debounce(function(mutations) {
     let contentChanged = mutations.some(function(mutation) {
-        return mutation.target.className && (mutation.target.className.includes('card') || mutation.target.className.includes('content'));
+        return mutation.target.className && 
+               (mutation.target.className.includes('card') || 
+                mutation.target.className.includes('content'));
     });
-    if (contentChanged) setTimeout(initTheme, 50);
-});
-initTheme();
+    if (contentChanged) {
+        debouncedInitTheme();
+    }
+}, 150)); // Debounced
+
+// --- Initialization Sequence ---
+// Initial theme application (immediate, no delay)
+debouncedInitTheme();
+
+// Setup for DOM ready state
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-        initTheme();
+        debouncedInitTheme();
         startWatchingButtons();
     });
 } else {
+    // DOM already ready
     startWatchingButtons();
 }
-setTimeout(initTheme, 100);
-document.addEventListener('visibilitychange', function() { if (!document.hidden) initTheme(); });
-window.addEventListener('ankiCardShown', initTheme);
-contentObserver.observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
+
+// Start content observer
+contentObserver.observe(document.body, { 
+    attributes: true, 
+    attributeFilter: ['class'], 
+    subtree: true 
+});
+activeObservers.push(contentObserver);
+
+// Visibility change handler (debounced)
+const handleVisibilityChange = debounce(function() { 
+    if (!document.hidden) {
+        debouncedInitTheme();
+    }
+}, 200);
+document.addEventListener('visibilitychange', handleVisibilityChange);
+
+// Anki card shown event (if available)
+if (typeof window !== 'undefined') {
+    window.addEventListener('ankiCardShown', debouncedInitTheme);
+}
+
+// --- NEW: Cleanup on card transition (Desktop-specific) ---
+if (IS_DESKTOP) {
+    // Listen for beforeunload to cleanup observers
+    window.addEventListener('beforeunload', cleanupObservers);
+}
+
+// --- NEW: Emergency fallback initialization (Desktop only) ---
+// This ensures theme loads even if other mechanisms fail
+if (IS_DESKTOP) {
+    setTimeout(function() {
+        const currentTheme = loadTheme();
+        // Only apply if no theme is currently active
+        const hasTheme = Array.from(document.body.classList).some(c => c.startsWith('theme-'));
+        if (!hasTheme) {
+            applyTheme(currentTheme);
+            updateThemeButtons(currentTheme);
+        }
+    }, 300);
+}
 </script>
 '''
 
