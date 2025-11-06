@@ -3753,8 +3753,8 @@ body.theme-dark-starless-sky {
     animation: pulse 2s ease-in-out infinite;
 }
 .mcq-title {
-    font-size: 1.15em;
-    font-weight: 500;
+    font-size: 1.5em;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
