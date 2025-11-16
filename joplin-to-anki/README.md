@@ -35,6 +35,7 @@ This project began as inspiration of [joplin-to-anki](https://github.com/BartBuc
    - Cloze Enhanced  
    - MCQ Enhanced
    - Image Enhanced (Anatomy-focused) - NOT IMAGE OCCLUSION, EVEN I HAVE MY LIMITS, I don't think it has anything to do with limits tho 🙂‍↔
+   
 ✅ **Automatic media conversion** - Images, resources  (FUTURE)
 ✅ **Unique card IDs** - Prevents duplicates, enables updates  
 
@@ -401,7 +402,7 @@ See `LICENSES/` directory for complete license texts.
 
 ## 🎓 About the Developer
 
-Chanki (yep, that's what we're going with), is developed and maintained by Cindy (why did I say that in third person), a medical student who needed better tools for converting lecture notes, notes in general, into effective spaced repetition flashcards (still third person). What started as a simple enhancement(you should have seen me when I finally got the first sync to run 🤡) to an existing tool (because I was ✨broke✨) became a complete rewrite with features specifically designed for my medical education as well as consideration for life-long learners, with unique features that served my day-to-day needs and aesthetics coz why not 🙂‍↔. Perhaps it can be of service to you as well 😊.
+Chanki (yep, that's what we're going with), is developed and maintained by Cindy (why did I say that in third person), a medical student who needed better tools for converting lecture notes, notes in general, into effective spaced repetition flashcards (still third person). What started as a simple enhancement and curiosity(you should have seen me when I finally got the first sync to run 🤡) to an existing tool (because I was ✨broke✨) became a complete rewrite with features specifically designed for my medical education as well as consideration for life-long learners, with unique features that served my day-to-day needs and aesthetics coz why not 🙂‍↔. Perhaps it can be of service to you as well 😊.
 
 If you're a medical student (OR LITERALLY ANYONE) struggling to keep your notes and flashcards in sync (or you are just like me and just broke tbh), this tool was built for you! Happy studying! 📚
 
