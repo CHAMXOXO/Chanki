@@ -1,4 +1,4 @@
-// joplin-client.js - COMPLETE VERSION with Media Support
+// joplin-client.js - COMPLETE VERSION with Logging Fix
 
 const axios = require("axios");
 const fs = require('fs').promises;
@@ -16,7 +16,6 @@ const newClient = (url, token, log) => {
     throw new Error("No token for Joplin Api provided");
   }
 
-  // Create axios instance with enhanced configuration for socket hangup prevention
   const axiosInstance = axios.create({
     baseURL: url,
     timeout: 30000,
@@ -218,7 +217,9 @@ const newClient = (url, token, log) => {
           }),
           this.request(
             this.urlGen("notes", noteId, "resources"),
-            "GET"
+            "GET",
+            undefined,
+            "id,title,file_extension,mime,filename"
           ).catch(error => {
             log(levelVerbose, `Warning: Could not fetch resources for note ${noteId}: ${error.message}`);
             return [];
@@ -240,26 +241,13 @@ const newClient = (url, token, log) => {
         const resources = Array.isArray(resourcesResponse) ? resourcesResponse : 
           (Array.isArray(resourcesResponse?.items) ? resourcesResponse.items : []);
 
-        log(levelApplication, `[DIAGNOSTIC] Raw resourcesResponse structure: ${JSON.stringify(resourcesResponse, null, 2)}`);
-        
-        log(levelApplication, `[DIAGNOSTIC] Resources array length: ${resources.length}`);
+        log(levelDebug, `[DIAGNOSTIC] Raw resourcesResponse structure: ${JSON.stringify(resourcesResponse, null, 2)}`);
         
         resources.forEach((resource, idx) => {
-          log(levelApplication, `[DIAGNOSTIC] Resource ${idx}:`);
-          log(levelApplication, `  Full object: ${JSON.stringify(resource, null, 2)}`);
-          log(levelApplication, `  Has file_extension? ${resource.hasOwnProperty('file_extension')}`);
-          log(levelApplication, `  Has mime_type? ${resource.hasOwnProperty('mime_type')}`);
-          log(levelApplication, `  Has filename? ${resource.hasOwnProperty('filename')}`);
-          log(levelApplication, `  Has title? ${resource.hasOwnProperty('title')}`);
-          log(levelApplication, `  All keys: ${Object.keys(resource).join(', ')}`);
+          log(levelDebug, `[DIAGNOSTIC] Resource ${idx}:`);
+          // FIX: Corrected log to check for 'mime' instead of 'mime_type' to align with API response.
+          log(levelDebug, `  Has mime? ${resource.hasOwnProperty('mime')}`);
         });
-
-        log(levelDebug, `Note details extracted:
-          - Note ID: ${noteId}
-          - Title: ${fullNote.title}
-          - Notebook: ${notebook.title} (${notebook.id})
-          - Tags: ${JSON.stringify(tags)}
-          - Resources: ${resources.length}`);
 
         return {
           note: fullNote,

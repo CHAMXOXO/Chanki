@@ -1,39 +1,49 @@
-// anki-client.js - FIXED
+// anki-client.js
 
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
 
+// ENHANCEMENT: Helper to sanitize strings for use as Anki tags.
+const sanitizeForTag = (text) => {
+    if (!text || typeof text !== 'string') return '';
+    // Replace spaces and colons with underscores, remove other problematic characters.
+    return text.trim().replace(/[\s:]+/g, '_').replace(/[#()]/g, '');
+};
+
 // Moved outside the class so it's accessible by the importer
 const buildAnkiFieldsObject = (question, answer, jtaID, inferredType, enhancedFields) => {
-    let fields = { "Joplin to Anki ID": jtaID };
+    // FIX: Ensure all field values are strings.
+    const ef = (key) => enhancedFields[key] || "";
+    let fields = { "Joplin to Anki ID": jtaID || "" };
+    
     switch (inferredType) {
         case 'basic':
-            fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["Answer"] = answer;
-            fields["Explanation"] = enhancedFields.explanation; fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-            fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
+            fields["Header"] = ef('header'); fields["Question"] = question || ""; fields["Answer"] = answer || "";
+            fields["Explanation"] = ef('explanation'); fields["Clinical Correlation"] = ef('clinicalCorrelation');
+            fields["Footer"] = ef('footer'); fields["Sources"] = ef('sources');
             break;
         case 'cloze':
-            fields["Header"] = enhancedFields.header; fields["Text"] = question; fields["Extra"] = enhancedFields.extra;
-            fields["Explanation"] = enhancedFields.explanation; fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation;
-            fields["Footer"] = enhancedFields.footer; fields["Sources"] = enhancedFields.sources;
+            fields["Header"] = ef('header'); fields["Text"] = question || ""; fields["Extra"] = ef('extra');
+            fields["Explanation"] = ef('explanation'); fields["Clinical Correlation"] = ef('clinicalCorrelation');
+            fields["Footer"] = ef('footer'); fields["Sources"] = ef('sources');
             break;
         case 'mcq':
-            fields["Header"] = enhancedFields.header; fields["Question"] = question; fields["OptionA"] = enhancedFields.optionA;
-            fields["OptionB"] = enhancedFields.optionB; fields["OptionC"] = enhancedFields.optionC; fields["OptionD"] = enhancedFields.optionD;
-            fields["CorrectAnswer"] = enhancedFields.correctAnswer; fields["Explanation"] = enhancedFields.explanation;
-            fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation; fields["Footer"] = enhancedFields.footer;
-            fields["Sources"] = enhancedFields.sources;
+            fields["Header"] = ef('header'); fields["Question"] = question || ""; fields["OptionA"] = ef('optionA');
+            fields["OptionB"] = ef('optionB'); fields["OptionC"] = ef('optionC'); fields["OptionD"] = ef('optionD');
+            fields["CorrectAnswer"] = ef('correctAnswer'); fields["Explanation"] = ef('explanation');
+            fields["Clinical Correlation"] = ef('clinicalCorrelation'); fields["Footer"] = ef('footer');
+            fields["Sources"] = ef('sources');
             break;
         case 'image':
-            fields["Header"] = enhancedFields.header; fields["QuestionImagePath"] = enhancedFields.questionImagePath;
-            fields["AnswerImagePath"] = enhancedFields.answerImagePath; fields["AltText"] = enhancedFields.altText;
-            fields["Question"] = question; fields["Answer"] = answer; fields["Origin"] = enhancedFields.origin;
-            fields["Insertion"] = enhancedFields.insertion; fields["Innervation"] = enhancedFields.innervation;
-            fields["Action"] = enhancedFields.action; fields["Comments"] = enhancedFields.comments;
-            fields["Clinical Correlation"] = enhancedFields.clinicalCorrelation; fields["Footer"] = enhancedFields.footer;
-            fields["Sources"] = enhancedFields.sources;
+            fields["Header"] = ef('header'); fields["QuestionImagePath"] = ef('questionImagePath');
+            fields["AnswerImagePath"] = ef('answerImagePath'); fields["AltText"] = ef('altText');
+            fields["Question"] = question || ""; fields["Answer"] = answer || ""; fields["Origin"] = ef('origin');
+            fields["Insertion"] = ef('insertion'); fields["Innervation"] = ef('innervation');
+            fields["Action"] = ef('action'); fields["Comments"] = ef('comments');
+            fields["Clinical Correlation"] = ef('clinicalCorrelation'); fields["Footer"] = ef('footer');
+            fields["Sources"] = ef('sources');
             break;
     }
     return fields;
@@ -117,6 +127,20 @@ class AnkiClient {
     return this.doRequest({ action: "notesInfo", version: 6, params: { notes: noteIds } });
   }
 
+  async getNoteModTime(noteId) {
+      if (!noteId) return null;
+      try {
+        const noteInfo = await this.doRequest({ action: "notesInfo", version: 6, params: { notes: [noteId] } });
+        if (noteInfo && noteInfo.length > 0) {
+          return noteInfo[0].mod; 
+        }
+        return null;
+      } catch (error) {
+          this.log(levelApplication, `⚠️ Error fetching mod time for note ${noteId}: ${error.message}`);
+          return null;
+      }
+    }
+
   detectCardType(question, answer, additionalFields = {}) {
     if (/\{\{c\d+::[^}]+\}\}/g.test(question || "")) return "cloze";
     if ((additionalFields.questionImagePath||'').trim() || (additionalFields.answerImagePath||'').trim()) return "image";
@@ -128,10 +152,10 @@ class AnkiClient {
   }
   
   async createNote(question, answer, jtaID, title, notebook, tags = [], folders = [], additionalFields = {}, deckName = "Default") {
-    this.log(levelApplication, `📥 createNote called with deckName: "${deckName}"`);
+    this.log(levelVerbose, `📥 createNote called with deckName: "${deckName}"`);
     
     const verifiedDeckName = await this.ensureDeckExists(deckName);
-    this.log(levelApplication, `Creating note in deck: ${verifiedDeckName}`);
+    this.log(levelDebug, `Creating note in deck: ${verifiedDeckName}`);
     const cardType = this.detectCardType(question, answer, additionalFields);
     const model = models[cardType];
     if (!model) {
@@ -139,7 +163,10 @@ class AnkiClient {
     }
     const modelName = model.name;
     const fields = buildAnkiFieldsObject(question, answer, jtaID, cardType, additionalFields);
-    const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
+    
+    // FIX: Sanitize note title and notebook for use as tags
+    const noteTags = [...tags, `joplin-title:${sanitizeForTag(title)}`, `joplin-notebook:${sanitizeForTag(notebook?.title)}`];
+
     const noteData = { 
       deckName: verifiedDeckName,
       modelName, 
@@ -187,7 +214,8 @@ class AnkiClient {
   }
 
   async updateNoteTags(noteId, title, notebook, tags = []) {
-    const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
+    // FIX: Sanitize note title and notebook for use as tags
+    const noteTags = [...tags, `joplin-title:${sanitizeForTag(title)}`, `joplin-notebook:${sanitizeForTag(notebook?.title)}`];
     try {
       await this.doRequest({ action: "updateNoteTags", version: 6, params: { note: noteId, tags: noteTags.join(" ") } });
     } catch (error) {
@@ -196,9 +224,9 @@ class AnkiClient {
   }
 
   async createCustomNote(modelName, fields, deckName, tags = [], title = '', notebook = {}) {
-    this.log(levelApplication, `📥 Creating custom note with model: "${modelName}"`);
+    this.log(levelVerbose, `📥 Creating custom note with model: "${modelName}"`);
     const verifiedDeckName = await this.ensureDeckExists(deckName);
-    const noteTags = [...tags, `joplin-title:${title}`, `joplin-notebook:${notebook?.title || 'Unknown'}`];
+    const noteTags = [...tags, `joplin-title:${sanitizeForTag(title)}`, `joplin-notebook:${sanitizeForTag(notebook?.title)}`];
     const noteData = {
       deckName: verifiedDeckName,
       modelName,
@@ -232,6 +260,7 @@ class AnkiClient {
     return this.doRequest({ action: "findNotes", version: 6, params: { query } });
   }
 
+  // FIX: This function is now completely rewritten to be robust and fetch deck names.
   async getAllJtaNotesInfo() {
     this.log(levelVerbose, '🔍 Fetching all JTA notes from Anki for state comparison...');
     const noteIds = await this.doRequest({
@@ -239,22 +268,35 @@ class AnkiClient {
       version: 6,
       params: { query: `"Joplin to Anki ID:*"` }
     });
+
     if (!noteIds || noteIds.length === 0) {
       this.log(levelApplication, 'ℹ️ No existing JTA notes found in Anki.');
       return new Map();
     }
     this.log(levelDebug, `Found ${noteIds.length} JTA notes in Anki. Fetching their info...`);
     const notesInfo = await this.getNoteInfo(noteIds);
+
+    // --- NEW LOGIC: EFFICIENTLY FETCH DECK NAMES ---
+    const cardIds = notesInfo.map(note => (note.cards && note.cards.length > 0) ? note.cards[0] : null).filter(Boolean);
+    const cardsInfo = await this.doRequest({ action: "cardsInfo", version: 6, params: { cards: cardIds } });
+    
+    const cardToDeckMap = new Map();
+    cardsInfo.forEach(card => cardToDeckMap.set(card.cardId, card.deckName));
+    // --- END NEW LOGIC ---
+
     const notesMap = new Map();
     for (const note of notesInfo) {
       if (note && note.fields && note.fields['Joplin to Anki ID']) {
         const jtaID = note.fields['Joplin to Anki ID'].value;
         if (jtaID) {
           const ankiModTimeUtc = new Date(note.mod * 1000).toISOString().replace(/\.\d{3}Z$/, '.000Z');
+          const firstCardId = (note.cards && note.cards.length > 0) ? note.cards[0] : null;
+          const deckName = cardToDeckMap.get(firstCardId) || 'Unknown'; // Fallback
           
           notesMap.set(jtaID, {
             ankiNoteId: note.noteId,
             modelName: note.modelName,
+            deckName: deckName, // Add the deck name here
             ankiModTimeUtc: ankiModTimeUtc,
             fields: note.fields,
             tags: note.tags,
@@ -266,32 +308,36 @@ class AnkiClient {
     return notesMap;
   }
 
+
   async getNotesInfoByJtaIds(jtaIds) {
     if (!jtaIds || jtaIds.length === 0) {
       return [];
     }
     
     const allNotes = [];
+    const batchSize = 50;
     
-    for (const jtaID of jtaIds) {
-      try {
-        const noteIds = await this.doRequest({
-          action: "findNotes",
-          version: 6,
-          params: { query: `"Joplin to Anki ID:${jtaID}"` }
-        });
-        
-        if (noteIds && noteIds.length > 0) {
-          const notesInfo = await this.doRequest({
-            action: "notesInfo",
-            version: 6,
-            params: { notes: noteIds }
-          });
-          allNotes.push(...notesInfo);
+    for (let i = 0; i < jtaIds.length; i += batchSize) {
+        const idBatch = jtaIds.slice(i, i + batchSize);
+        const query = idBatch.map(id => `"Joplin to Anki ID:${id}"`).join(" or ");
+        try {
+            const noteIds = await this.doRequest({
+                action: "findNotes",
+                version: 6,
+                params: { query }
+            });
+
+            if (noteIds && noteIds.length > 0) {
+                const notesInfo = await this.doRequest({
+                    action: "notesInfo",
+                    version: 6,
+                    params: { notes: noteIds }
+                });
+                allNotes.push(...notesInfo);
+            }
+        } catch (e) {
+            this.log(levelVerbose, `⚠️ Could not fetch batch of notes: ${e.message}`);
         }
-      } catch (e) {
-        this.log(levelVerbose, `⚠️ Could not fetch note for JTA ID ${jtaID}: ${e.message}`);
-      }
     }
     
     return allNotes;
@@ -320,4 +366,5 @@ const models = {
   image: { name: "Joplin to Anki Image Enhanced", fields: [ "Header", "QuestionImagePath", "AnswerImagePath", "AltText", "Question", "Answer", "Origin", "Insertion", "Innervation", "Action", "Comments", "Clinical Correlation", "Footer", "Sources", "Joplin to Anki ID" ] }
 };
 
-module.exports = AnkiClient;
+// FIX: Export buildAnkiFieldsObject so it can be used by the importer.
+module.exports = { AnkiClient, buildAnkiFieldsObject };

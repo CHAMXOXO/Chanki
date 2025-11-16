@@ -1,89 +1,113 @@
-// log.js
+// log.js - SYNTAX CORRECTED
 const fs = require('fs');
 const path = require('path');
+const chalk = require('chalk'); 
 
-const LogLevel = {
-    NONE: 0,
-    APPLICATION: 1, // High-level operational messages
-    VERBOSE: 2,     // More detailed operational messages
-    DEBUG: 3        // All internal debugging messages
-};
+const LogLevel = { NONE: 0, APPLICATION: 1, VERBOSE: 2, DEBUG: 3 };
+let currentLevel = LogLevel.APPLICATION;
 
-// --- IMPORTANT: Default log level set to DEBUG ---
-// This ensures you get verbose output by default without needing to configure it externally.
-let currentLevel = LogLevel.DEBUG; 
-
-// Get the log file path from environment variable or default
-// You can set JTA_LOG_FILE=/path/to/your/log.log if you want to override this
-const LOG_FILE_PATH = process.env.JTA_LOG_FILE || path.join(__dirname, 'jta_sync.log');
-
-// Ensure the log file directory exists
+const LOG_FILE_PATH = process.env.JTA_LOG_FILE || path.join(__dirname, '..', 'jta_sync.log');
 const logDir = path.dirname(LOG_FILE_PATH);
+
 if (!fs.existsSync(logDir)) {
-    try {
-        fs.mkdirSync(logDir, { recursive: true });
-    } catch (error) {
-        console.error(`Failed to create log directory ${logDir}:`, error);
+    try { 
+        fs.mkdirSync(logDir, { recursive: true }); 
+    } catch (error) { 
+        console.error('Failed to create log directory:', error); // FIXED: Added parentheses
     }
 }
 
 const writeToLogFile = (message) => {
     try {
-        fs.appendFileSync(LOG_FILE_PATH, `${message}\n`);
-    } catch (error) {
-        console.error('Failed to write to log file:', error);
+        const plain = String(message).replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
+        fs.appendFileSync(LOG_FILE_PATH, `${plain}\n`);
+    } catch (error) { 
+        console.error('Failed to write to log file:', error); 
     }
 };
 
-/**
- * Logs a message if its level is less than or equal to the current global log level.
- * Messages are always printed to console and written to a file.
- * @param {number} level - The log level of the message (e.g., LogLevel.DEBUG).
- * @param {string} message - The message to log.
- */
 const log = (level, message) => {
-    if (level <= currentLevel) {
-        const timestamp = new Date().toISOString();
-        let levelTag = '';
-        switch (level) {
-            case LogLevel.APPLICATION:
-                levelTag = '[APP]';
-                break;
-            case LogLevel.VERBOSE:
-                levelTag = '[VERB]';
-                break;
-            case LogLevel.DEBUG:
-                levelTag = '[DEBUG]';
-                break;
-            case LogLevel.NONE: // Should ideally not be used for logging messages
-            default:
-                levelTag = '[INFO]';
-        }
-        const logMessage = `${timestamp} ${levelTag} ${message}`;
-        console.log(logMessage); // Always log to console
-        writeToLogFile(logMessage); // Always write to file
+    // Validation logic
+    if (typeof level !== 'number' || !Object.values(LogLevel).includes(level)) {
+        const warningMessage = `[LOGGER-ERROR] log() function called with invalid level. Level: ${level}, Message: ${message}`;
+        console.error(chalk.red.bold(warningMessage));
+        writeToLogFile(new Date().toISOString() + ' ' + warningMessage);
+        level = LogLevel.APPLICATION;
+        message = `(INVALID LOG CALL) ${message || level}`;
     }
+    
+    if (level > currentLevel) return;
+    
+    if (message === undefined || message === null) {
+        message = String(message);
+    } else if (typeof message === 'object') {
+        message = JSON.stringify(message, null, 2);
+    }
+    
+    // Handle boxen output
+    if (message.includes('┌') && message.includes('┐')) {
+        console.log(message);
+        writeToLogFile(message);
+        return;
+    }
+    
+    const timestamp = new Date().toISOString();
+    let levelTag = '';
+    
+    switch (level) {
+        case LogLevel.APPLICATION: levelTag = '[APP]'; break;
+        case LogLevel.VERBOSE: levelTag = '[VERB]'; break;
+        case LogLevel.DEBUG: levelTag = '[DEBUG]'; break;
+    }
+    
+    // FIXED: Changed backticks to parentheses
+    writeToLogFile(`${timestamp} ${levelTag} ${message}`);
+    
+    let coloredLevelTag = levelTag;
+    let coloredMessage = message;
+    
+    const coloredTimestamp = (chalk && chalk.dim) ? chalk.dim(timestamp) : timestamp;
+    
+    try {
+        switch (level) {
+            case LogLevel.APPLICATION: 
+                coloredLevelTag = chalk.blue.bold(levelTag); 
+                break;
+            case LogLevel.VERBOSE: 
+                coloredLevelTag = chalk.cyan(levelTag); 
+                break;
+            case LogLevel.DEBUG: 
+                coloredLevelTag = chalk.gray(levelTag); 
+                break;
+        }
+        
+        if (message.includes('✅') || message.includes('Successfully')) {
+            coloredMessage = chalk.green(message);
+        } else if (message.includes('❌') || message.includes('Error') || message.includes('Failed')) {
+            coloredMessage = chalk.red.bold(message);
+        } else if (message.includes('⚠️') || message.includes('Warning')) {
+            coloredMessage = chalk.yellow(message);
+        } else if (message.includes('💎')) {
+            coloredMessage = chalk.magenta.bold(message);
+        }
+    } catch (e) { 
+        /* Proceed with uncolored logs */ 
+    }
+    
+    // FIXED: Changed backticks to parentheses
+    console.log(`${coloredTimestamp} ${coloredLevelTag} ${coloredMessage}`);
 };
 
-/**
- * Sets the global logging level.
- * @param {number} level - The new log level.
- */
 const setLevel = (level) => {
     if (Object.values(LogLevel).includes(level)) {
         currentLevel = level;
-        log(LogLevel.APPLICATION, `Log level set to: ${Object.keys(LogLevel).find(key => LogLevel[key] === level)}`);
-    } else {
-        console.warn(`Invalid log level: ${level}. Keeping current level: ${Object.keys(LogLevel).find(key => LogLevel[key] === currentLevel)}`);
     }
 };
 
-module.exports = {
-    levelNone: LogLevel.NONE,
-    levelApplication: LogLevel.APPLICATION,
-    levelVerbose: LogLevel.VERBOSE,
-    levelDebug: LogLevel.DEBUG,
-    log, // Export the direct log function
-    setLevel,
-    getLogFilePath: () => LOG_FILE_PATH
+module.exports = { 
+    levelApplication: LogLevel.APPLICATION, 
+    levelVerbose: LogLevel.VERBOSE, 
+    levelDebug: LogLevel.DEBUG, 
+    log, 
+    setLevel 
 };

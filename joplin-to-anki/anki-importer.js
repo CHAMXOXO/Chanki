@@ -1,9 +1,12 @@
-// anki-importer.js - FIXED with proper field deletion support
+// anki-importer.js
 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
+// FIX: Correctly import the buildAnkiFieldsObject function from anki-client
+const { buildAnkiFieldsObject } = require('./anki-client');
 
 const decodeHtmlEntities = (text) => {
-  if (!text || typeof text !== 'string') return text;
+  // Ensure we always work with a string
+  if (typeof text !== 'string') return '';
   const entityMap = {
     '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&apos;': "'",
     '&#x27;': "'", '&#x39;': "'", '&#xA0;': ' ', '&nbsp;': ' '
@@ -17,13 +20,6 @@ const decodeHtmlEntities = (text) => {
   return decoded;
 };
 
-/**
- * Converts Joplin resource links back to Anki media filenames
- * @param {string} html - HTML content with potential Joplin resource links
- * @param {object} mediaConversionMap - Bidirectional mapping of resources
- * @param {function} log - Logging function
- * @returns {string} - HTML with Anki filenames restored
- */
 const convertJoplinResourcesToAnkiMedia = (html, mediaConversionMap, log) => {
   if (!html || typeof html !== 'string') return html;
   if (!mediaConversionMap || Object.keys(mediaConversionMap).length === 0) return html;
@@ -31,36 +27,26 @@ const convertJoplinResourcesToAnkiMedia = (html, mediaConversionMap, log) => {
   const cheerio = require('cheerio');
   const $ = cheerio.load(html, { decodeEntities: false });
   const images = $('img');
-  let converted = 0;
   
   images.each((i, imgElement) => {
     const img = $(imgElement);
     const src = img.attr('src');
     
-    // Check if it's a Joplin resource link (format: ":/{resource-id}")
     if (src && src.startsWith(':/')) {
       const resourceId = src.replace(':/', '');
-      
-      // Look up the original Anki filename using reverse mapping
       if (mediaConversionMap[resourceId]) {
-        const originalAnkiFilename = mediaConversionMap[resourceId];
-        img.attr('src', originalAnkiFilename);
-        converted++;
-        log(levelDebug, `[MEDIA-REVERSE] ✅ :/${resourceId} → ${originalAnkiFilename}`);
-      } else {
-        log(levelVerbose, `[MEDIA-REVERSE] ⚠️ No mapping found for :/${resourceId} (might be a managed resource)`);
+        img.attr('src', mediaConversionMap[resourceId]);
       }
     }
   });
-  
-  if (converted > 0) {
-    log(levelApplication, `[MEDIA-REVERSE] 📊 Converted ${converted} Joplin resource(s) back to Anki media`);
-  }
-  
   return $.html();
 };
 
 const batchImporter = async (aClient, items, batchSize = 10, log, jClient, mediaConversionMap = {}) => {
+  const itemsToCreate = items.create || [];
+  const itemsToUpdate = items.update || [];
+  const totalItems = itemsToCreate.length + itemsToUpdate.length;
+
   const summary = { 
     created: 0, 
     updated: 0, 
@@ -71,228 +57,112 @@ const batchImporter = async (aClient, items, batchSize = 10, log, jClient, media
     createdItems: [] 
   };
   
-  log(levelApplication, `📦 Starting batch import of ${items.length} items...`);
+  log(levelApplication, `📦 Starting batch import of ${totalItems} items...`);
   
-  for (let i = 0; i < items.length; i += batchSize) {
-    const batch = items.slice(i, i + batchSize);
-    log(levelApplication, `Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(items.length / batchSize)}...`);
-    
-    const promises = batch.map(async (item) => {
-      try {
-      log(levelDebug, `[IMPORTER-DEBUG] Processing item ${item.jtaID}. Full item object received: ${JSON.stringify(item, null, 2)}`);
-        // PHASE 1: UPLOAD RESOURCES
-        if (item.resourcesToUpload && item.resourcesToUpload.length > 0 && jClient) {
-          log(levelApplication, `[MEDIA] 🎬 Uploading ${item.resourcesToUpload.length} resources for ${item.jtaID}...`);
-          
-          for (const resource of item.resourcesToUpload) {
-            try {
-              const fileData = await jClient.request(
-                jClient.urlGen("resources", resource.id, "file"), 
-                "GET", undefined, undefined, false, "binary"
-              );
-              
-              if (!fileData) throw new Error(`No data for resource ${resource.id}`);
-              
-              await aClient.storeMedia(resource.fileName, fileData);
-              summary.resourcesUploaded++;
-              log(levelApplication, `✅ [MEDIA] Uploaded ${resource.fileName}`);
-            } catch (e) {
-              summary.resourcesFailed++;
-              log(levelApplication, `❌ [MEDIA] Failed: ${resource.fileName}: ${e.message}`);
-            }
-          }
-        }
-        
-        await aClient.ensureDeckExists(item.deckName);
-        const existingNotes = await aClient.findNote(item.jtaID, item.deckName);
-        
-        const isCustomNote = item.additionalFields && item.additionalFields.customNoteType;
-
-        log(levelDebug, `[IMPORTER-DEBUG] Item ${item.jtaID}: Is this a custom note? -> ${isCustomNote}`);
-        
-        if (isCustomNote) {
-            // CUSTOM NOTE TYPE HANDLING
-            const modelName = item.additionalFields.customNoteType;
-            log(levelDebug, `[IMPORTER-DEBUG] Taking the CUSTOM note path for ${item.jtaID}.`);
-            log(levelDebug, `[IMPORTER-DEBUG] Custom ModelName: "${modelName}". Fields to be sent to Anki: ${JSON.stringify(item.additionalFields.customFields, null, 2)}`);
-            
-            // ✅ CONVERT JOPLIN RESOURCES TO ANKI MEDIA IN CUSTOM FIELDS
-            const fields = {};
-            for (const [fieldName, fieldValue] of Object.entries(item.additionalFields.customFields)) {
-              let convertedValue = decodeHtmlEntities(fieldValue);
-              
-              // Check if this field contains HTML with potential Joplin resource links
-              if (convertedValue && typeof convertedValue === 'string' && convertedValue.includes(':/')) {
-                log(levelDebug, `[CUSTOM-MEDIA] Checking field "${fieldName}" for Joplin resources`);
-                convertedValue = convertJoplinResourcesToAnkiMedia(convertedValue, mediaConversionMap, log);
-              }
-              
-              fields[fieldName] = convertedValue;
-            }
-            
-            log(levelDebug, `[CUSTOM-NOTE] Processed ${Object.keys(fields).length} fields for custom note type "${modelName}"`);
-            
-            if (existingNotes && existingNotes.length > 0) {
-              await aClient.updateCustomNote(existingNotes[0], fields);
-              await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
-              summary.updated++;
-              log(levelApplication, `✅ Updated custom "${modelName}" card: "${item.title}" (${Object.keys(fields).length} fields)`);
-            } else {
-              await aClient.createCustomNote(modelName, fields, item.deckName, item.tags, item.title, item.notebook);
-              summary.created++;
-              summary.createdItems.push({ 
-                jtaID: item.jtaID, 
-                joplinNoteId: item.joplinNoteId, 
-                index: item.index 
-              });
-              log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
-            }
-        } else {
-          // STANDARD NOTE TYPE HANDLING
-          const decodedAdditionalFields = Object.fromEntries(
-            Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v || '')])
-          );
-
-          log(levelDebug, `[IMPORTER-DEBUG] Taking the STANDARD note path for ${item.jtaID}.`);
-          
-          const cardType = aClient.detectCardType(item.question, item.answer, decodedAdditionalFields);
-          
-          if (existingNotes && existingNotes.length > 0) {
-            // === FIX: UPDATE WITH PROPER FIELD CLEARING ===
-            const fieldsToUpdate = {};
-            
-            // ✅ CONVERT JOPLIN RESOURCES BACK TO ANKI FILENAMES FIRST
-            const convertedQuestion = convertJoplinResourcesToAnkiMedia(
-              item.question || '', 
-              mediaConversionMap, 
-              log
-            );
-            const convertedAnswer = convertJoplinResourcesToAnkiMedia(
-              item.answer || '', 
-              mediaConversionMap, 
-              log
-            );
-            
-            // Always include Question and Answer (use empty string if not present)
-            fieldsToUpdate.Question = decodeHtmlEntities(convertedQuestion);
-            fieldsToUpdate.Answer = decodeHtmlEntities(convertedAnswer);
-            
-            // === FIX: Include ALL possible fields, even if empty ===
-            // This ensures deleted fields get cleared in Anki
-            // IMPORTANT: %%FieldName%% is treated as VALID content, not a placeholder
-            const allPossibleFields = [
-              'Header', 'Footer', 'Sources', 'Explanation', 'Clinical Correlation',
-              'Extra', 'Comments', 'Origin', 'Insertion', 'Innervation', 'Action',
-              'OptionA', 'OptionB', 'OptionC', 'OptionD', 'CorrectAnswer',
-              'QuestionImagePath', 'AnswerImagePath', 'AltText'
-            ];
-            
-            // Mapping from Anki field names to additionalFields keys
-            const fieldMapping = {
-              'Header': 'header',
-              'Footer': 'footer',
-              'Sources': 'sources',
-              'Explanation': 'explanation',
-              'Clinical Correlation': 'clinicalCorrelation',
-              'Extra': 'extra',
-              'Comments': 'comments',
-              'Origin': 'origin',
-              'Insertion': 'insertion',
-              'Innervation': 'innervation',
-              'Action': 'action',
-              'OptionA': 'optionA',
-              'OptionB': 'optionB',
-              'OptionC': 'optionC',
-              'OptionD': 'optionD',
-              'CorrectAnswer': 'correctAnswer',
-              'QuestionImagePath': 'questionImagePath',
-              'AnswerImagePath': 'answerImagePath',
-              'AltText': 'altText'
-            };
-            
-            for (const fieldName of allPossibleFields) {
-              const fieldKey = fieldMapping[fieldName];
-              let fieldValue = decodedAdditionalFields[fieldKey] || '';
-              
-              // ✅ CONVERT RESOURCES IN THIS FIELD TOO (if it contains HTML)
-              if (fieldValue && typeof fieldValue === 'string' && fieldValue.includes(':/')) {
-                fieldValue = convertJoplinResourcesToAnkiMedia(fieldValue, mediaConversionMap, log);
-              }
-              
-              // Only send to Anki if field exists in the model
-              // Empty string is valid and will clear the field
-              fieldsToUpdate[fieldName] = fieldValue || '';
-            }
-            
-            await aClient.updateNote(existingNotes[0], fieldsToUpdate);
-            await aClient.updateNoteTags(existingNotes[0], item.title, item.notebook, item.tags);
-            summary.updated++;
-            log(levelApplication, `✅ Updated standard "${cardType}" card: "${item.title}" (${Object.keys(fieldsToUpdate).length} fields)`);
-          } else {
-            // CREATE NEW
-            // ✅ CONVERT RESOURCES BEFORE CREATING
-            const convertedQuestion = convertJoplinResourcesToAnkiMedia(
-              item.question, 
-              mediaConversionMap, 
-              log
-            );
-            const convertedAnswer = convertJoplinResourcesToAnkiMedia(
-              item.answer, 
-              mediaConversionMap, 
-              log
-            );
-            
-            // Also convert resources in additional fields
-            const convertedAdditionalFields = {};
-            for (const [key, value] of Object.entries(decodedAdditionalFields)) {
-              if (value && typeof value === 'string' && value.includes(':/')) {
-                convertedAdditionalFields[key] = convertJoplinResourcesToAnkiMedia(value, mediaConversionMap, log);
-              } else {
-                convertedAdditionalFields[key] = value;
-              }
-            }
-            
-            await aClient.createNote(
-              convertedQuestion, 
-              convertedAnswer, 
-              item.jtaID, 
-              item.title,
-              item.notebook, 
-              item.tags, 
-              item.folders, 
-              convertedAdditionalFields, 
-              item.deckName
-            );
-            
-            summary.created++;
-            summary.createdItems.push({ 
-              jtaID: item.jtaID, 
-              joplinNoteId: item.joplinNoteId, 
-              index: item.index 
-            });
-            log(levelApplication, `✅ Created standard "${cardType}" card: "${item.title}"`);
-          }
-        }
-      } catch (e) {
-        log(levelApplication, `❌ Failed to process JTA ID ${item.jtaID}: ${e.message}`);
-        log(levelDebug, `Error stack: ${e.stack}`);
-        summary.failed++;
-      }
-    });
-    
-    await Promise.all(promises);
-  }
+  const allItems = [...itemsToCreate, ...itemsToUpdate];
   
-  log(levelApplication, `
-📊 Batch Import Summary:
-   • Created: ${summary.created}
-   • Updated: ${summary.updated}
-   • Failed: ${summary.failed}
-   • Resources Uploaded: ${summary.resourcesUploaded}
-   • Resource Failures: ${summary.resourcesFailed}
-  `);
-  
-  return summary;
-};
+   for (let i = 0; i < allItems.length; i += batchSize) {
+     const batch = allItems.slice(i, i + batchSize);
+     log(levelApplication, `Processing batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(allItems.length / batchSize)}...`);
+     
+     const promises = batch.map(async (item) => {
+       try {
+         if (item.resourcesToUpload && item.resourcesToUpload.length > 0 && jClient) {
+           log(levelVerbose, `[MEDIA] 🎬 Uploading ${item.resourcesToUpload.length} resources for ${item.jtaID}...`);
+           for (const resource of item.resourcesToUpload) {
+             try {
+               const fileData = await jClient.request(
+                 jClient.urlGen("resources", resource.id, "file"), "GET", undefined, undefined, false, "binary"
+               );
+               if (!fileData) throw new Error(`No data for resource ${resource.id}`);
+               await aClient.storeMedia(resource.fileName, fileData);
+               summary.resourcesUploaded++;
+               log(levelVerbose, `✅ [MEDIA] Uploaded ${resource.fileName}`);
+             } catch (e) {
+               summary.resourcesFailed++;
+               log(levelApplication, `❌ [MEDIA] Failed: ${resource.fileName}: ${e.message}`);
+             }
+           }
+         }
+         
+         await aClient.ensureDeckExists(item.deckName);
+         
+         const isCustomNote = item.additionalFields && item.additionalFields.customNoteType;
+         
+         if (isCustomNote) {
+             const modelName = item.additionalFields.customNoteType;
+             const fields = {};
+             // --- FIX: Ensure every field value is a string to prevent "bad argument type" API errors. ---
+             for (const [fieldName, fieldValue] of Object.entries(item.additionalFields.customFields)) {
+               fields[fieldName] = decodeHtmlEntities(fieldValue); // Removed (|| '') as decode handles it
+             }
+             // --- END FIX ---
+     
+             if (item.ankiNoteId) {
+                await aClient.updateCustomNote(item.ankiNoteId, fields);
+                await aClient.updateNoteTags(item.ankiNoteId, item.title, item.notebook, item.tags);
+                summary.updated++;
+                log(levelApplication, `✅ Updated custom "${modelName}" card: "${item.title}"`);
+             } else {
+               await aClient.createCustomNote(modelName, fields, item.deckName, item.tags, item.title, item.notebook);
+               summary.created++;
+               summary.createdItems.push({ jtaID: item.jtaID, joplinNoteId: item.joplinNoteId, index: item.index });
+               log(levelApplication, `✅ Created custom "${modelName}" card: "${item.title}"`);
+             }
+         } else {
+           const modelName = item.additionalFields.ankiModelName || aClient.detectCardType(item.question, item.answer, item.additionalFields);
+               const cardType = aClient.detectCardType(item.question, item.answer, item.additionalFields); // Still useful for buildAnkiFieldsObject
+       
+               const decodedAdditionalFields = Object.fromEntries(
+                 Object.entries(item.additionalFields || {}).map(([k, v]) => [k, decodeHtmlEntities(v)])
+               );
+       
+               // 2. Build the fields object using this reliable information.
+               const fields = buildAnkiFieldsObject(decodeHtmlEntities(item.question), decodeHtmlEntities(item.answer), item.jtaID, cardType, decodedAdditionalFields);
+       
+               if (item.ankiNoteId) {
+                  // 3. Perform the UPDATE using the correctly built fields.
+                  await aClient.updateNote(item.ankiNoteId, fields);
+                  await aClient.updateNoteTags(item.ankiNoteId, item.title, item.notebook, item.tags);
+                  summary.updated++;
+                  log(levelApplication, `✅ Updated standard "${modelName}" card: "${item.title}"`);
+               } else {
+                 // 4. Perform the CREATE. createNote internally figures out the model name.
+                 await aClient.createNote(
+                   item.question, item.answer, item.jtaID, item.title, item.notebook, 
+                   item.tags, item.folders, decodedAdditionalFields, item.deckName
+                 );
+                 summary.created++;
+                 summary.createdItems.push({ jtaID: item.jtaID, joplinNoteId: item.joplinNoteId, index: item.index });
+               }
+           }
+       } catch (e) {
+         const isDuplicateError = e.message && e.message.includes('cannot create note because it is a duplicate');
+         if (isDuplicateError) {
+           log(levelVerbose, `⏭️ Skipped duplicate creation attempt for ${item.jtaID}. Treating as implicitly synced/skipped.`);
+           summary.skipped++;
+           return; 
+         }
+         log(levelApplication, `❌ Failed to process JTA ID ${item.jtaID}: ${e.message}`);
+         log(levelDebug, `Error stack: ${e.stack}`);
+         summary.failed++;
+       }
+     });
+     
+     await Promise.all(promises);
+   }
+   
+   log(levelApplication, `
+ 📊 Batch Import Summary:
+    • Created: ${summary.created}
+    • Updated: ${summary.updated}
+    • Skipped: ${summary.skipped}
+    • Failed: ${summary.failed}
+    • Resources Uploaded: ${summary.resourcesUploaded}
+    • Resource Failures: ${summary.resourcesFailed}
+   `);
+   
+   return summary;
+ };
 
 module.exports = batchImporter;
