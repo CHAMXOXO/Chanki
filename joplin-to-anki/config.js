@@ -1,12 +1,10 @@
-// config.js - ENHANCED & CENTRALIZED VERSION
 const Configstore = require("configstore");
 const packageJson = require("./package.json");
 
-// 1. Define default values in one place.
 const defaultConfigs = {
   joplinURL: "http://localhost:41184",
   ankiURL: "http://localhost:8765",
-  exportFromDate: null, // We will set this dynamically if needed
+  exportFromDate: null, 
   joplinToken: null,
 };
 
@@ -22,10 +20,8 @@ const config = new Configstore(packageJson.name);
 function loadConfig() {
   const storedConfig = config.all;
 
-  // Start with defaults and merge stored values
   let finalConfig = { ...defaultConfigs, ...storedConfig };
 
-  // Allow environment variables to override everything
   if (process.env.JTA_JOPLIN_URL) {
     finalConfig.joplinURL = process.env.JTA_JOPLIN_URL;
   }
@@ -43,25 +39,17 @@ function loadConfig() {
     finalConfig.exportFromDate = defaultDate.toISOString();
   }
   
-  // 2. Perform critical validation.
-  // The 'run' command will need the token.
   if (!finalConfig.joplinToken) {
-    // We don't throw an error here, as commands like 'status' or 'config' should still work.
-    // The 'run' command itself should perform the final check.
-    // This allows the app to function partially without a full setup.
   }
 
   return finalConfig;
 }
 
-// 3. Export a single, ready-to-use config object for the application.
 const validatedConfig = loadConfig();
 
 module.exports = {
-  // The main export is the validated config object
   config: validatedConfig,
   
-  // Expose these methods for the `chanki config` commands
   path: config.path,
   set: (key, value) => {
     config.set(key, value);

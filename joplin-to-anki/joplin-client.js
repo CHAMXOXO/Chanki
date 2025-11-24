@@ -1,4 +1,4 @@
-// joplin-client.js - COMPLETE VERSION with Logging Fix
+// joplin-client.js
 
 const axios = require("axios");
 const fs = require('fs').promises;

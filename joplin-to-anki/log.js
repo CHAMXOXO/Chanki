@@ -13,7 +13,7 @@ if (!fs.existsSync(logDir)) {
     try { 
         fs.mkdirSync(logDir, { recursive: true }); 
     } catch (error) { 
-        console.error('Failed to create log directory:', error); // FIXED: Added parentheses
+        console.error('Failed to create log directory:', error); z
     }
 }
 
@@ -27,7 +27,7 @@ const writeToLogFile = (message) => {
 };
 
 const log = (level, message) => {
-    // Validation logic
+    // Validation logicz
     if (typeof level !== 'number' || !Object.values(LogLevel).includes(level)) {
         const warningMessage = `[LOGGER-ERROR] log() function called with invalid level. Level: ${level}, Message: ${message}`;
         console.error(chalk.red.bold(warningMessage));
@@ -60,7 +60,7 @@ const log = (level, message) => {
         case LogLevel.DEBUG: levelTag = '[DEBUG]'; break;
     }
     
-    // FIXED: Changed backticks to parentheses
+    // FIXED: Changed backticks to parenthesesz
     writeToLogFile(`${timestamp} ${levelTag} ${message}`);
     
     let coloredLevelTag = levelTag;

@@ -1,60 +1,89 @@
 #!/usr/bin/env node
 const { program } = require("commander");
 const jta = require("./index");
-// --- UPDATED: Import the new config module's exports ---
 const { config, path: configPath, set: configSet, reset: configReset } = require("./config");
 const { log, setLevel, levelApplication, levelVerbose, levelDebug } = require("./log");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
 
-const CHANKI_VERSION = "2.0.2"; // Bumped version for new features
+const CHANKI_VERSION = "2.0.2";
 const CHANKI_BANNER = `
 ╔════════════════════════════════════════════════════════════╗
 ║                       CHANKI v2.0.2                        ║
 ║         Advanced Joplin ↔ Anki Synchronization             ║
-║                                                            ║
-║          Based on joplin-to-anki by Bart (MIT)             ║
-║           Enhanced & Extended by Cindy © 2025              ║
 ╚════════════════════════════════════════════════════════════╝
 `;
 
 function detectPremiumLicense() {
   const licenseFile = path.join(os.homedir(), '.jta-premium-license');
   const envKey = process.env.JTA_PREMIUM_KEY;
+  
   if (envKey) return { active: true, key: envKey, source: 'environment variable' };
+  
   if (fs.existsSync(licenseFile)) {
     try {
       const key = fs.readFileSync(licenseFile, 'utf8').trim();
       return { active: true, key: key, source: 'license file' };
-    } catch (e) { return { active: false, error: 'Could not read license file' }; }
+    } catch (e) { 
+        return { active: false, error: 'Could not read license file' }; 
+    }
   }
   return { active: false };
 }
 
 async function loadPremiumPlugin() {
   const license = detectPremiumLicense();
+  
+  // If no license exists, stop trying to load (Prevents "Module not found" error in Legacy mode)
   if (!license.active) return { loaded: false, license: false };
+  
   try {
-    // --- NOTE: Hardcoded path retained as requested for local development ---
-    const localPath = '/home/cindy/Chanki-Premium/joplin-to-anki-premium';
-    const premiumModule = fs.existsSync(localPath) ? require(localPath) : require('chanki-premium');
+    // 1. Check your specific Developer Path
+    const devPath = '/home/cindy/Chanki-Premium/joplin-to-anki-premium';
+    
+    // 2. Check Sibling Directory (Standard Dev structure)
+    const siblingPath = path.join(__dirname, '../joplin-to-anki-premium');
+
+    let premiumModule = null;
+
+    if (fs.existsSync(devPath)) {
+        premiumModule = require(devPath);
+    } else if (fs.existsSync(siblingPath)) {
+        premiumModule = require(siblingPath);
+    } else {
+        // 3. Fallback to Production (NPM package)
+        try {
+            premiumModule = require('chanki-premium');
+        } catch (e) {
+            // If strictly legacy, this is expected, but we only error if a license WAS found
+            throw new Error("Premium license detected, but premium module files are missing.");
+        }
+    }
 
     if (premiumModule && premiumModule.initialize) {
       const logLevels = { levelApplication, levelVerbose, levelDebug };
-      const success = premiumModule.initialize(jta, log, logLevels);
+      const success = await premiumModule.initialize(jta, log, logLevels);
       return { loaded: success, license: true };
     }
-    throw new Error("Premium module is invalid.");
+    
+    return { loaded: false, license: true };
+
   } catch (error) {
-    log(levelApplication, `❌ Failed to load premium plugin`);
-    log(levelApplication, `   Error: ${error.message}`);
     return { loaded: false, license: true, error: error };
   }
 }
 
-program.name('chanki').version(CHANKI_VERSION).description('...');
-program.option("-t, --joplintoken <token>", "Override the stored Joplin token").option("-d, --date <ISO Time String>", "Override the last sync date").option("-j, --joplinurl <URL>", "Override the stored Joplin URL").option("-a, --ankiurl <URL>", "Override the stored Anki URL").option('-v, --verbose', "Enable verbose logging").option('-vv, --debug', "Enable debug logging").option("--no-banner", "Hide the startup banner");
+program.name('chanki').version(CHANKI_VERSION).description('Advanced Joplin to Anki Sync Tool');
+
+program.option("-t, --joplintoken <token>", "Override the stored Joplin token")
+       .option("-d, --date <ISO Time String>", "Override the last sync date")
+       .option("-j, --joplinurl <URL>", "Override the stored Joplin URL")
+       .option("-a, --ankiurl <URL>", "Override the stored Anki URL")
+       .option('-v, --verbose', "Enable verbose logging")
+       .option('-vv, --debug', "Enable debug logging")
+       .option("--no-banner", "Hide the startup banner");
+
 program.hook('preAction', (thisCommand) => {
   const opts = thisCommand.opts();
   if (opts.debug) setLevel(levelDebug);
@@ -68,12 +97,19 @@ program.command("status").description("Show current configuration and license st
     }
     const premium = await loadPremiumPlugin();
     
-    // --- UPDATED: Use the imported 'config' object directly ---
-    // No need for getAll() or fallback checks like `|| '(not set)'` for most values
     console.log('📊 System Status\n');
     console.log(`Version: ${CHANKI_VERSION}`);
-    console.log(`Edition: ${premium.loaded ? '💎 Premium' : '📦 Legacy'}`);
-    if (premium.license && !premium.loaded && premium.error) console.log(`Load Error: ${String(premium.error.message)}`);
+    
+    if (premium.loaded) {
+        console.log(`Edition: 💎 Premium (Active)`);
+    } else {
+        console.log(`Edition: 📦 Legacy (Free)`);
+    }
+
+    if (premium.license && !premium.loaded && premium.error) {
+        console.log(`⚠️ Warning: License found but module failed to load:`);
+        console.log(`   ${String(premium.error.message)}`);
+    }
     
     console.log('\n⚙️  Configuration\n');
     console.log(`Joplin URL: ${config.joplinURL}`);
@@ -107,7 +143,10 @@ program.command("run")
         }
 
         try {
-            await loadPremiumPlugin();
+            const premiumStatus = await loadPremiumPlugin();
+            if(premiumStatus.license && !premiumStatus.loaded) {
+                 log(levelApplication, `⚠️ Running in Legacy Mode (Premium module not found)`);
+            }
             
             const logLevels = { levelApplication, levelVerbose, levelDebug };
             
@@ -124,11 +163,10 @@ program.command("run")
         } catch (error) {
             log(levelApplication, `❌ A critical error occurred during the sync process:`);
             log(levelApplication, error.message);
-            process.exit(1); // This is correct
+            process.exit(1); 
         }
     });
 
-// --- NEW: Fully implemented `config` command ---
 const configCommand = program.command("config").description("Get or set configuration values");
 
 configCommand.command("set <key> <value>").description("Set a configuration key").action((key, value) => {
@@ -137,7 +175,6 @@ configCommand.command("set <key> <value>").description("Set a configuration key"
 });
 
 configCommand.command("get <key>").description("Get a configuration key's value").action((key) => {
-    // The imported 'config' object already has all values
     const value = config[key];
     if (value !== undefined) {
         console.log(value);
@@ -151,7 +188,6 @@ configCommand.command("reset").description("Reset all stored configurations to d
     log(levelApplication, '✅ Configuration has been reset.');
 });
 
-// --- NEW: Fully implemented `license` command ---
 program.command("license").description("Display premium license details").action(() => {
     log(levelApplication, "Checking for premium license...");
     const license = detectPremiumLicense();

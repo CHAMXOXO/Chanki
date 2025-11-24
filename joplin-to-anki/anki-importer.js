@@ -1,7 +1,6 @@
 // anki-importer.js
 
 const { levelApplication, levelVerbose, levelDebug } = require("./log");
-// FIX: Correctly import the buildAnkiFieldsObject function from anki-client
 const { buildAnkiFieldsObject } = require('./anki-client');
 
 const decodeHtmlEntities = (text) => {

@@ -1,9 +1,8 @@
-// index.js - MINIMALLY CORRECTED
+// index.js
 
 const { AnkiClient } = require("./anki-client");
 const joplin = require("./joplin-client");
 const batchImporter = require("./anki-importer");
-// --- FIX: Import the log levels so we can pass them ---
 const { log, levelApplication, levelVerbose, levelDebug } = require("./log");
 const { JoplinExporter, registerPremiumDeckHandler, registerDynamicMapper } = require('./joplin-exporter');
 
@@ -13,7 +12,6 @@ function registerTwoWaySyncEngine(engine) {
   log(levelVerbose, '   → Two-way sync engine registered by premium plugin.');
 }
 
-// --- FIX: Add logLevels to the function signature ---
 const run = async (joplinURL, joplinToken, exportFromDate, ankiURL, logLevels) => {
   log(levelApplication, "🚀 Initializing Joplin to Anki Sync");
 
@@ -27,7 +25,6 @@ const run = async (joplinURL, joplinToken, exportFromDate, ankiURL, logLevels) =
     if (TwoWaySyncEngine) {
       log(levelApplication, "Running with Premium Two-Way Sync Engine...");
       const exporter = new JoplinExporter(jClient, log);
-      // --- FIX: Pass the logLevels object to the SyncEngine constructor ---
       const engine = new TwoWaySyncEngine(jClient, aClient, log, batchImporter, exporter, logLevels);
       await engine.run();
     } else {
