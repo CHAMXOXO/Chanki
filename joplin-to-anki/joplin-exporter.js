@@ -23,6 +23,7 @@ const extractAdditionalFieldsFromElement = ($, jtaElement) => {
   return fields;
 };
 
+// FIXED: Now searches additionalFields to fix broken images in Explanation/Clinical fields
 const rewriteResourcePaths = (item, joplinResources) => {
     if (!joplinResources || joplinResources.length === 0) return item;
     if (!item.resourcesToUpload) item.resourcesToUpload = [];
@@ -34,7 +35,7 @@ const rewriteResourcePaths = (item, joplinResources) => {
         const resourceLink = `:/${resource.id}`;
         let found = false;
 
-        // Search Custom Fields
+        // 1. Search Custom Fields (Premium)
         if (item.additionalFields && item.additionalFields.customFields) {
           for (const fieldName in item.additionalFields.customFields) {
             let content = item.additionalFields.customFields[fieldName];
@@ -45,12 +46,26 @@ const rewriteResourcePaths = (item, joplinResources) => {
           }
         }
 
-        // Search Standard Fields
-        const fieldsToSearch = ['question', 'answer'];
-        for (const fieldName of fieldsToSearch) {
-            if (item[fieldName] && item[fieldName].includes(resourceLink)) {
+        // 2. Search Standard Fields (Core/Legacy)
+        // FIX: Added explanation, clinicalCorrelation, etc. to this loop
+        const directFields = ['question', 'answer'];
+        const additionalFields = ['explanation', 'clinicalCorrelation', 'header', 'footer', 'sources'];
+
+        // Check direct fields (Question/Answer)
+        for (const fieldName of directFields) {
+            if (item[fieldName] && typeof item[fieldName] === 'string' && item[fieldName].includes(resourceLink)) {
                 item[fieldName] = item[fieldName].replace(new RegExp(resourceLink, 'g'), fileName);
                 found = true;
+            }
+        }
+
+        // Check additional fields (Explanation, etc)
+        if (item.additionalFields) {
+            for (const fieldName of additionalFields) {
+                if (item.additionalFields[fieldName] && typeof item.additionalFields[fieldName] === 'string' && item.additionalFields[fieldName].includes(resourceLink)) {
+                    item.additionalFields[fieldName] = item.additionalFields[fieldName].replace(new RegExp(resourceLink, 'g'), fileName);
+                    found = true;
+                }
             }
         }
 
@@ -114,12 +129,16 @@ class JoplinExporter {
         
         for (let i = 0; i < jtaBlocks.length; i++) {
             const el = jtaBlocks[i];
-            const jtaID = $(el).attr("data-id");
+            let jtaID = $(el).attr("data-id");
             // Anki Sync marks the model name. If not present, assume Basic.
             const noteType = $(el).attr('data-note-type') || 'Joplin to Anki Basic Enhanced';
             let item;
     
-            if (!jtaID) continue; // Will be stamped by sync engine
+            // --- FIX: GENERATE AUTO ID IF MISSING (Legacy Mode) ---
+            if (!jtaID) {
+                // Using "auto_" prefix as requested + NoteID + Index for stability
+                jtaID = `auto_${note.id}_${i}`; 
+            }
     
             // 1. PREMIUM DYNAMIC EXPORTER
             if (dynamicMapper && dynamicMapper.getAvailableNoteTypes().includes(noteType)) {
@@ -133,13 +152,14 @@ class JoplinExporter {
                   };
                 }
             } 
-            // 2. CORE LEGACY EXPORTER (Fallback to Basic)
+            // 2. CORE LEGACY EXPORTER (Fallback to Basic Enhanced)
             else {
                 const additionalFields = extractAdditionalFieldsFromElement($, el);
                 let questionHtml = $(el).find(".question").html() || '';
                 let answerHtml = $(el).find(".answer-text").html() || '';
                 
-                if (questionHtml && answerHtml) {
+                // Allow creation even if Question/Answer tags are missing (fallback to simple content check if needed, but sticking to structure for now)
+                if (questionHtml || answerHtml) {
                     item = {
                       jtaID, index: i, title: details.note.title, notebook: details.notebook, 
                       question: questionHtml, answer: answerHtml,

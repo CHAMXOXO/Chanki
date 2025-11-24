@@ -12,6 +12,11 @@
 
 Turn your **Joplin lecture notes** into **Anki flashcards** automatically - and keep them synced as you study.
 
+**Perfect for:**
+- 🏥 **Medical Students** - Lecture notes → USMLE flashcards
+- 💻 **CS Students** - Algorithms with LaTeX + syntax-highlighted code
+- 📚 **Lifelong Learners** - Organize knowledge with unlimited nested decks
+
 **Before Chanki:** Manually copy-paste notes → Format cards → Pray you don't lose edits
 
 **After Chanki:** Write notes once → Sync → Study in Anki → Edits flow both ways ✨
@@ -39,16 +44,28 @@ chanki run
 
 ### **Free Forever (Open Source)**
 - ✅ One-way sync (Joplin → Anki)
-- ✅ 4 enhanced card types (Basic, Cloze, MCQ, Image)
+- ✅ Basic Enhanced cards (proof of concept)
+- ✅ Simple deck organization (notebook = deck)
 - ✅ Automatic media handling
 - ✅ Community support
 
+**Perfect for:** Trying out the workflow, simple note-taking
+
 ### **Premium ($49/year or $29 for students)**
-- 💎 **Two-way sync** - Edit in Joplin OR Anki
+- 💎 **Two-way sync** - Edit in Joplin OR Anki, changes flow both ways
+- 💎 **4 Advanced Card Types** - MCQ, Cloze, Image (Anatomy), Basic Enhanced
+- 💎 **LaTeX Support** - Beautiful math equation rendering
+- 💎 **Code Syntax Highlighting** - For algorithms, code snippets, pathways
 - 💎 **Smart conflict resolution** - Never lose changes
-- 💎 **Advanced deck organization** - Folder hierarchy + tag-based
-- 💎 **Custom card templates** - Create your own note types
+- 💎 **Advanced deck organization** - Unlimited folder hierarchy + tag-based decks
+- 💎 **Custom card templates** - Define your own note types via JSON config
+- 💎 **Dynamic field mapping** - Map any Joplin structure to Anki fields
+- 💎 **25 Beautiful Themes** - Included in .apkg (works on Desktop + AnkiDroid + iOS)
+- 💎 **Theme Switching Add-on** - Live theme previews (Desktop only)
+- 💎 **State tracking** - Knows what changed and when
 - 💎 **Priority support** - Email help within 48 hours
+
+**Perfect for:** Medical/CS students, serious learners, anyone with 100+ cards
 
 **[Get Premium →](https://chamxoxo.gumroad.com/chanki)** | **[Student Discount →](mailto:mirukacindy@gmail.com?subject=Student%20License)**
 
@@ -69,15 +86,26 @@ Lecture → Joplin Notes → Chanki Sync → Anki Cards → USMLE Success
 > *"Finally, my lecture notes and Anki stay in sync. Game changer."*  
 > — M2 Student, UCSF
 
-### **Features Medical Students Actually Need**
+### **Features Students Actually Need**
 
-| Feature | Why It Matters |
-|---------|----------------|
-| **MCQ Cards** | Practice NBME-style questions |
-| **Image Cards** | Learn anatomy with labels |
-| **Hierarchy Decks** | Organize by: Year → System → Topic |
-| **Tag-Based Decks** | `deck::Cardio, subdeck::Pharm` |
-| **Clinical Correlation Fields** | Connect facts to cases |
+| Feature | Free | Premium | Why It Matters |
+|---------|------|---------|----------------|
+| **Basic Cards** | ✅ | ✅ | Simple Q&A flashcards |
+| **MCQ Cards** | ❌ | ✅ | Practice NBME-style questions |
+| **Cloze Deletion** | ❌ | ✅ | Fill-in-the-blank memorization |
+| **Image Cards** | ❌ | ✅ | Learn anatomy with labeled diagrams |
+| **LaTeX Support** | ❌ | ✅ | Render math equations, chemical formulas |
+| **Code Blocks** | ❌ | ✅ | Syntax highlighting for algorithms, pathways |
+| **Hierarchy Decks** | ❌ | ✅ | Organize by: Year → System → Topic |
+| **Tag-Based Decks** | ❌ | ✅ | `deck::USMLE, subdeck::Step1, subdeck::Cardio` |
+| **Clinical Correlation** | ❌ | ✅ | Connect facts to real cases |
+| **Custom Templates** | ❌ | ✅ | Create your own card types (via JSON) |
+
+**Bonus for CS/IT Students (Premium):**
+- ✅ Full LaTeX support (algorithms, proofs, equations)
+- ✅ Code syntax highlighting (Python, JS, C++, Rust, etc.)
+- ✅ Custom templates for documentation, API references
+- ✅ Unlimited nested decks for complex topic hierarchies
 
 ---
 
@@ -118,7 +146,7 @@ chanki run
 
 ## 📝 Creating Flashcards
 
-### Quick Example
+### Quick Example (Free - Basic Cards)
 
 **In Joplin, write:**
 ```html
@@ -129,7 +157,6 @@ chanki run
     2. Left common carotid<br>
     3. Left subclavian
   </div>
-  <div class="explanation">Remember: ABC</div>
 </span>
 ```
 
@@ -138,10 +165,13 @@ chanki run
 chanki run
 ```
 
-**Boom.** It's now an Anki card. Edit in either app - changes sync both ways (Premium).
+**Boom.** It's now an Anki card.
 
-### Advanced: MCQ Cards
+---
 
+### Premium: Advanced Card Types
+
+#### MCQ Cards (Premium)
 ```html
 <span class="jta">
   <div class="question">First-line treatment for atrial fibrillation?</div>
@@ -154,7 +184,41 @@ chanki run
 </span>
 ```
 
-**[See All Card Types →](docs/CARD_TYPES.md)**
+#### Image Cards (Premium - Anatomy)
+```html
+<span class="jta">
+  <div class="image-question">Identify this muscle:</div>
+  <img src=":/abc123" alt="Muscle diagram"/>
+  <div class="answer-text">Biceps brachii</div>
+  <div class="origin">Short head: coracoid; Long head: supraglenoid tubercle</div>
+  <div class="insertion">Radial tuberosity</div>
+  <div class="innervation">Musculocutaneous (C5-C6)</div>
+  <div class="action">Elbow flexion, forearm supination</div>
+</span>
+```
+
+#### LaTeX + Code (Premium)
+```html
+<span class="jta">
+  <div class="question">What's the time complexity?</div>
+  <div class="code-block">
+    <code class="language-python">
+def binary_search(arr, target):
+    left, right = 0, len(arr) - 1
+    while left <= right:
+        mid = (left + right) // 2
+        if arr[mid] == target:
+            return mid
+    return -1
+    </code>
+  </div>
+  <div class="answer-text">
+    O(log n) - LaTeX: $T(n) = O(\log n)$
+  </div>
+</span>
+```
+
+**[See All Premium Card Types →](docs/PREMIUM_CARDS.md)**
 
 ---
 
