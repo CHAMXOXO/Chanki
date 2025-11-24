@@ -1,29 +1,35 @@
-# Chanki - Intelligent Joplin ↔ Anki Sync
+# Chanki - The Ultimate Joplin ↔ Anki Sync
 
-**The only bidirectional sync tool built specifically for medical students**
+**The only bidirectional sync tool built for Medical Students, Devs, and Polymaths.**
 
 ![Version](https://img.shields.io/badge/version-2.0.2-blue)
 ![License](https://img.shields.io/badge/license-MIT%20Core%20%2B%20Premium-green)
-![Medical](https://img.shields.io/badge/made%20for-medical%20students-red)
+![Sync](https://img.shields.io/badge/sync-bidirectional-purple)
 
 ---
 
 ## 🎯 What is Chanki?
 
-Turn your **Joplin lecture notes** into **Anki flashcards** automatically - and keep them synced as you study.
+Chanki connects your **Joplin notes** and **Anki flashcards** into a single, breathing ecosystem.
 
-**Perfect for:**
-- 🏥 **Medical Students** - Lecture notes → USMLE flashcards
-- 💻 **CS Students** - Algorithms with LaTeX + syntax-highlighted code
-- 📚 **Lifelong Learners** - Organize knowledge with unlimited nested decks
+**Most tools are one-way streets.** You write notes, they become cards, but if you edit the card during a review, your notes get outdated.
 
-**Before Chanki:** Manually copy-paste notes → Format cards → Pray you don't lose edits
-
-**After Chanki:** Write notes once → Sync → Study in Anki → Edits flow both ways ✨
+**Chanki is a two-way bridge.**
+1.  **Write in Joplin:** Turn lecture notes into flashcards automatically.
+2.  **Edit in Anki:** Fix typos or add details while reviewing—changes flow back to Joplin.
+3.  **Sync Existing Decks:** Have a massive Anki collection? Sync it *into* Joplin to create searchable notes from your flashcards.
 
 ---
 
-## ⚡ Quick Start (5 Minutes)
+## 👥 Who is this for?
+
+*   🏥 **Medical Students:** From Pre-med to Boards (USMLE, COMLEX, PLAB). Turn high-yield lecture slides into Anatomy, Pharm, and Pathology cards instantly.
+*   💻 **Developers & CS:** Master algorithms and syntax. Full support for code blocks and LaTeX.
+*   ⚖️ **Law & Polymaths:** Memorize case law, history dates, or languages with structured data.
+
+---
+
+## ⚡ Quick Start
 
 ```bash
 # 1. Install
@@ -36,189 +42,200 @@ chanki config set joplinToken YOUR_TOKEN
 chanki run
 ```
 
-**That's it.** Your notes are now flashcards.
+---
+
+## ⚠️ Important: Legacy (Free) Limitations
+
+The Free version is robust but designed for a specific workflow: **Simple, "Write-Once" Note Taking.** Before you start, please understand these trade-offs.
+
+### 1. The "Moving Card" Risk 🚨
+Legacy mode tracks cards based on their **line number** in your note.
+*   **The Problem:** If you insert a new question at the *top* of your note, every question below it shifts down. Anki sees them as "new" lines and **resets your study progress** for all of them.
+*   **The Fix:** In Legacy, always add new questions to the *bottom* of your note.
+*   **Premium Solution:** Premium assigns a permanent ID to every card. You can cut, paste, and reorganize your notes freely without ever losing your Anki streaks.
+
+### 2. Deck Organization 🔒
+*   **Legacy:** All cards go into a single **"Default"** deck.
+*   **Premium:** Cards are automatically sorted into decks matching your **Joplin Notebooks** (e.g., `Medicine::Cardiology`) or via Tags (e.g., `deck::Step1`).
+
+### 3. Sync Speed 🐢
+*   **Legacy:** "Dumb" sync. It re-reads *every single note* you have, every time you run it. As your collection grows, this gets slower.
+*   **Premium:** "Smart" sync. It only checks notes that have changed since the last run. Syncing 5,000 cards takes seconds.
+
+### 4. One-Way Only ➡️
+*   **Legacy:** Changes in Joplin overwrite Anki. Edits made in Anki are lost.
+*   **Premium:** True Two-Way Sync. Edit anywhere.
+
+---
+
+## 📝 Use Cases & Card Templates
+
+Chanki Premium supports **Advanced Models** designed for complex topics. Below are real examples of how to write them in Joplin.
+
+**Note:** The content inside `<details class="answer">` appears on the **Back** of the card. Content outside appears on the **Front**.
+
+### 1. Basic Enhanced (Standard Q&A)
+*Best for: General concepts, Law, History, Definitions.*
+
+```html
+<span class="jta">
+  <div class="header">Cardiology • Hypertension</div>
+  <div class="question">
+    What are the three major classes of drugs used as first-line therapy for hypertension in non-black patients?
+  </div>
+  
+  <details class="answer">
+    <div class="answer-text">
+      1. Thiazide diuretics<br>
+      2. ACE inhibitors / ARBs<br>
+      3. Calcium channel blockers
+    </div>
+    <div class="explanation">
+      Beta-blockers are no longer considered first-line for uncomplicated HTN.
+    </div>
+    <div class="correlation">
+      <b>Clinical:</b> In patients with CKD, ACE inhibitors are preferred due to renal protective effects.
+    </div>
+    <div class="footer">First Aid 2024, pg. 312</div>
+  </details>
+</span>
+```
+
+### 2. MCQ Enhanced (Multiple Choice)
+*Best for: Boards Prep (USMLE, Bar Exam), Testing differentials.*
+
+```html
+<span class="jta">
+  <div class="header">Pharm • Anti-arrhythmics</div>
+  <div class="question">Which anti-arrhythmic drug has a side effect of pulmonary fibrosis?</div>
+  
+  <div class="option-a">A) Digoxin</div>
+  <div class="option-b">B) Amiodarone</div>
+  <div class="option-c">C) Verapamil</div>
+  <div class="option-d">D) Lidocaine</div>
+
+  <details class="answer">
+    <div class="correct-answer">B</div>
+    <div class="explanation">
+      <b>Amiodarone</b> toxicity includes Pulmonary fibrosis, Hepatotoxicity, and Thyroid dysfunction (PHT).
+    </div>
+    <div class="sources">Sketchy Pharm</div>
+  </details>
+</span>
+```
+
+### 3. Image Enhanced (Anatomy Mode)
+*Best for: Anatomy, Histology, Art History, Geography.*
+
+```html
+<span class="jta">
+  <div class="image-question">Identify the highlighted muscle:</div>
+  <!-- data-jta-image-type="question" maps to QuestionImagePath -->
+  <img src=":/biceps_scan" alt="Muscle Diagram" data-jta-image-type="question">
+
+  <details class="answer">
+    <div class="answer-text">Biceps Brachii</div>
+    <div class="origin">Short head: Coracoid process<br>Long head: Supraglenoid tubercle</div>
+    <div class="insertion">Radial tuberosity</div>
+    <div class="innervation">Musculocutaneous nerve (C5-C6)</div>
+    <div class="action">Supination of forearm, Flexion of elbow</div>
+    <div class="comments">"Corkscrew" muscle</div>
+  </details>
+</span>
+```
+
+### 4. Cloze Enhanced (Fill-in-the-blank)
+*Best for: Memorizing lists, statutes, or biological pathways.*
+
+```html
+<span class="jta">
+  <div class="header">Pathology • Inflammation</div>
+  <!-- .question maps to the Text field -->
+  <div class="question">
+    {{c1::Neutrophils}} are the primary leukocytes recruited during {{c2::acute}} inflammation, whereas {{c1::Macrophages}} dominate in {{c2::chronic}} inflammation.
+  </div>
+
+  <details class="answer">
+    <div class="extra">
+      Neutrophils arrive within 6-24 hours; Macrophages arrive after 48 hours.
+    </div>
+    <div class="explanation">
+      Recruitment is mediated by IL-8, C5a, and Leukotriene B4.
+    </div>
+  </details>
+</span>
+```
+
+### 5. LaTeX Problem (Math/Physics)
+*Best for: Calculus, Physics, Chemistry.*
+
+```html
+<span class="jta" data-note-type="LaTeX Problem">
+  <div class="header">Calculus • Derivatives</div>
+  <!-- .question maps to the Problem field -->
+  <div class="question">
+    Find the derivative of: $$f(x) = x^2$$
+  </div>
+
+  <details class="answer">
+    <!-- .answer-text maps to the Solution field -->
+    <div class="answer-text">
+      $$f'(x) = 2x$$
+    </div>
+    <div class="footer">Power Rule</div>
+  </details>
+</span>
+```
+
+### 6. Code Snippet (CS/Dev Mode)
+*Best for: Algorithms, API signatures, Syntax memorization.*
+
+```html
+<span class="jta" data-note-type="Code Snippet">
+  <!-- .header maps to the Title field -->
+  <div class="header">Binary Search</div>
+  <!-- .question maps to the Description field -->
+  <div class="question">Implement an iterative binary search in Python.</div>
+
+  <details class="answer">
+    <!-- .answer-text maps to the Code field -->
+    <div class="answer-text">
+```python
+def binary_search(arr, target):
+    low, high = 0, len(arr) - 1
+    while low <= high:
+        mid = (low + high) // 2
+        if arr[mid] == target:
+            return mid
+        elif arr[mid] < target:
+            low = mid + 1
+        else:
+            high = mid - 1
+    return -1
+```
+    </div>
+    <!-- .footer maps to the Language field -->
+    <div class="footer">Python 3</div>
+  </details>
+</span>
+```
 
 ---
 
 ## 🆓 Free vs Premium
 
-### **Free Forever (Open Source)**
-- ✅ One-way sync (Joplin → Anki)
-- ✅ Basic Enhanced cards (proof of concept)
-- ✅ Simple deck organization (notebook = deck)
-- ✅ Automatic media handling
-- ✅ Community support
+| Feature | 📦 Legacy (Free) | 💎 Premium |
+| :--- | :---: | :---: |
+| **Sync Direction** | One-Way (Joplin → Anki) | **Two-Way Bidirectional** |
+| **Sync Sources** | Joplin Notes Only | **Joplin Notes + Existing Anki Decks** |
+| **Card Safety** | Fragile (Line-based) | **Robust (ID-based)** |
+| **Decks** | Default Only | **Notebooks & Tags** |
+| **Models** | Basic Enhanced Only | **Basic, MCQ, Image, Cloze, Code, Custom** |
+| **Anki Add-on** | ❌ No | **✅ Theme Switcher & Preview** |
+| **Conflict Resolution** | Overwrite | **Smart Merge** |
+| **Support** | Community | **Priority Email** |
 
-**Perfect for:** Trying out the workflow, simple note-taking
-
-### **Premium ($49/year or $29 for students)**
-- 💎 **Two-way sync** - Edit in Joplin OR Anki, changes flow both ways
-- 💎 **4 Advanced Card Types** - MCQ, Cloze, Image (Anatomy), Basic Enhanced
-- 💎 **LaTeX Support** - Beautiful math equation rendering
-- 💎 **Code Syntax Highlighting** - For algorithms, code snippets, pathways
-- 💎 **Smart conflict resolution** - Never lose changes
-- 💎 **Advanced deck organization** - Unlimited folder hierarchy + tag-based decks
-- 💎 **Custom card templates** - Define your own note types via JSON config
-- 💎 **Dynamic field mapping** - Map any Joplin structure to Anki fields
-- 💎 **25 Beautiful Themes** - Included in .apkg (works on Desktop + AnkiDroid + iOS)
-- 💎 **Theme Switching Add-on** - Live theme previews (Desktop only)
-- 💎 **State tracking** - Knows what changed and when
-- 💎 **Priority support** - Email help within 48 hours
-
-**Perfect for:** Medical/CS students, serious learners, anyone with 100+ cards
-
-**[Get Premium →](https://chamxoxo.gumroad.com/chanki)** | **[Student Discount →](mailto:mirukacindy@gmail.com?subject=Student%20License)**
-
----
-
-## 📚 Why Medical Students Love Chanki
-
-### **Built for Your Workflow**
-
-```
-Lecture → Joplin Notes → Chanki Sync → Anki Cards → USMLE Success
-```
-
-**Real testimonials:**
-> *"Saved me 10 hours/week formatting cards. Worth every penny."*  
-> — M3 Student, Johns Hopkins
-
-> *"Finally, my lecture notes and Anki stay in sync. Game changer."*  
-> — M2 Student, UCSF
-
-### **Features Students Actually Need**
-
-| Feature | Free | Premium | Why It Matters |
-|---------|------|---------|----------------|
-| **Basic Cards** | ✅ | ✅ | Simple Q&A flashcards |
-| **MCQ Cards** | ❌ | ✅ | Practice NBME-style questions |
-| **Cloze Deletion** | ❌ | ✅ | Fill-in-the-blank memorization |
-| **Image Cards** | ❌ | ✅ | Learn anatomy with labeled diagrams |
-| **LaTeX Support** | ❌ | ✅ | Render math equations, chemical formulas |
-| **Code Blocks** | ❌ | ✅ | Syntax highlighting for algorithms, pathways |
-| **Hierarchy Decks** | ❌ | ✅ | Organize by: Year → System → Topic |
-| **Tag-Based Decks** | ❌ | ✅ | `deck::USMLE, subdeck::Step1, subdeck::Cardio` |
-| **Clinical Correlation** | ❌ | ✅ | Connect facts to real cases |
-| **Custom Templates** | ❌ | ✅ | Create your own card types (via JSON) |
-
-**Bonus for CS/IT Students (Premium):**
-- ✅ Full LaTeX support (algorithms, proofs, equations)
-- ✅ Code syntax highlighting (Python, JS, C++, Rust, etc.)
-- ✅ Custom templates for documentation, API references
-- ✅ Unlimited nested decks for complex topic hierarchies
-
----
-
-## 🚀 Installation
-
-### Prerequisites
-- **Node.js 18+** ([Download](https://nodejs.org))
-- **Anki** with [AnkiConnect](https://ankiweb.net/shared/info/2055492159)
-- **Joplin** with [Web Clipper](https://joplinapp.org/clipper/) enabled
-
-### Install Core (Free)
-
-```bash
-# Option 1: NPM (Recommended)
-npm install -g chanki
-
-# Option 2: From Source
-git clone https://github.com/CHAMXOXO/chanki.git
-cd chanki/joplin-to-anki
-npm install
-npm link
-```
-
-### Activate Premium (Optional)
-
-```bash
-# After purchasing license:
-echo "YOUR-LICENSE-KEY" > ~/.jta-premium-license
-
-# Verify
-chanki run
-# Look for: "✅ Premium features loaded successfully!"
-```
-
-**[Buy Premium License →](https://chamxoxo.gumroad.com/chanki)**
-
----
-
-## 📝 Creating Flashcards
-
-### Quick Example (Free - Basic Cards)
-
-**In Joplin, write:**
-```html
-<span class="jta">
-  <div class="question">What are the branches of the aortic arch?</div>
-  <div class="answer-text">
-    1. Brachiocephalic trunk<br>
-    2. Left common carotid<br>
-    3. Left subclavian
-  </div>
-</span>
-```
-
-**Run sync:**
-```bash
-chanki run
-```
-
-**Boom.** It's now an Anki card.
-
----
-
-### Premium: Advanced Card Types
-
-#### MCQ Cards (Premium)
-```html
-<span class="jta">
-  <div class="question">First-line treatment for atrial fibrillation?</div>
-  <div class="option-a">A) Amiodarone</div>
-  <div class="option-b">B) Beta-blocker</div>
-  <div class="option-c">C) Digoxin</div>
-  <div class="option-d">D) Warfarin</div>
-  <div class="correct-answer">B</div>
-  <div class="explanation">Beta-blockers for rate control</div>
-</span>
-```
-
-#### Image Cards (Premium - Anatomy)
-```html
-<span class="jta">
-  <div class="image-question">Identify this muscle:</div>
-  <img src=":/abc123" alt="Muscle diagram"/>
-  <div class="answer-text">Biceps brachii</div>
-  <div class="origin">Short head: coracoid; Long head: supraglenoid tubercle</div>
-  <div class="insertion">Radial tuberosity</div>
-  <div class="innervation">Musculocutaneous (C5-C6)</div>
-  <div class="action">Elbow flexion, forearm supination</div>
-</span>
-```
-
-#### LaTeX + Code (Premium)
-```html
-<span class="jta">
-  <div class="question">What's the time complexity?</div>
-  <div class="code-block">
-    <code class="language-python">
-def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid
-    return -1
-    </code>
-  </div>
-  <div class="answer-text">
-    O(log n) - LaTeX: $T(n) = O(\log n)$
-  </div>
-</span>
-```
-
-**[See All Premium Card Types →](docs/PREMIUM_CARDS.md)**
+**[Get Premium ($49/yr) →](https://chamxoxo.gumroad.com/chanki)** | **[Student Discount ($29/yr) →](mailto:mirukacindy@gmail.com?subject=Student%20License)**
 
 ---
 
@@ -249,102 +266,6 @@ Tags: deck::USMLE, subdeck::Step1, subdeck::Cardio
 Anki: USMLE::Step1::Cardio
 ```
 
-**[Advanced Config →](docs/CONFIGURATION.md)**
-
----
-
-## 🎓 Student Workflow Guide
-
-### Recommended Setup
-
-```
-Joplin Notebooks:
-├── 📚 Medical School
-│   ├── 🧬 Preclinical
-│   │   ├── Anatomy
-│   │   ├── Biochemistry
-│   │   └── Physiology
-│   ├── 🔬 Clinical
-│   │   ├── Pathology
-│   │   └── Pharmacology
-│   └── 🏥 Rotations
-│       └── Internal Medicine
-```
-
-### Daily Routine
-
-1. **Lecture** → Take notes in Joplin (with `<span class="jta">` blocks)
-2. **Afternoon** → Run `chanki run` (2 minutes)
-3. **Evening** → Review in Anki (cards auto-updated)
-4. **Next day** → Edit cards in Anki → Sync → Changes appear in Joplin
-
-**[Complete Student Guide →](docs/STUDENT_GUIDE.md)**
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**"No cards syncing"**
-- ✅ Check Joplin Web Clipper is enabled (port 41184)
-- ✅ Check AnkiConnect is installed
-- ✅ Run `chanki status` to verify config
-
-**"Ghost notes in DUMP folder"**
-- ℹ️ This happens if notes lack valid titles/folders (by design)
-- ✅ Add proper titles or notebook paths to fix
-
-**"Sync takes forever"**
-- ℹ️ First sync initializes state (~1 min/100 cards)
-- ✅ Subsequent syncs are 10x faster
-
-**[Full Troubleshooting Guide →](docs/TROUBLESHOOTING.md)**
-
----
-
-## 🗺️ Roadmap
-
-### v2.1 (Next Month)
-- [ ] Web dashboard for config
-- [ ] Bulk edit operations
-- [ ] Export sync logs
-
-### v3.0 (Q2 2025)
-- [ ] Image occlusion support
-- [ ] Mobile sync verification
-- [ ] Custom CSS themes
-
-**[Vote on Features →](https://github.com/CHAMXOXO/chanki/discussions)**
-
----
-
-## 💖 Support the Project
-
-### Free Ways to Help
-- ⭐ Star on GitHub
-- 📝 Share with classmates
-- 🐛 Report bugs
-- 📖 Improve docs
-
-### Paid Support
-- 💎 **Buy Premium** - Funds development + gets you better features
-- ☕ **Donate** - [GitHub Sponsors](https://github.com/sponsors/CHAMXOXO) ($5/month)
-
----
-
-## 📜 License
-
-### Open Source Core (MIT)
-**Free forever.** Use, modify, distribute.
-
-Based on [joplin-to-anki](https://github.com/BartBucknill/joplin-to-anki) by Bart (MIT License).
-
-### Premium Features (Proprietary)
-**Requires license.** Two-way sync, advanced decks, templates, priority support.
-
-See `LICENSE` and `PREMIUM-LICENSE` for details.
-
 ---
 
 ## 🎓 About the Creator
@@ -352,26 +273,26 @@ See `LICENSE` and `PREMIUM-LICENSE` for details.
 Hi, I'm **Cindy** - a broke medical student who got tired of manually syncing 500+ flashcards every week.
 
 What started as "I'll just fork that old Anki tool" turned into a complete rewrite with:
-- Bidirectional sync (because I edit in BOTH apps)
-- Medical-specific features (MCQs, anatomy images)
-- Smart conflict resolution (so I never lose work)
+- **Bidirectional sync** (because I edit in BOTH apps)
+- **Medical-specific features** (MCQs, anatomy images)
+- **Smart conflict resolution** (so I never lose work)
 
 If you're drowning in lectures and Anki reviews, this tool was built for you. ❤️
 
 ---
 
-**Made with ❤️ (and tears) for medical students**
+## 💖 Support the Project
 
-*"The best time to create flashcards was during lecture. The second best time is now."* — Every M1 ever
+This tool is the result of hundreds of hours of work to save you thousands of hours of studying.
 
----
+### Free Ways to Help
+- ⭐ Star on GitHub
+- 📝 Share with classmates
+- 🐛 Report bugs
 
-## 📞 Get Help
-
-- 🐛 [Report Bug](https://github.com/CHAMXOXO/chanki/issues)
-- 💬 [Discuss](https://github.com/CHAMXOXO/chanki/discussions)
-- 📧 [Email Support](mailto:mirukacindy@gmail.com) (Premium users: 48hr response)
-- 📖 [Full Documentation](https://chamxoxo.github.io/chanki)
+### Paid Support
+- 💎 **Buy Premium** - Funds development + gets you better features
+- ☕ **Donate** - [GitHub Sponsors](https://github.com/sponsors/CHAMXOXO) ($5/month)
 
 ---
 
